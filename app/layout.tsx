@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     template: "%s | Tze How",
   },
   description: "Personal publication site of Tze How.",
+  alternates: {
+    types: {
+      "application/rss+xml": "https://tze.how/feed.xml",
+    },
+  },
   openGraph: {
     type: "website",
     siteName: "Tze How",

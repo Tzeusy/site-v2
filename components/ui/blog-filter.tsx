@@ -2,13 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PostLink } from "@/components/ui/post-link";
-
-type BlogPostSummary = {
-  slug: string;
-  title: string;
-  date: string;
-  tags: string[];
-};
+import type { BlogPostSummary } from "@/lib/blog";
 
 type TagOption = {
   id: string;
@@ -104,6 +98,7 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
               slug={post.slug}
               title={post.title}
               date={post.date}
+              readingTime={post.readingTime}
             />
           ))}
         </ol>

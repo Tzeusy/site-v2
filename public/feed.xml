@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Tze How</title>
+    <link>https://tze.how</link>
+    <description>Long-form essays on reliability, systems, and software practice.</description>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 07 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <generator>site-v2 feed generator</generator>
+    <item>
+      <title>Badminton Court Bot</title>
+      <link>https://tze.how/blog/badminton-court-bot</link>
+      <guid isPermaLink="true">https://tze.how/blog/badminton-court-bot</guid>
+      <description>A Telegram bot that checks OnePA.sg court availability in one pass, replacing manual slot-by-slot searching.</description>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Binary Sudoku</title>
+      <link>https://tze.how/blog/binary-sudoku</link>
+      <guid isPermaLink="true">https://tze.how/blog/binary-sudoku</guid>
+      <description>8x8 Binary Sudoku implemented on a Mojo FPGA with constraint logic in hardware and WS2812b LED output.</description>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Handwaving Magicka</title>
+      <link>https://tze.how/blog/handwaving-magicka</link>
+      <guid isPermaLink="true">https://tze.how/blog/handwaving-magicka</guid>
+      <description>Using computer vision and emulated controller input to cast spells in Magicka through real hand gestures.</description>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Myx: Food Ordering</title>
+      <link>https://tze.how/blog/myx-food-ordering</link>
+      <guid isPermaLink="true">https://tze.how/blog/myx-food-ordering</guid>
+      <description>A Vue-based food delivery platform with customer and merchant interfaces, including merchant analytics workflows.</description>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>SUTD-MIT Global Leadership Programme</title>
+      <link>https://tze.how/blog/sutd-mit-global-leadership-programme</link>
+      <guid isPermaLink="true">https://tze.how/blog/sutd-mit-global-leadership-programme</guid>
+      <description>A ten-week build sprint designing and assembling an electric boat to sail the Charles River during the SUTD-MIT exchange.</description>
+      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Understanding Async Boundaries</title>
+      <link>https://tze.how/blog/understanding-async-boundaries</link>
+      <guid isPermaLink="true">https://tze.how/blog/understanding-async-boundaries</guid>
+      <description>Where to draw asynchronous seams so failures stay local and behavior remains predictable.</description>
+      <pubDate>Mon, 12 Jan 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Designing for Partial Failure</title>
+      <link>https://tze.how/blog/designing-for-partial-failure</link>
+      <guid isPermaLink="true">https://tze.how/blog/designing-for-partial-failure</guid>
+      <description>A practical approach to graceful degradation when one dependency is unhealthy.</description>
+      <pubDate>Wed, 03 Dec 2025 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Why Most Metrics Dashboards Fail</title>
+      <link>https://tze.how/blog/why-most-metrics-dashboards-fail</link>
+      <guid isPermaLink="true">https://tze.how/blog/why-most-metrics-dashboards-fail</guid>
+      <description>Dashboards fail when they optimize for visual density instead of operational decisions.</description>
+      <pubDate>Fri, 07 Nov 2025 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Gems on the Internet</title>
+      <link>https://tze.how/blog/gems-on-the-internet</link>
+      <guid isPermaLink="true">https://tze.how/blog/gems-on-the-internet</guid>
+      <description>Documenting some of my finds across the internet, with various overlaps with my interests. Not including many of the more mainstream ones: Slate Star Codex (Now Astral Codex Ten on Substack). The blog of an essayist/psychiatrist, who talks about almost any topic under the sun. I often cite his articles ...</description>
+      <pubDate>Mon, 13 Sep 2021 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>The Fed and the Coronavirus</title>
+      <link>https://tze.how/blog/market-databases</link>
+      <guid isPermaLink="true">https://tze.how/blog/market-databases</guid>
+      <description>Some analysis of the chaos in the markets over the past two months - watching interplay between asset classes along with relevant snippets from Reddit submissions.</description>
+      <pubDate>Sun, 12 Apr 2020 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>OpenAI Car Racing Adventures</title>
+      <link>https://tze.how/blog/openai-car-racing-adventures</link>
+      <guid isPermaLink="true">https://tze.how/blog/openai-car-racing-adventures</guid>
+      <description>An overview of our Imitation Learning approach towards creating a model to play the OpenAI-CarRacingv0 environment.</description>
+      <pubDate>Mon, 23 Mar 2020 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Setting up of i3wm [Ricing]</title>
+      <link>https://tze.how/blog/setting-up-of-i3wm-ricing</link>
+      <guid isPermaLink="true">https://tze.how/blog/setting-up-of-i3wm-ricing</guid>
+      <description>Setup process for i3wm, shortcuts, useful tools, and the like</description>
+      <pubDate>Fri, 16 Aug 2019 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Project Jessica</title>
+      <link>https://tze.how/blog/project-jessica</link>
+      <guid isPermaLink="true">https://tze.how/blog/project-jessica</guid>
+      <description>Overview of Project Jessica</description>
+      <pubDate>Fri, 03 May 2019 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Ethereum Address Analyzer</title>
+      <link>https://tze.how/blog/ethereum-address-analyzer</link>
+      <guid isPermaLink="true">https://tze.how/blog/ethereum-address-analyzer</guid>
+      <description>What I was up to in the summer of 2018</description>
+      <pubDate>Wed, 01 Aug 2018 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

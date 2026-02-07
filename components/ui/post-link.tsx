@@ -4,6 +4,7 @@ type PostLinkProps = {
   slug: string;
   title: string;
   date: string;
+  readingTime: string;
 };
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -17,7 +18,7 @@ function formatDate(date: string) {
   return DATE_FORMATTER.format(new Date(date));
 }
 
-export function PostLink({ slug, title, date }: PostLinkProps) {
+export function PostLink({ slug, title, date, readingTime }: PostLinkProps) {
   return (
     <li className="border-b border-rule py-3">
       <Link
@@ -25,7 +26,9 @@ export function PostLink({ slug, title, date }: PostLinkProps) {
         className="grid grid-cols-[1fr_auto] items-baseline gap-4 no-underline"
       >
         <span className="text-lg text-foreground">{title}</span>
-        <span className="text-sm text-muted">{formatDate(date)}</span>
+        <span className="text-sm text-muted">
+          {formatDate(date)} · {readingTime}
+        </span>
       </Link>
     </li>
   );
