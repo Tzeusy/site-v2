@@ -21,6 +21,29 @@ A reader should be able to stay on the page for 10 minutes without fatigue.
 | Package manager | Bun |
 | Blog | MDX / rendered markdown (file-based, no CMS) |
 
+## Run Locally
+
+### Prerequisites
+
+- Node.js 20+ (LTS recommended)
+- Bun 1.2+
+
+### Setup
+
+```bash
+git clone https://github.com/Tzeusy/site-v2.git
+cd site-v2
+bun install
+```
+
+### Start the development server
+
+```bash
+bun dev
+```
+
+Open `http://localhost:3000` in your browser.
+
 ## Navigation
 
 Not a "navbar" — a publication masthead. Simple nameplate + small navigation.
