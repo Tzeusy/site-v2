@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Home",
   description:
-    "Tze How — Site Reliability Engineer composing systems from proven ecosystems.",
+    "Tze How — engineer obsessed with how systems scale, break, and grow.",
 };
 
 export default function HomePage() {
@@ -13,12 +13,18 @@ export default function HomePage() {
       <section className="space-y-4">
         <p className="text-sm uppercase tracking-[0.08em] text-accent">Tze How</p>
         <h1 className="text-balance text-4xl sm:text-5xl">
-          Composing systems from the ecosystem up.
+          Curious about everything that scales.
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
-          Site Reliability Engineer at Citadel. I build on the shoulders of
-          giants — leveraging proven tools to create transparent, powerful
-          software.
+          Site Reliability Engineer at Citadel. I care deeply about how systems
+          grow — the architectures that hold, the abstractions that bend, and
+          the small decisions that compound over time.
+        </p>
+        <p className="max-w-[65ch] text-pretty text-muted">
+          That curiosity has pulled me across reinforcement learning, robotics,
+          hardware design, blockchain analysis, and production infrastructure.
+          The common thread is the same question: what makes something work
+          reliably at the next order of magnitude?
         </p>
       </section>
 
