@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SearchTrigger } from "@/components/ui/search-trigger";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navLinks = [
@@ -28,6 +29,7 @@ export function Masthead() {
               {link.label}
             </Link>
           ))}
+          <SearchTrigger />
           <ThemeToggle />
         </nav>
       </div>

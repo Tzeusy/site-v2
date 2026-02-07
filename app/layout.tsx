@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Serif, Inter } from "next/font/google";
 import { Masthead } from "@/components/layout/masthead";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { CommandPaletteProvider } from "@/components/ui/command-palette-provider";
 import "./tailwind.css";
 
 const inter = Inter({
@@ -70,6 +71,7 @@ export default function RootLayout({
           </main>
           <SiteFooter />
         </div>
+        <CommandPaletteProvider />
       </body>
     </html>
   );
