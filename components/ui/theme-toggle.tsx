@@ -47,10 +47,12 @@ export function ThemeToggle() {
       type="button"
       onClick={handleToggle}
       className="text-foreground"
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+      aria-label="Toggle theme"
+      title="Toggle theme"
     >
-      {theme === "dark" ? "\u2600" : "\u263e"}
+      <span suppressHydrationWarning>
+        {theme === "dark" ? "\u2600" : "\u263e"}
+      </span>
     </button>
   );
 }
