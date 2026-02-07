@@ -46,6 +46,9 @@ export function CommandPalette({ entries }: { entries: SearchEntry[] }) {
       .map(({ entry }) => entry);
   }, [entries, query]);
 
+  const safeActiveIndex =
+    results.length === 0 ? 0 : Math.min(activeIndex, results.length - 1);
+
   const closeAndReset = useCallback(() => {
     setOpen(false);
     setQuery("");
@@ -86,28 +89,26 @@ export function CommandPalette({ entries }: { entries: SearchEntry[] }) {
     }
   }, [open]);
 
-  // Reset active index when results change
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [results]);
-
   // Scroll active item into view
   useEffect(() => {
     if (!listRef.current) return;
-    const active = listRef.current.children[activeIndex] as HTMLElement | undefined;
+    const active = listRef.current.children[
+      safeActiveIndex
+    ] as HTMLElement | undefined;
     active?.scrollIntoView({ block: "nearest" });
-  }, [activeIndex]);
+  }, [safeActiveIndex, results]);
 
   function handleInputKeyDown(e: React.KeyboardEvent) {
+    const lastIndex = Math.max(results.length - 1, 0);
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActiveIndex((i) => Math.min(i + 1, results.length - 1));
+      setActiveIndex((i) => Math.min(Math.max(i, 0) + 1, lastIndex));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActiveIndex((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && results[activeIndex]) {
+      setActiveIndex((i) => Math.max(Math.min(i, lastIndex) - 1, 0));
+    } else if (e.key === "Enter" && results[safeActiveIndex]) {
       e.preventDefault();
-      navigate(results[activeIndex].href);
+      navigate(results[safeActiveIndex].href);
     }
   }
 
@@ -148,13 +149,16 @@ export function CommandPalette({ entries }: { entries: SearchEntry[] }) {
             className="flex-1 bg-transparent font-sans text-sm text-foreground placeholder:text-muted outline-none"
             placeholder="Search pages, posts, projects..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActiveIndex(0);
+            }}
             onKeyDown={handleInputKeyDown}
             aria-autocomplete="list"
             aria-controls="command-palette-list"
             aria-activedescendant={
-              results[activeIndex]
-                ? `command-palette-item-${activeIndex}`
+              results[safeActiveIndex]
+                ? `command-palette-item-${safeActiveIndex}`
                 : undefined
             }
           />
@@ -180,9 +184,9 @@ export function CommandPalette({ entries }: { entries: SearchEntry[] }) {
               key={entry.href}
               id={`command-palette-item-${i}`}
               role="option"
-              aria-selected={i === activeIndex}
+              aria-selected={i === safeActiveIndex}
               className={`flex cursor-pointer items-center gap-3 rounded px-3 py-2 text-sm ${
-                i === activeIndex
+                i === safeActiveIndex
                   ? "bg-foreground/[0.06]"
                   : ""
               }`}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ProjectEntry as Project } from "@/lib/projects";
 
@@ -8,12 +9,15 @@ type ProjectEntryProps = {
 export function ProjectEntry({ project }: ProjectEntryProps) {
   return (
     <li className="space-y-4 border-t border-rule pt-10 first:border-t-0 first:pt-0">
-      <img
-        src={project.thumbnail.src}
-        alt={project.thumbnail.alt}
-        className="h-56 w-full rounded-sm border border-rule object-cover"
-        loading="lazy"
-      />
+      <div className="relative h-56 w-full overflow-hidden rounded-sm border border-rule">
+        <Image
+          src={project.thumbnail.src}
+          alt={project.thumbnail.alt}
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+      </div>
       <h3 className="font-serif text-2xl text-foreground">
         {project.title}
       </h3>
