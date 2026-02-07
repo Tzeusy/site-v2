@@ -75,11 +75,11 @@ export default function AboutPage() {
           collaboration under real constraints.
         </p>
         <p className="max-w-[65ch] text-muted">
-          Today I work as a Site Reliability Engineer at Citadel, where I focus
-          on observability, platform tooling, and keeping systems transparent
-          under pressure. The throughline from school to work is the same:
-          leverage what exists, make it visible, and compose it into something
-          greater than the parts.
+          Today I work as a Site Reliability Engineer on Citadel&rsquo;s
+          Enterprise Data team, where I help serve reference data to the firm —
+          optimizing for both performance and correctness. The throughline from
+          school to work is the same: leverage what exists, make it visible, and
+          compose it into something greater than the parts.
         </p>
       </section>
 
@@ -137,7 +137,7 @@ export default function AboutPage() {
       <section className="space-y-5 border-t border-rule pt-10">
         <h2 className="font-serif text-2xl">Now — February 2025</h2>
         <ul className="max-w-[65ch] list-disc space-y-2 pl-5 text-muted">
-          <li>Working on observability and platform reliability at Citadel.</li>
+          <li>Serving reference data to the firm on Citadel&rsquo;s Enterprise Data team.</li>
           <li>Rebuilding this site with Next.js, Tailwind CSS v4, and MDX.</li>
           <li>Reading about systems thinking and software composition.</li>
         </ul>
