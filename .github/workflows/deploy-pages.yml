@@ -32,6 +32,8 @@ jobs:
 
       - name: Build static site
         run: bun run build
+        env:
+          BASE_PATH: /site-v2
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
