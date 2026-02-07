@@ -21,7 +21,9 @@ function normalizeTag(tag: string) {
 export function BlogFilter({ posts, tags }: BlogFilterProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredPosts = useMemo(() => {
     if (selectedTags.length === 0) return posts;
@@ -34,6 +36,12 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
 
   const hasSelection = selectedTags.length > 0;
 
+  const visibleTags = useMemo(() => {
+    if (!search.trim()) return tags;
+    const q = search.trim().toLowerCase();
+    return tags.filter((tag) => tag.label.toLowerCase().includes(q));
+  }, [tags, search]);
+
   function toggleTag(tagId: string) {
     setSelectedTags((current) =>
       current.includes(tagId)
@@ -45,6 +53,15 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
   function clearTags() {
     setSelectedTags([]);
   }
+
+  // Focus search input when dropdown opens; clear search when closed
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => searchRef.current?.focus());
+    } else {
+      setSearch("");
+    }
+  }, [open]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -100,26 +117,40 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
           </div>
 
           {open ? (
-            <div className="absolute left-0 z-10 mt-2 max-w-[min(400px,calc(100vw-3rem))] rounded border border-rule bg-background p-3 shadow-sm">
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => {
-                  const isActive = selectedTags.includes(tag.id);
-                  return (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => toggleTag(tag.id)}
-                      aria-pressed={isActive}
-                      className={`rounded-full border px-3 py-1 text-sm ${
-                        isActive
-                          ? "border-foreground bg-foreground/[0.06] text-foreground"
-                          : "border-rule text-muted"
-                      }`}
-                    >
-                      {tag.label}
-                    </button>
-                  );
-                })}
+            <div className="absolute left-0 z-10 mt-2 max-w-[min(400px,calc(100vw-3rem))] rounded border border-rule bg-background shadow-sm">
+              <div className="border-b border-rule px-3 py-2">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Filter categories..."
+                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted outline-none"
+                />
+              </div>
+              <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto p-3">
+                {visibleTags.length > 0 ? (
+                  visibleTags.map((tag) => {
+                    const isActive = selectedTags.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        onClick={() => toggleTag(tag.id)}
+                        aria-pressed={isActive}
+                        className={`rounded-full border px-3 py-1 text-sm ${
+                          isActive
+                            ? "border-foreground bg-foreground/[0.06] text-foreground"
+                            : "border-rule text-muted"
+                        }`}
+                      >
+                        {tag.label}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <span className="text-sm text-muted">No matching categories.</span>
+                )}
               </div>
             </div>
           ) : null}
