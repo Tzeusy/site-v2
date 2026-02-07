@@ -1,6 +1,10 @@
 "use client";
 
+import { useModKey } from "@/components/ui/kbd";
+
 export function SearchTrigger() {
+  const mod = useModKey();
+
   return (
     <button
       type="button"
@@ -10,8 +14,8 @@ export function SearchTrigger() {
           new KeyboardEvent("keydown", { key: "k", metaKey: true }),
         )
       }
-      aria-label="Search (Cmd+K)"
-      title="Search (⌘K)"
+      aria-label={`Search (${mod}K)`}
+      title={`Search (${mod}K)`}
     >
       <svg
         className="h-4 w-4"

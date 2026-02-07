@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Kbd } from "@/components/ui/kbd";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -37,12 +38,10 @@ export default function HomePage() {
       <section className="space-y-3">
         <p className="text-sm uppercase tracking-[0.08em] text-accent">Shortcuts</p>
         <p className="text-muted">
-          <kbd className="rounded border border-rule px-1.5 py-0.5 font-sans text-xs">⌘K</kbd>{" "}
-          for quick-search.
+          <Kbd shortcut="K" /> for quick-search.
         </p>
         <p className="text-muted">
-          <kbd className="rounded border border-rule px-1.5 py-0.5 font-sans text-xs">⌘J</kbd>{" "}
-          to toggle night mode.
+          <Kbd shortcut="J" /> to toggle night mode.
         </p>
       </section>
     </article>

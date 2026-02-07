@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useModKey } from "@/components/ui/kbd";
 
 type Theme = "light" | "dark";
 
@@ -53,13 +54,15 @@ export function ThemeToggle() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   });
 
+  const mod = useModKey();
+
   return (
     <button
       type="button"
       onClick={handleToggle}
       className="text-foreground"
-      aria-label="Toggle theme (Cmd+J)"
-      title="Toggle theme (⌘J)"
+      aria-label={`Toggle theme (${mod}J)`}
+      title={`Toggle theme (${mod}J)`}
     >
       <span suppressHydrationWarning>
         {theme === "dark" ? "\u2600" : "\u263e"}
