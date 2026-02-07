@@ -1,4 +1,17 @@
 import type { MDXComponents } from "mdx/types";
+import Image from "next/image";
+
+const DEFAULT_MDX_IMAGE_WIDTH = 1200;
+const DEFAULT_MDX_IMAGE_HEIGHT = 630;
+
+const parseDimension = (value: number | string | undefined) => {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+};
 
 export const mdxComponents: MDXComponents = {
   h1: ({ className = "", ...props }) => (
@@ -37,14 +50,21 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  img: ({ className = "", alt, ...props }) => (
-    <img
-      className={`my-6 w-full rounded-md border border-rule ${className}`}
-      alt={alt ?? ""}
-      loading="lazy"
-      {...props}
-    />
-  ),
+  img: ({ className = "", alt, width, height, ...props }) => {
+    const resolvedWidth = parseDimension(width) ?? DEFAULT_MDX_IMAGE_WIDTH;
+    const resolvedHeight = parseDimension(height) ?? DEFAULT_MDX_IMAGE_HEIGHT;
+
+    return (
+      <Image
+        className={`my-6 h-auto w-full rounded-md border border-rule ${className}`}
+        alt={alt ?? ""}
+        width={resolvedWidth}
+        height={resolvedHeight}
+        sizes="100vw"
+        {...props}
+      />
+    );
+  },
   figure: ({ className = "", ...props }) => (
     <figure className={`my-8 ${className}`} {...props} />
   ),

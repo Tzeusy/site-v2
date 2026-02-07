@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { projects } from "@/lib/projects";
 
@@ -107,12 +108,15 @@ export default function AboutPage() {
         <ul className="space-y-4 list-none">
           {highlights.map((project) => (
             <li key={project.blogSlug} className="flex gap-4 items-start">
-              <img
-                src={project.thumbnail.src}
-                alt={project.thumbnail.alt}
-                className="h-16 w-24 shrink-0 rounded-sm border border-rule object-cover"
-                loading="lazy"
-              />
+              <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-sm border border-rule">
+                <Image
+                  src={project.thumbnail.src}
+                  alt={project.thumbnail.alt}
+                  fill
+                  sizes="96px"
+                  className="object-cover"
+                />
+              </div>
               <div className="space-y-1">
                 <h3 className="font-serif text-lg text-foreground">
                   <Link href={`/blog/${project.blogSlug}`}>

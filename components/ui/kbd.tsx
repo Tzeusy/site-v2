@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const subscribe = () => () => {};
+const getSnapshot = () =>
+  typeof navigator !== "undefined" &&
+  navigator.platform.toUpperCase().includes("MAC")
+    ? "⌘"
+    : "Ctrl+";
+const getServerSnapshot = () => "⌘";
 
 export function useModKey() {
-  const [isMac, setIsMac] = useState(true);
-  useEffect(() => {
-    setIsMac(navigator.platform.toUpperCase().includes("MAC"));
-  }, []);
-  return isMac ? "⌘" : "Ctrl+";
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export function Kbd({ shortcut }: { shortcut: string }) {
