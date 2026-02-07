@@ -1,0 +1,35 @@
+import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+const navLinks = [
+  { href: "/", label: "Profile" },
+  { href: "/blog", label: "Blog" },
+  { href: "/resume", label: "Resume" },
+];
+
+export function Masthead() {
+  return (
+    <header className="border-b border-rule">
+      <div className="mx-auto flex w-full max-w-[75ch] items-center justify-between gap-4 px-6 py-5 sm:px-8">
+        <Link
+          href="/"
+          className="font-serif text-lg tracking-tight text-foreground no-underline hover:underline"
+        >
+          TH <span className="text-muted">{"\u2014"} Software Engineer</span>
+        </Link>
+        <nav className="flex items-center gap-4 text-sm text-muted sm:gap-5">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="decoration-transparent underline-offset-[0.2em] hover:decoration-current"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <ThemeToggle />
+        </nav>
+      </div>
+    </header>
+  );
+}

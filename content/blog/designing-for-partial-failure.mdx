@@ -1,0 +1,24 @@
+---
+title: "Designing for Partial Failure"
+date: 2025-12-03
+summary: "A practical approach to graceful degradation when one dependency is unhealthy."
+tags: ["sre", "systems-design"]
+---
+
+## Assume One Dependency Is Down
+
+Most incidents are not total outages. They are partial failures where one
+critical dependency goes brown while everything else keeps serving traffic.
+
+## Define Degraded Modes Early
+
+Write degraded behavior in advance:
+
+- What still works
+- What is delayed
+- What is blocked
+
+## Favor Honest Interfaces
+
+When a dependency is degraded, surface that state clearly. Quietly timing out
+and retrying forever creates mystery, not resilience.

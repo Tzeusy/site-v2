@@ -1,0 +1,145 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import {
+  getAdjacentPosts,
+  getAllPostSummaries,
+  getPostBySlug,
+  getPostSlugs,
+} from "@/lib/blog";
+
+type BlogPostPageProps = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
+
+export async function generateStaticParams() {
+  const slugs = await getPostSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: "Post not found",
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.summary,
+    openGraph: {
+      title: post.title,
+      description: post.summary,
+      type: "article",
+      url: `https://tze.how/blog/${post.slug}`,
+      publishedTime: post.date,
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary",
+      title: post.title,
+      description: post.summary,
+    },
+  };
+}
+
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+  if (!post) {
+    notFound();
+  }
+
+  const allPosts = await getAllPostSummaries();
+  const { previousPost, nextPost } = await getAdjacentPosts(slug);
+  const relatedPosts = allPosts
+    .filter(
+      (candidate) =>
+        candidate.slug !== slug &&
+        candidate.tags.some((tag) => post.tags.includes(tag)),
+    )
+    .slice(0, 3);
+  const showToc = post.headings.length >= 3;
+
+  return (
+    <article className="space-y-10">
+      <header className="space-y-4">
+        <p className="text-sm text-muted">
+          <time dateTime={post.date}>{post.date}</time> · {post.readingTime}
+        </p>
+        <h1 className="text-balance text-4xl sm:text-5xl">{post.title}</h1>
+        <p className="text-lg text-muted">{post.summary}</p>
+        {post.tags.length > 0 ? (
+          <p className="text-sm text-muted">
+            {post.tags.map((tag, index) => (
+              <span key={tag}>
+                {index > 0 ? " · " : ""}
+                {tag}
+              </span>
+            ))}
+          </p>
+        ) : null}
+      </header>
+
+      {showToc ? (
+        <nav className="space-y-2 border-y border-rule py-4">
+          <p className="text-sm uppercase tracking-[0.08em] text-muted">
+            In this essay
+          </p>
+          <ol className="space-y-1 text-sm text-muted">
+            {post.headings.map((heading) => (
+              <li key={heading.id}>
+                <a href={`#${heading.id}`} className="no-underline hover:underline">
+                  {heading.text}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      ) : null}
+
+      <section className="space-y-4">{post.content}</section>
+
+      {relatedPosts.length > 0 ? (
+        <section className="space-y-3 border-t border-rule pt-8">
+          <p className="text-sm uppercase tracking-[0.08em] text-muted">
+            More on this topic
+          </p>
+          <ul className="space-y-1 text-sm">
+            {relatedPosts.map((relatedPost) => (
+              <li key={relatedPost.slug}>
+                <Link href={`/blog/${relatedPost.slug}`}>{relatedPost.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <footer className="grid gap-4 border-t border-rule pt-8 text-sm sm:grid-cols-2">
+        <div>
+          {previousPost ? (
+            <>
+              <p className="text-muted">Previous</p>
+              <Link href={`/blog/${previousPost.slug}`}>{previousPost.title}</Link>
+            </>
+          ) : null}
+        </div>
+        <div className="sm:text-right">
+          {nextPost ? (
+            <>
+              <p className="text-muted">Next</p>
+              <Link href={`/blog/${nextPost.slug}`}>{nextPost.title}</Link>
+            </>
+          ) : null}
+        </div>
+      </footer>
+    </article>
+  );
+}
