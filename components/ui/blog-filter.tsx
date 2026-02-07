@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PostLink } from "@/components/ui/post-link";
 import type { BlogPostSummary } from "@/lib/blog";
 
@@ -20,6 +20,8 @@ function normalizeTag(tag: string) {
 
 export function BlogFilter({ posts, tags }: BlogFilterProps) {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredPosts = useMemo(() => {
     if (selectedTags.length === 0) return posts;
@@ -44,14 +46,43 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
     setSelectedTags([]);
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
   return (
     <div className="space-y-6">
       {tags.length > 0 ? (
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="text-sm uppercase tracking-[0.08em] text-accent">
+        <div ref={dropdownRef} className="relative">
+          <div className="flex items-center gap-3 text-sm">
+            <button
+              type="button"
+              onClick={() => setOpen((prev) => !prev)}
+              className="flex items-center gap-1.5 text-sm uppercase tracking-[0.08em] text-accent"
+            >
               Categories
-            </span>
+              <svg
+                className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                aria-hidden="true"
+              >
+                <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
             <span className="text-muted">
               {hasSelection
                 ? `Showing ${filteredPosts.length} of ${posts.length}`
@@ -67,26 +98,31 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
               </button>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => {
-              const isActive = selectedTags.includes(tag.id);
-              return (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  aria-pressed={isActive}
-                  className={`rounded-full border px-3 py-1 text-sm ${
-                    isActive
-                      ? "border-foreground bg-foreground/[0.06] text-foreground"
-                      : "border-rule text-muted"
-                  }`}
-                >
-                  {tag.label}
-                </button>
-              );
-            })}
-          </div>
+
+          {open ? (
+            <div className="absolute left-0 z-10 mt-2 max-w-[min(400px,calc(100vw-3rem))] rounded border border-rule bg-background p-3 shadow-sm">
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => {
+                  const isActive = selectedTags.includes(tag.id);
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => toggleTag(tag.id)}
+                      aria-pressed={isActive}
+                      className={`rounded-full border px-3 py-1 text-sm ${
+                        isActive
+                          ? "border-foreground bg-foreground/[0.06] text-foreground"
+                          : "border-rule text-muted"
+                      }`}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
