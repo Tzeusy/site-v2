@@ -11,6 +11,7 @@ export function SearchTrigger() {
         )
       }
       aria-label="Search (Cmd+K)"
+      title="Search (⌘K)"
     >
       <svg
         className="h-4 w-4"
