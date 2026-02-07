@@ -4,8 +4,8 @@
   --background: #fafaf9;
   --foreground: #1c1917;
   --muted: #78716c;
-  --accent: #ea580c;
-  --link: #2563eb;
+  --accent: #44403c;
+  --link: #57534e;
   --rule: #e7e5e4;
   color-scheme: light;
 }
@@ -25,8 +25,8 @@
   --background: #171412;
   --foreground: #e7e5e4;
   --muted: #a8a29e;
-  --accent: #38bdf8;
-  --link: #60a5fa;
+  --accent: #d6d3d1;
+  --link: #a8a29e;
   --rule: #292524;
   color-scheme: dark;
 }

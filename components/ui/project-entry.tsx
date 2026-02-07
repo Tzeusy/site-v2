@@ -2,11 +2,10 @@ import Link from "next/link";
 import type { ProjectEntry as Project } from "@/lib/projects";
 
 type ProjectEntryProps = {
-  index: number;
   project: Project;
 };
 
-export function ProjectEntry({ index, project }: ProjectEntryProps) {
+export function ProjectEntry({ project }: ProjectEntryProps) {
   return (
     <li className="space-y-4 border-t border-rule pt-10 first:border-t-0 first:pt-0">
       <img
@@ -16,7 +15,7 @@ export function ProjectEntry({ index, project }: ProjectEntryProps) {
         loading="lazy"
       />
       <h3 className="font-serif text-2xl text-foreground">
-        <span className="text-accent">{index}.</span> {project.title}
+        {project.title}
       </h3>
       <p className="max-w-[70ch] text-muted">{project.description}</p>
       <p className="text-sm text-muted">

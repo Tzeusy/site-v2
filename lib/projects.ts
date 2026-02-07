@@ -76,8 +76,8 @@ export const projects: ProjectEntry[] = [
       "Computer vision and emulated game controllers for casting spells in Magicka using hand gestures.",
     blogSlug: "handwaving-magicka",
     thumbnail: {
-      src: "/images/projects/project-placeholder.svg",
-      alt: "Handwaving Magicka project placeholder thumbnail",
+      src: "/images/magicka.gif",
+      alt: "Handwaving Magicka gesture-based spell casting",
     },
     links: [
       {
@@ -92,8 +92,8 @@ export const projects: ProjectEntry[] = [
       "Telegram bot that checks OnePA.sg court availability in one pass to remove manual slot-by-slot checking.",
     blogSlug: "badminton-court-bot",
     thumbnail: {
-      src: "/images/projects/project-placeholder.svg",
-      alt: "Badminton Court Bot project placeholder thumbnail",
+      src: "/images/badminton.jpg",
+      alt: "Badminton Court Bot court availability checker",
     },
     links: [
       {
@@ -108,8 +108,8 @@ export const projects: ProjectEntry[] = [
       "Ten-week exchange building an electric boat to sail the Charles River in Boston.",
     blogSlug: "sutd-mit-global-leadership-programme",
     thumbnail: {
-      src: "/images/projects/project-placeholder.svg",
-      alt: "SUTD-MIT Global Leadership Programme placeholder thumbnail",
+      src: "/images/mit.jpg",
+      alt: "SUTD-MIT Global Leadership Programme electric boat on the Charles River",
     },
     links: [{ label: "Most Technically Challenging Boat" }],
   },
@@ -119,8 +119,8 @@ export const projects: ProjectEntry[] = [
       "8x8 Binary Sudoku implemented on a Mojo FPGA with programmable WS2812b LED hardware.",
     blogSlug: "binary-sudoku",
     thumbnail: {
-      src: "/images/projects/project-placeholder.svg",
-      alt: "Binary Sudoku project placeholder thumbnail",
+      src: "/images/binary-sudoku.jpg",
+      alt: "Binary Sudoku on FPGA with WS2812b LEDs",
     },
     links: [{ label: "GitHub", href: "https://github.com/gabrielwong159/fpga" }],
   },
@@ -130,8 +130,8 @@ export const projects: ProjectEntry[] = [
       "Vue-based food delivery platform with customer and merchant interfaces, including merchant analytics workflows.",
     blogSlug: "myx-food-ordering",
     thumbnail: {
-      src: "/images/projects/project-placeholder.svg",
-      alt: "Myx food ordering project placeholder thumbnail",
+      src: "/images/myx.jpg",
+      alt: "Myx food ordering platform",
     },
     links: [{ label: "Project" }],
   },

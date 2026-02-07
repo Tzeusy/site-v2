@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Home",
   description:
-    "Personal publication site of Tze How with writing, background, and projects.",
+    "Tze How — Site Reliability Engineer composing systems from proven ecosystems.",
 };
 
 export default function HomePage() {
@@ -13,11 +13,12 @@ export default function HomePage() {
       <section className="space-y-4">
         <p className="text-sm uppercase tracking-[0.08em] text-accent">Tze How</p>
         <h1 className="text-balance text-4xl sm:text-5xl">
-          Building calm software and writing about it.
+          Composing systems from the ecosystem up.
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
-          Site Reliability Engineer at Citadel. I care about systems that remain
-          understandable under pressure.
+          Site Reliability Engineer at Citadel. I build on the shoulders of
+          giants — leveraging proven tools to create transparent, powerful
+          software.
         </p>
       </section>
 
