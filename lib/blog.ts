@@ -9,6 +9,7 @@ import { mdxComponents } from "@/components/mdx/mdx-components";
 import { withBasePath } from "@/lib/base-path";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
+const BLOG_IMAGE_DIR = path.join(process.cwd(), "public/images/blog");
 
 export type BlogFrontmatter = {
   title: string;
@@ -254,6 +255,22 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     headings: extractHeadings(content),
     readingTime: readingTime(content).text,
   };
+}
+
+export async function getPostThumbnail(
+  slug: string,
+): Promise<string | null> {
+  const extensions = ["jpg", "png", "gif", "webp"];
+  for (const ext of extensions) {
+    const filePath = path.join(BLOG_IMAGE_DIR, `${slug}-0.${ext}`);
+    try {
+      await fs.access(filePath);
+      return `/images/blog/${slug}-0.${ext}`;
+    } catch {
+      // file doesn't exist, try next extension
+    }
+  }
+  return null;
 }
 
 export async function getAdjacentPosts(slug: string) {

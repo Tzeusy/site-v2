@@ -6,9 +6,11 @@ import {
 } from "@/components/productivity/productivity-graph";
 import {
   getPostSize,
+  getPostThumbnail,
   getPublishedPostSummaries,
   isActivePost,
 } from "@/lib/blog";
+import { withBasePath } from "@/lib/base-path";
 import {
   normalizeProductivityKey,
   productivityCategories,
@@ -25,15 +27,16 @@ function buildProductivityGraphCategories(): ProductivityGraphCategory[] {
   return productivityCategories.map((category) => ({
     id: normalizeProductivityKey(category.id),
     label: category.label,
+    description: category.description,
   }));
 }
 
 export default async function ProductivityPage() {
   const graphCategories = buildProductivityGraphCategories();
   const allPosts = await getPublishedPostSummaries();
-  const graphPosts: ProductivityGraphPost[] = allPosts
-    .filter((post) => isActivePost(post))
-    .map((post) => {
+  const activePosts = allPosts.filter((post) => isActivePost(post));
+  const graphPosts: ProductivityGraphPost[] = await Promise.all(
+    activePosts.map(async (post) => {
       const linkedCategoryIds = Array.from(
         new Set(
           post.tags
@@ -45,14 +48,18 @@ export default async function ProductivityPage() {
         ),
       );
 
+      const thumbnail = await getPostThumbnail(post.slug);
+
       return {
         slug: post.slug,
         title: post.title,
         summary: post.summary,
         categories: linkedCategoryIds,
         size: getPostSize(post),
+        image: thumbnail ? withBasePath(thumbnail) : undefined,
       };
-    });
+    }),
+  );
 
   return (
     <article className="space-y-8">
@@ -60,11 +67,11 @@ export default async function ProductivityPage() {
         <p className="text-sm uppercase tracking-[0.08em] text-accent">Productivity</p>
         <h1 className="text-balance text-4xl sm:text-5xl">How the pieces connect.</h1>
         <p className="max-w-[65ch] text-muted">
-          This graph shows currently active productivity notes. Category nodes are
-          fixed and post nodes are generated from blog tags. Mark a post with{" "}
+          This graph shows various elements in my personal setup for my development workflows
+          {/* Mark a post with{" "}
           <code className="text-foreground">active</code> to include it, and{" "}
           <code className="text-foreground">size-1</code> to{" "}
-          <code className="text-foreground">size-5</code> to tune node weight.
+          <code className="text-foreground">size-5</code> to tune node weight. */}
         </p>
       </header>
 

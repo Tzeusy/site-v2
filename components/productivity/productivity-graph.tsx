@@ -1,11 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forceSimulation,
+  forceLink,
+  forceManyBody,
+  forceCollide,
+  forceX,
+  forceY,
+} from "d3-force";
+import type { SimulationNodeDatum, SimulationLinkDatum } from "d3-force";
 import { withBasePath } from "@/lib/base-path";
 
 export type ProductivityGraphCategory = {
   id: string;
   label: string;
+  description: string;
 };
 
 export type ProductivityGraphPost = {
@@ -14,6 +24,7 @@ export type ProductivityGraphPost = {
   summary: string;
   size: number;
   categories: string[];
+  image?: string;
 };
 
 type ProductivityGraphProps = {
@@ -26,17 +37,10 @@ type FocusedNode =
   | { type: "post"; id: string }
   | null;
 
-type Point = {
-  x: number;
-  y: number;
-};
-
-type PositionedPost = ProductivityGraphPost & {
-  x: number;
-  y: number;
+type SimNode = SimulationNodeDatum & {
+  nodeId: string;
+  nodeType: "category" | "post";
   radius: number;
-  anchorX: number;
-  anchorY: number;
 };
 
 const WIDTH = 980;
@@ -46,15 +50,8 @@ const CENTER_Y = HEIGHT / 2;
 const CATEGORY_RING_RADIUS_X = WIDTH * 0.4;
 const CATEGORY_RING_RADIUS_Y = HEIGHT * 0.38;
 const MARGIN = 42;
-
-function hashString(input: string) {
-  let hash = 0;
-  for (const char of input) {
-    hash = (hash << 5) - hash + char.charCodeAt(0);
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
+const CATEGORY_RADIUS = 15;
+const SIM_TICKS = 300;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -68,103 +65,248 @@ function radiusForSize(size: number) {
   return 8 + normalizeSize(size) * 2;
 }
 
-function categoryPoint(index: number, total: number): Point {
-  const angle = (-Math.PI / 2) + (index / Math.max(total, 1)) * Math.PI * 2;
+function round2(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
+function hashString(input: string) {
+  let hash = 0;
+  for (const char of input) {
+    hash = (hash << 5) - hash + char.charCodeAt(0);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function categoryRingPoint(index: number, total: number) {
+  const angle = -Math.PI / 2 + (index / Math.max(total, 1)) * Math.PI * 2;
   return {
-    x: CENTER_X + Math.cos(angle) * CATEGORY_RING_RADIUS_X,
-    y: CENTER_Y + Math.sin(angle) * CATEGORY_RING_RADIUS_Y,
+    x: round2(CENTER_X + Math.cos(angle) * CATEGORY_RING_RADIUS_X),
+    y: round2(CENTER_Y + Math.sin(angle) * CATEGORY_RING_RADIUS_Y),
   };
 }
 
-function computePostLayout(
+type LayoutResult = {
+  categoryPositions: Map<string, { x: number; y: number }>;
+  postPositions: Map<string, { x: number; y: number; radius: number }>;
+};
+
+function computeForceLayout(
+  categories: ProductivityGraphCategory[],
   posts: ProductivityGraphPost[],
-  categoryPositions: Map<string, Point>,
-): PositionedPost[] {
-  const initial = posts.map((post) => {
-    const linkedPoints = post.categories
-      .map((categoryId) => categoryPositions.get(categoryId))
-      .filter((point): point is Point => Boolean(point));
-
-    const anchor =
-      linkedPoints.length > 0
-        ? linkedPoints.reduce(
-            (acc, point) => ({
-              x: acc.x + point.x / linkedPoints.length,
-              y: acc.y + point.y / linkedPoints.length,
-            }),
-            { x: 0, y: 0 },
-          )
-        : { x: CENTER_X, y: CENTER_Y };
-
-    const hash = hashString(post.slug);
-    const angle = ((hash % 360) * Math.PI) / 180;
-    const offset = 16 + (hash % 34);
-    const radius = radiusForSize(post.size);
-
+): LayoutResult {
+  const catNodes: SimNode[] = categories.map((cat, i) => {
+    const pt = categoryRingPoint(i, categories.length);
     return {
-      ...post,
-      anchorX: anchor.x,
-      anchorY: anchor.y,
-      x: clamp(anchor.x + Math.cos(angle) * offset, MARGIN, WIDTH - MARGIN),
-      y: clamp(anchor.y + Math.sin(angle) * offset, MARGIN, HEIGHT - MARGIN),
-      radius,
+      nodeId: `cat-${cat.id}`,
+      nodeType: "category" as const,
+      x: pt.x,
+      y: pt.y,
+      fx: pt.x,
+      fy: pt.y,
+      radius: CATEGORY_RADIUS,
     };
   });
 
-  for (let step = 0; step < 24; step += 1) {
-    for (let left = 0; left < initial.length; left += 1) {
-      for (let right = left + 1; right < initial.length; right += 1) {
-        const a = initial[left];
-        const b = initial[right];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const distance = Math.hypot(dx, dy) || 0.0001;
-        const minDistance = a.radius + b.radius + 18;
-        if (distance >= minDistance) {
-          continue;
-        }
+  const catIndexById = new Map(catNodes.map((n, i) => [n.nodeId, i]));
 
-        const push = (minDistance - distance) / 2;
-        const nx = dx / distance;
-        const ny = dy / distance;
-        a.x = clamp(a.x - nx * push, MARGIN, WIDTH - MARGIN);
-        a.y = clamp(a.y - ny * push, MARGIN, HEIGHT - MARGIN);
-        b.x = clamp(b.x + nx * push, MARGIN, WIDTH - MARGIN);
-        b.y = clamp(b.y + ny * push, MARGIN, HEIGHT - MARGIN);
-      }
+  const postNodes: SimNode[] = posts.map((post) => {
+    const linkedCatNodes = post.categories
+      .map((catId) => catNodes[catIndexById.get(`cat-${catId}`) ?? -1])
+      .filter(Boolean);
+
+    const cx =
+      linkedCatNodes.length > 0
+        ? linkedCatNodes.reduce((s, n) => s + (n.x ?? CENTER_X), 0) /
+          linkedCatNodes.length
+        : CENTER_X;
+    const cy =
+      linkedCatNodes.length > 0
+        ? linkedCatNodes.reduce((s, n) => s + (n.y ?? CENTER_Y), 0) /
+          linkedCatNodes.length
+        : CENTER_Y;
+
+    // Deterministic jitter from slug hash
+    const h = hashString(post.slug);
+    const angle = ((h % 360) * Math.PI) / 180;
+    const jitter = 10 + (h % 30);
+
+    return {
+      nodeId: `post-${post.slug}`,
+      nodeType: "post" as const,
+      x: cx + Math.cos(angle) * jitter,
+      y: cy + Math.sin(angle) * jitter,
+      radius: radiusForSize(post.size),
+    };
+  });
+
+  const allNodes = [...catNodes, ...postNodes];
+  const nodeIndex = new Map(allNodes.map((n, i) => [n.nodeId, i]));
+
+  const links: SimulationLinkDatum<SimNode>[] = posts.flatMap((post) =>
+    post.categories
+      .filter((catId) => nodeIndex.has(`cat-${catId}`))
+      .map((catId) => ({
+        source: nodeIndex.get(`post-${post.slug}`)!,
+        target: nodeIndex.get(`cat-${catId}`)!,
+      })),
+  );
+
+  const CATEGORY_CHARGE = -150;
+  const POST_CHARGE = CATEGORY_CHARGE / 3;
+
+  const sim = forceSimulation<SimNode>(allNodes)
+    .force(
+      "link",
+      forceLink<SimNode, SimulationLinkDatum<SimNode>>(links)
+        .distance(60)
+        .strength(0.6),
+    )
+    .force(
+      "charge",
+      forceManyBody<SimNode>().strength((d) =>
+        d.nodeType === "category" ? CATEGORY_CHARGE : POST_CHARGE,
+      ),
+    )
+    .force(
+      "collide",
+      forceCollide<SimNode>()
+        .radius((d) => d.radius + 8)
+        .strength(0.7),
+    )
+    .force("x", forceX<SimNode>(CENTER_X).strength(0.03))
+    .force("y", forceY<SimNode>(CENTER_Y).strength(0.03))
+    .stop();
+
+  for (let i = 0; i < SIM_TICKS; i++) {
+    sim.tick();
+  }
+
+  // Clamp to bounds
+  for (const node of allNodes) {
+    if (node.fx == null) {
+      node.x = clamp(node.x ?? CENTER_X, MARGIN, WIDTH - MARGIN);
     }
-
-    for (const node of initial) {
-      node.x = clamp(node.x * 0.92 + node.anchorX * 0.08, MARGIN, WIDTH - MARGIN);
-      node.y = clamp(node.y * 0.92 + node.anchorY * 0.08, MARGIN, HEIGHT - MARGIN);
+    if (node.fy == null) {
+      node.y = clamp(node.y ?? CENTER_Y, MARGIN, HEIGHT - MARGIN);
     }
   }
 
-  return initial;
-}
-
-export function ProductivityGraph({ categories, posts }: ProductivityGraphProps) {
-  const [focusedNode, setFocusedNode] = useState<FocusedNode>(null);
-
-  const categoryPositions = useMemo(
-    () =>
-      new Map(
-        categories.map((category, index) => [
-          category.id,
-          categoryPoint(index, categories.length),
-        ]),
-      ),
-    [categories],
+  const categoryPositions = new Map(
+    catNodes.map((n) => [
+      n.nodeId.slice(4), // strip "cat-" prefix
+      { x: round2(n.x ?? 0), y: round2(n.y ?? 0) },
+    ]),
   );
 
-  const positionedPosts = useMemo(
-    () => computePostLayout(posts, categoryPositions),
-    [posts, categoryPositions],
+  const postPositions = new Map(
+    postNodes.map((n) => [
+      n.nodeId.slice(5), // strip "post-" prefix
+      { x: round2(n.x ?? 0), y: round2(n.y ?? 0), radius: n.radius },
+    ]),
+  );
+
+  return { categoryPositions, postPositions };
+}
+
+export function ProductivityGraph({
+  categories,
+  posts,
+}: ProductivityGraphProps) {
+  const [focusedNode, setFocusedNode] = useState<FocusedNode>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Pan & zoom state
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+
+  const viewBox = useMemo(() => {
+    const w = WIDTH / zoom;
+    const h = HEIGHT / zoom;
+    const x = pan.x - (w - WIDTH) / 2;
+    const y = pan.y - (h - HEIGHT) / 2;
+    return `${round2(x)} ${round2(y)} ${round2(w)} ${round2(h)}`;
+  }, [pan, zoom]);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      // Only pan on primary button, and not when clicking a link
+      if (e.button !== 0) return;
+      const target = e.target as Element;
+      if (target.closest("a")) return;
+
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setIsDragging(true);
+      dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+    },
+    [pan],
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (!dragStart.current || !svgRef.current) return;
+
+      const svg = svgRef.current;
+      const rect = svg.getBoundingClientRect();
+      // Convert screen pixels to SVG units
+      const scaleX = (WIDTH / zoom) / rect.width;
+      const scaleY = (HEIGHT / zoom) / rect.height;
+
+      const dx = (e.clientX - dragStart.current.x) * scaleX;
+      const dy = (e.clientY - dragStart.current.y) * scaleY;
+
+      setPan({ x: dragStart.current.panX - dx, y: dragStart.current.panY - dy });
+    },
+    [zoom],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    setIsDragging(false);
+    dragStart.current = null;
+  }, []);
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent<SVGSVGElement>) => {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.92 : 1 / 0.92;
+      setZoom((z) => clamp(z * factor, 0.4, 4));
+    },
+    [],
+  );
+
+  const resetView = useCallback(() => {
+    setPan({ x: 0, y: 0 });
+    setZoom(1);
+  }, []);
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setIsFullscreen(false);
+  }, []);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen, handleEscape]);
+
+  const { categoryPositions, postPositions } = useMemo(
+    () => computeForceLayout(categories, posts),
+    [categories, posts],
   );
 
   const edges = useMemo(
     () =>
-      positionedPosts.flatMap((post) =>
+      posts.flatMap((post) =>
         post.categories
           .filter((categoryId) => categoryPositions.has(categoryId))
           .map((categoryId) => ({
@@ -173,158 +315,262 @@ export function ProductivityGraph({ categories, posts }: ProductivityGraphProps)
             categoryId,
           })),
       ),
-    [categoryPositions, positionedPosts],
-  );
-
-  const postsBySlug = useMemo(
-    () => new Map(positionedPosts.map((post) => [post.slug, post])),
-    [positionedPosts],
+    [categoryPositions, posts],
   );
 
   function edgeIsVisible(edge: { postSlug: string; categoryId: string }) {
-    if (!focusedNode) {
-      return true;
-    }
-    if (focusedNode.type === "post") {
-      return edge.postSlug === focusedNode.id;
-    }
+    if (!focusedNode) return true;
+    if (focusedNode.type === "post") return edge.postSlug === focusedNode.id;
     return edge.categoryId === focusedNode.id;
   }
 
   function categoryIsVisible(categoryId: string) {
-    if (!focusedNode) {
-      return true;
-    }
-    if (focusedNode.type === "category") {
-      return categoryId === focusedNode.id;
-    }
-    return positionedPosts
+    if (!focusedNode) return true;
+    if (focusedNode.type === "category") return categoryId === focusedNode.id;
+    return posts
       .find((post) => post.slug === focusedNode.id)
       ?.categories.includes(categoryId);
   }
 
   function postIsVisible(post: ProductivityGraphPost) {
-    if (!focusedNode) {
-      return true;
-    }
-    if (focusedNode.type === "post") {
-      return post.slug === focusedNode.id;
-    }
+    if (!focusedNode) return true;
+    if (focusedNode.type === "post") return post.slug === focusedNode.id;
     return post.categories.includes(focusedNode.id);
   }
 
-  return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto rounded border border-rule bg-background">
-        <svg
-          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          className="h-[560px] w-full min-w-[720px]"
-          role="img"
-          aria-label="Productivity graph connecting categories and active posts"
-        >
-          <rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="transparent" />
+  const svgContent = (
+    <svg
+      ref={svgRef}
+      viewBox={viewBox}
+      className={[
+        isFullscreen
+          ? "h-full w-full"
+          : "h-[560px] w-full min-w-[720px]",
+        isDragging ? "cursor-grabbing" : "cursor-grab",
+      ].join(" ")}
+      role="img"
+      aria-label="Productivity graph connecting categories and active posts"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onWheel={handleWheel}
+    >
+      <defs>
+        {posts.map((post) => {
+          const pos = postPositions.get(post.slug);
+          if (!pos || !post.image) return null;
+          return (
+            <clipPath key={`clip-${post.slug}`} id={`clip-${post.slug}`}>
+              <circle cx={pos.x} cy={pos.y} r={pos.radius} />
+            </clipPath>
+          );
+        })}
+      </defs>
 
-          {edges.map((edge) => {
-            const post = postsBySlug.get(edge.postSlug);
-            const categoryPointValue = categoryPositions.get(edge.categoryId);
-            if (!post || !categoryPointValue) {
-              return null;
+      <rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="transparent" />
+
+      {/* Edges */}
+      {edges.map((edge) => {
+        const postPos = postPositions.get(edge.postSlug);
+        const catPos = categoryPositions.get(edge.categoryId);
+        if (!postPos || !catPos) return null;
+
+        const visible = edgeIsVisible(edge);
+        return (
+          <line
+            key={edge.key}
+            x1={catPos.x}
+            y1={catPos.y}
+            x2={postPos.x}
+            y2={postPos.y}
+            stroke="var(--rule)"
+            strokeWidth={visible ? 1.6 : 1}
+            opacity={visible ? 1 : 0.22}
+          />
+        );
+      })}
+
+      {/* Category nodes */}
+      {categories.map((category) => {
+        const point = categoryPositions.get(category.id);
+        if (!point) return null;
+
+        const visible = categoryIsVisible(category.id);
+        const isFocused =
+          focusedNode?.type === "category" &&
+          focusedNode.id === category.id;
+        return (
+          <g
+            key={category.id}
+            onMouseEnter={() =>
+              setFocusedNode({ type: "category", id: category.id })
             }
+            onMouseLeave={() => setFocusedNode(null)}
+          >
+            <title>{`${category.label} — ${category.description}`}</title>
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r={isFocused ? 18 : CATEGORY_RADIUS}
+              fill={
+                isFocused ? "var(--foreground)" : "var(--background)"
+              }
+              stroke="var(--foreground)"
+              strokeWidth={1.3}
+              opacity={visible ? 1 : 0.28}
+            />
+            <text
+              x={point.x}
+              y={point.y + 33}
+              textAnchor="middle"
+              fontSize="12"
+              fill="var(--muted)"
+              opacity={visible ? 1 : 0.28}
+            >
+              {category.label}
+            </text>
+          </g>
+        );
+      })}
 
-            const visible = edgeIsVisible(edge);
-            return (
-              <line
-                key={edge.key}
-                x1={categoryPointValue.x}
-                y1={categoryPointValue.y}
-                x2={post.x}
-                y2={post.y}
-                stroke="var(--rule)"
-                strokeWidth={visible ? 1.6 : 1}
-                opacity={visible ? 1 : 0.22}
-              />
-            );
-          })}
+      {/* Post nodes */}
+      {posts.map((post) => {
+        const pos = postPositions.get(post.slug);
+        if (!pos) return null;
 
-          {categories.map((category) => {
-            const point = categoryPositions.get(category.id);
-            if (!point) {
-              return null;
+        const visible = postIsVisible(post);
+        const isFocused =
+          focusedNode?.type === "post" && focusedNode.id === post.slug;
+        const r = isFocused ? pos.radius + 1.5 : pos.radius;
+
+        return (
+          <a
+            key={post.slug}
+            href={withBasePath(`/blog/${post.slug}`)}
+            onMouseEnter={() =>
+              setFocusedNode({ type: "post", id: post.slug })
             }
-
-            const visible = categoryIsVisible(category.id);
-            const isFocused =
-              focusedNode?.type === "category" && focusedNode.id === category.id;
-            return (
-              <g
-                key={category.id}
-                onMouseEnter={() => setFocusedNode({ type: "category", id: category.id })}
-                onMouseLeave={() => setFocusedNode(null)}
-              >
+            onMouseLeave={() => setFocusedNode(null)}
+            onFocus={() =>
+              setFocusedNode({ type: "post", id: post.slug })
+            }
+            onBlur={() => setFocusedNode(null)}
+          >
+            <title>{post.title}</title>
+            {post.image ? (
+              <>
                 <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={isFocused ? 18 : 15}
-                  fill={isFocused ? "var(--foreground)" : "var(--background)"}
-                  stroke="var(--foreground)"
-                  strokeWidth={1.3}
-                  opacity={visible ? 1 : 0.28}
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={r}
+                  fill="var(--background)"
+                  stroke={
+                    isFocused ? "var(--foreground)" : "var(--rule)"
+                  }
+                  strokeWidth={isFocused ? 2 : 1.2}
+                  opacity={visible ? 1 : 0.24}
                 />
-                <text
-                  x={point.x}
-                  y={point.y + 33}
-                  textAnchor="middle"
-                  fontSize="12"
-                  fill="var(--muted)"
-                  opacity={visible ? 1 : 0.28}
-                >
-                  {category.label}
-                </text>
-              </g>
-            );
-          })}
-
-          {positionedPosts.map((post) => {
-            const visible = postIsVisible(post);
-            const isFocused = focusedNode?.type === "post" && focusedNode.id === post.slug;
-            return (
-              <a
-                key={post.slug}
-                href={withBasePath(`/blog/${post.slug}`)}
-                onMouseEnter={() => setFocusedNode({ type: "post", id: post.slug })}
-                onMouseLeave={() => setFocusedNode(null)}
-                onFocus={() => setFocusedNode({ type: "post", id: post.slug })}
-                onBlur={() => setFocusedNode(null)}
-              >
-                <title>{post.title}</title>
-                <circle
-                  cx={post.x}
-                  cy={post.y}
-                  r={isFocused ? post.radius + 1.5 : post.radius}
-                  fill={isFocused ? "var(--foreground)" : "var(--accent)"}
+                <image
+                  href={post.image}
+                  x={pos.x - pos.radius}
+                  y={pos.y - pos.radius}
+                  width={pos.radius * 2}
+                  height={pos.radius * 2}
+                  clipPath={`url(#clip-${post.slug})`}
+                  preserveAspectRatio="xMidYMid slice"
                   opacity={visible ? 0.92 : 0.24}
                 />
-                <text
-                  x={post.x}
-                  y={post.y - (post.radius + 7)}
-                  textAnchor="middle"
-                  fontSize={11 + normalizeSize(post.size)}
-                  fill="var(--foreground)"
-                  opacity={visible ? 1 : 0.28}
-                >
-                  {post.title}
-                </text>
-              </a>
-            );
-          })}
-        </svg>
+              </>
+            ) : (
+              <circle
+                cx={pos.x}
+                cy={pos.y}
+                r={r}
+                fill={
+                  isFocused ? "var(--foreground)" : "var(--accent)"
+                }
+                opacity={visible ? 0.92 : 0.24}
+              />
+            )}
+            <text
+              x={pos.x}
+              y={pos.y - (pos.radius + 7)}
+              textAnchor="middle"
+              fontSize={11 + normalizeSize(post.size)}
+              fill="var(--foreground)"
+              opacity={visible ? 1 : 0.28}
+            >
+              {post.title}
+            </text>
+          </a>
+        );
+      })}
+    </svg>
+  );
+
+  const isViewMoved = pan.x !== 0 || pan.y !== 0 || zoom !== 1;
+
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-background">
+        <div className="flex justify-end gap-4 px-4 py-3">
+          {isViewMoved && (
+            <button
+              type="button"
+              onClick={resetView}
+              className="text-sm text-muted hover:text-foreground"
+            >
+              Reset view
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(false)}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Exit fullscreen (Esc)
+          </button>
+        </div>
+        <div className="flex-1 px-4 pb-4">
+          {svgContent}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="relative left-1/2 right-1/2 -mx-[50vw] w-screen space-y-4 px-6 sm:px-8"
+    >
+      <div className="overflow-hidden rounded border border-rule bg-background">
+        {svgContent}
       </div>
 
-      <p className="text-sm text-muted">
-        Active productivity notes are shown as circles. Hover or focus a node to
-        isolate its
-        relationships.
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted">
+          Drag to pan, scroll to zoom. Hover a node to isolate its
+          relationships.
+        </p>
+        <div className="flex shrink-0 gap-4">
+          {isViewMoved && (
+            <button
+              type="button"
+              onClick={resetView}
+              className="text-sm text-muted hover:text-foreground"
+            >
+              Reset view
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(true)}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Fullscreen
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
