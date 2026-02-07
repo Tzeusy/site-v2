@@ -6,12 +6,15 @@ type PostLinkProps = {
   date: string;
 };
 
+const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "2-digit",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  }).format(new Date(date));
+  return DATE_FORMATTER.format(new Date(date));
 }
 
 export function PostLink({ slug, title, date }: PostLinkProps) {
