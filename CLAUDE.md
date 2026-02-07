@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Full rewrite of [tze.how](https://tze.how) — a personal site styled as an "Editorial Minimal" publication. Currently in **planning stage** with no application code yet. The README.md is the source-of-truth specification.
+Full rewrite of [tze.how](https://tze.how) — a personal site styled as an "Editorial Minimal" publication.
 
 ## Planned Tech Stack
 
@@ -15,7 +15,7 @@ Full rewrite of [tze.how](https://tze.how) — a personal site styled as an "Edi
 - **Blog:** MDX / markdown files in `content/blog/`, rendered at build time
 - **Deployment:** Vercel or GitHub Pages with static export
 
-## Commands (once scaffolded)
+## Commands
 
 ```bash
 bun install            # Install dependencies
@@ -24,12 +24,13 @@ bun build              # Production build
 bun lint               # Run linter
 ```
 
-## Planned Architecture
+## Architecture
 
 ```
 app/                    # Next.js App Router
 ├── layout.tsx          # Root layout (masthead, footer, theme toggle)
 ├── page.tsx            # Profile/home page (/)
+├── productivity/page.tsx # Productivity graph (/productivity)
 ├── blog/
 │   ├── page.tsx        # Blog index (/blog)
 │   └── [slug]/page.tsx # Individual post
@@ -73,6 +74,7 @@ bd sync                               # Sync with git
 Work is NOT done until pushed. Before ending any session:
 
 ```bash
+bun run lint              # Fix lint errors before committing
 git status                # Check changes
 git add <files>           # Stage code
 bd sync                   # Commit beads
