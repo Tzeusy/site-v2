@@ -20,12 +20,6 @@ export default function HomePage() {
           grow — the architectures that hold, the abstractions that bend, and
           the small decisions that compound over time.
         </p>
-        <p className="max-w-[65ch] text-pretty text-muted">
-          That curiosity has pulled me across reinforcement learning, robotics,
-          hardware design, blockchain analysis, and production infrastructure.
-          The common thread is the same question: what makes something work
-          reliably at the next order of magnitude?
-        </p>
       </section>
 
       <nav className="space-y-4 border-y border-rule py-8">

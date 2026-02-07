@@ -31,7 +31,7 @@ export default function AboutPage() {
       <header className="space-y-4">
         <p className="text-sm uppercase tracking-[0.08em] text-accent">About</p>
         <h1 className="text-balance text-4xl sm:text-5xl">
-          Composing systems from the ecosystem up.
+          Composing systems from the shoulders of giants.
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
           Singaporean engineer building transparent, powerful software by
@@ -62,9 +62,10 @@ export default function AboutPage() {
         <p className="max-w-[65ch] text-muted">
           Along the way I built across a wide surface: imitation-learning agents
           for OpenAI Gym, a ROS-controlled robotic barista, FPGA hardware games,
-          Ethereum compliance tooling, and food-delivery platforms. Each project
-          reinforced the same lesson — the best results come not from
-          reinventing, but from composing proven ecosystems with taste and care.
+          Ethereum compliance tooling, and food-delivery platforms. That
+          curiosity keeps pulling me into new domains — the common thread is
+          the same question: what makes something work reliably at the next
+          order of magnitude?
         </p>
         <p className="max-w-[65ch] text-muted">
           A highlight was the SUTD–MIT Global Leadership Programme, a ten-week
