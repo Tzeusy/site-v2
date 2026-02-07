@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 260" fill="none">
+  <style>
+    text { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+    .label { font-size: 13px; fill: #78716c; }
+    .node-label { font-size: 14px; fill: #1c1917; font-weight: 500; }
+    .title { font-size: 15px; fill: #1c1917; font-weight: 600; }
+  </style>
+
+  <!-- Title -->
+  <text x="360" y="28" text-anchor="middle" class="title">All dependencies healthy</text>
+
+  <!-- Client -->
+  <rect x="20" y="90" width="120" height="60" rx="6" stroke="#a8a29e" stroke-width="1.5" fill="#fafaf9"/>
+  <text x="80" y="125" text-anchor="middle" class="node-label">Client</text>
+
+  <!-- API Gateway -->
+  <rect x="200" y="90" width="120" height="60" rx="6" stroke="#a8a29e" stroke-width="1.5" fill="#fafaf9"/>
+  <text x="260" y="125" text-anchor="middle" class="node-label">API Gateway</text>
+
+  <!-- Service A -->
+  <rect x="400" y="50" width="120" height="60" rx="6" stroke="#16a34a" stroke-width="1.5" fill="#f0fdf4"/>
+  <text x="460" y="85" text-anchor="middle" class="node-label">Auth</text>
+  <circle cx="500" cy="65" r="5" fill="#16a34a"/>
+
+  <!-- Service B -->
+  <rect x="400" y="140" width="120" height="60" rx="6" stroke="#16a34a" stroke-width="1.5" fill="#f0fdf4"/>
+  <text x="460" y="175" text-anchor="middle" class="node-label">Orders</text>
+  <circle cx="500" cy="155" r="5" fill="#16a34a"/>
+
+  <!-- Database -->
+  <rect x="590" y="90" width="110" height="60" rx="6" stroke="#16a34a" stroke-width="1.5" fill="#f0fdf4"/>
+  <text x="645" y="125" text-anchor="middle" class="node-label">Database</text>
+  <circle cx="680" cy="105" r="5" fill="#16a34a"/>
+
+  <!-- Arrows -->
+  <line x1="140" y1="120" x2="196" y2="120" stroke="#a8a29e" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="320" y1="110" x2="396" y2="85" stroke="#a8a29e" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="320" y1="130" x2="396" y2="165" stroke="#a8a29e" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="520" y1="170" x2="586" y2="135" stroke="#a8a29e" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- Legend -->
+  <circle cx="240" cy="240" r="5" fill="#16a34a"/>
+  <text x="252" y="244" class="label">Healthy</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6" fill="#a8a29e"/>
+    </marker>
+  </defs>
+</svg>

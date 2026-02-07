@@ -9,7 +9,7 @@ export default function ResumePage() {
   return (
     <section className="space-y-8">
       <header className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.08em] text-muted">Resume</p>
+        <p className="text-sm uppercase tracking-[0.08em] text-accent">Resume</p>
         <h1 className="text-4xl sm:text-5xl">Curriculum vitae</h1>
         <p className="text-muted">
           A PDF copy is embedded below. You can also download it directly.

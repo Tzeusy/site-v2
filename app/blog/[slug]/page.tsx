@@ -90,7 +90,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {showToc ? (
         <nav className="space-y-2 border-y border-rule py-4">
-          <p className="text-sm uppercase tracking-[0.08em] text-muted">
+          <p className="text-sm uppercase tracking-[0.08em] text-accent">
             In this essay
           </p>
           <ol className="space-y-1 text-sm text-muted">
@@ -109,7 +109,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {relatedPosts.length > 0 ? (
         <section className="space-y-3 border-t border-rule pt-8">
-          <p className="text-sm uppercase tracking-[0.08em] text-muted">
+          <p className="text-sm uppercase tracking-[0.08em] text-accent">
             More on this topic
           </p>
           <ul className="space-y-1 text-sm">

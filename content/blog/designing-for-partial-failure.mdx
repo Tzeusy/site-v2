@@ -10,6 +10,20 @@ tags: ["sre", "systems-design"]
 Most incidents are not total outages. They are partial failures where one
 critical dependency goes brown while everything else keeps serving traffic.
 
+In a healthy system, every service responds within SLA and the gateway routes
+normally:
+
+![System architecture with all dependencies healthy](/images/blog/partial-failure-healthy.svg)
+
+When one dependency degrades, the blast radius depends entirely on how you
+designed for it. Without upfront planning, one brown service cascades into a full
+outage:
+
+<figure>
+  <img src="/images/blog/partial-failure-degraded.svg" alt="System architecture showing Orders service in a degraded state while Auth and Database remain healthy" />
+  <figcaption>The Orders service is down, but Auth and reads still work — if the gateway knows how to degrade gracefully.</figcaption>
+</figure>
+
 ## Define Degraded Modes Early
 
 Write degraded behavior in advance:

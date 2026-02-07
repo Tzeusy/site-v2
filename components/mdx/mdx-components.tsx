@@ -37,4 +37,21 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  img: ({ className = "", alt, ...props }) => (
+    <img
+      className={`my-6 w-full rounded-md border border-rule ${className}`}
+      alt={alt ?? ""}
+      loading="lazy"
+      {...props}
+    />
+  ),
+  figure: ({ className = "", ...props }) => (
+    <figure className={`my-8 ${className}`} {...props} />
+  ),
+  figcaption: ({ className = "", ...props }) => (
+    <figcaption
+      className={`mt-2 text-center text-sm text-muted ${className}`}
+      {...props}
+    />
+  ),
 };

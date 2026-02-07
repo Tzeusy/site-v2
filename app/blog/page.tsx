@@ -13,7 +13,7 @@ export default async function BlogIndexPage() {
   return (
     <section className="space-y-8">
       <header className="space-y-3">
-        <p className="text-sm uppercase tracking-[0.08em] text-muted">Blog</p>
+        <p className="text-sm uppercase tracking-[0.08em] text-accent">Blog</p>
         <h1 className="text-4xl sm:text-5xl">Table of contents</h1>
       </header>
 

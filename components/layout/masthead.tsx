@@ -2,7 +2,8 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navLinks = [
-  { href: "/", label: "Profile" },
+  { href: "/about", label: "About" },
+  { href: "/projects", label: "Projects" },
   { href: "/blog", label: "Blog" },
   { href: "/resume", label: "Resume" },
 ];
@@ -15,7 +16,7 @@ export function Masthead() {
           href="/"
           className="font-serif text-lg tracking-tight text-foreground no-underline hover:underline"
         >
-          TH <span className="text-muted">{"\u2014"} Software Engineer</span>
+          <span className="text-accent">TH</span> <span className="text-muted">{"\u2014"} Software Engineer</span>
         </Link>
         <nav className="flex items-center gap-4 text-sm text-muted sm:gap-5">
           {navLinks.map((link) => (

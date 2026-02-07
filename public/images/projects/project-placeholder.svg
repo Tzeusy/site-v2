@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Project placeholder image</title>
+  <desc id="desc">Neutral placeholder thumbnail used for projects without a dedicated cover image.</desc>
+  <rect width="1200" height="675" fill="#f5f5f4" />
+  <rect x="60" y="60" width="1080" height="555" fill="#fafaf9" stroke="#d6d3d1" stroke-width="2" />
+  <line x1="120" y1="250" x2="1080" y2="250" stroke="#d6d3d1" stroke-width="2" />
+  <line x1="120" y1="315" x2="860" y2="315" stroke="#d6d3d1" stroke-width="2" />
+  <line x1="120" y1="380" x2="760" y2="380" stroke="#d6d3d1" stroke-width="2" />
+  <text x="120" y="205" fill="#57534e" font-family="Georgia, serif" font-size="54">Project Notes</text>
+</svg>

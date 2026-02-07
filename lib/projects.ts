@@ -3,9 +3,16 @@ export type ProjectLink = {
   href?: string;
 };
 
+export type ProjectThumbnail = {
+  src: string;
+  alt: string;
+};
+
 export type ProjectEntry = {
   title: string;
   description: string;
+  blogSlug: string;
+  thumbnail: ProjectThumbnail;
   links: ProjectLink[];
 };
 
@@ -14,6 +21,11 @@ export const projects: ProjectEntry[] = [
     title: "OpenAI Car Racing",
     description:
       "Imitation learning for the OpenAI Gym car racing environment, with Layerwise Relevance Propagation to visualize model behavior.",
+    blogSlug: "openai-car-racing-adventures",
+    thumbnail: {
+      src: "/images/blog/openai-car-racing-adventures-0.jpg",
+      alt: "OpenAI car racing visualization thumbnail",
+    },
     links: [
       { label: "GitHub", href: "https://github.com/Tzeusy/RL_car" },
       { label: "Best Project Award" },
@@ -23,6 +35,11 @@ export const projects: ProjectEntry[] = [
     title: "Automated Barista",
     description:
       "Automating a Niryo One 6-axis robotic arm and coffee machine via ROS and microcontroller integrations for SUTD Open House 2020.",
+    blogSlug: "project-jessica",
+    thumbnail: {
+      src: "/images/blog/project-jessica-0.jpg",
+      alt: "Automated Barista robotic arm thumbnail",
+    },
     links: [
       {
         label: "Video",
@@ -35,18 +52,33 @@ export const projects: ProjectEntry[] = [
     title: "Ethereum Activity Analyzer",
     description:
       "Automated Ethereum address analysis for MAS compliance checks, behavior monitoring, and related address discovery.",
+    blogSlug: "ethereum-address-analyzer",
+    thumbnail: {
+      src: "/images/blog/ethereum-address-analyzer-0.jpg",
+      alt: "Ethereum Activity Analyzer thumbnail",
+    },
     links: [{ label: "Case study" }],
   },
   {
     title: "i3 Ricing",
     description:
       "A practical write-up on i3 tiling window manager customization for cleaner workflows and a more focused desktop environment.",
+    blogSlug: "setting-up-of-i3wm-ricing",
+    thumbnail: {
+      src: "/images/blog/setting-up-of-i3wm-ricing-0.jpg",
+      alt: "i3 desktop customization thumbnail",
+    },
     links: [{ label: "Write-up" }],
   },
   {
     title: "Handwaving Magicka",
     description:
       "Computer vision and emulated game controllers for casting spells in Magicka using hand gestures.",
+    blogSlug: "handwaving-magicka",
+    thumbnail: {
+      src: "/images/projects/project-placeholder.svg",
+      alt: "Handwaving Magicka project placeholder thumbnail",
+    },
     links: [
       {
         label: "GitHub",
@@ -58,6 +90,11 @@ export const projects: ProjectEntry[] = [
     title: "Badminton Court Bot",
     description:
       "Telegram bot that checks OnePA.sg court availability in one pass to remove manual slot-by-slot checking.",
+    blogSlug: "badminton-court-bot",
+    thumbnail: {
+      src: "/images/projects/project-placeholder.svg",
+      alt: "Badminton Court Bot project placeholder thumbnail",
+    },
     links: [
       {
         label: "GitHub",
@@ -69,18 +106,33 @@ export const projects: ProjectEntry[] = [
     title: "SUTD-MIT Global Leadership Programme",
     description:
       "Ten-week exchange building an electric boat to sail the Charles River in Boston.",
+    blogSlug: "sutd-mit-global-leadership-programme",
+    thumbnail: {
+      src: "/images/projects/project-placeholder.svg",
+      alt: "SUTD-MIT Global Leadership Programme placeholder thumbnail",
+    },
     links: [{ label: "Most Technically Challenging Boat" }],
   },
   {
     title: "Binary Sudoku",
     description:
       "8x8 Binary Sudoku implemented on a Mojo FPGA with programmable WS2812b LED hardware.",
+    blogSlug: "binary-sudoku",
+    thumbnail: {
+      src: "/images/projects/project-placeholder.svg",
+      alt: "Binary Sudoku project placeholder thumbnail",
+    },
     links: [{ label: "GitHub", href: "https://github.com/gabrielwong159/fpga" }],
   },
   {
     title: "Myx: Food Ordering",
     description:
       "Vue-based food delivery platform with customer and merchant interfaces, including merchant analytics workflows.",
+    blogSlug: "myx-food-ordering",
+    thumbnail: {
+      src: "/images/projects/project-placeholder.svg",
+      alt: "Myx food ordering project placeholder thumbnail",
+    },
     links: [{ label: "Project" }],
   },
 ];
