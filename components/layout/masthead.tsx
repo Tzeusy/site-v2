@@ -17,7 +17,7 @@ export function Masthead() {
           href="/"
           className="font-serif text-lg tracking-tight text-foreground no-underline hover:underline"
         >
-          <span className="text-accent">TH</span> <span className="text-muted">{"\u2014"} Software Engineer</span>
+          tze.how
         </Link>
         <nav className="flex items-center gap-4 text-sm text-muted sm:gap-5">
           {navLinks.map((link) => (
