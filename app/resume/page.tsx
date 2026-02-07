@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { withBasePath } from "@/lib/base-path";
 
 export const metadata: Metadata = {
   title: "Resume",
@@ -6,6 +7,8 @@ export const metadata: Metadata = {
 };
 
 export default function ResumePage() {
+  const resumePdfPath = withBasePath("/resume.pdf");
+
   return (
     <section className="space-y-8">
       <header className="space-y-3">
@@ -17,14 +20,14 @@ export default function ResumePage() {
       </header>
 
       <p>
-        <a href="/resume.pdf" download>
+        <a href={resumePdfPath} download>
           Download PDF
         </a>
       </p>
 
       <div className="overflow-hidden rounded-md border border-rule">
         <object
-          data="/resume.pdf"
+          data={resumePdfPath}
           type="application/pdf"
           width="100%"
           height="900"
@@ -36,7 +39,7 @@ export default function ResumePage() {
               instead.
             </p>
             <p>
-              <a href="/resume.pdf" download>
+              <a href={resumePdfPath} download>
                 Download resume.pdf
               </a>
             </p>

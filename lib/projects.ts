@@ -1,3 +1,5 @@
+import { withBasePath } from "@/lib/base-path";
+
 export type ProjectLink = {
   label: string;
   href?: string;
@@ -135,4 +137,10 @@ export const projects: ProjectEntry[] = [
     },
     links: [{ label: "Project" }],
   },
-];
+].map((project) => ({
+  ...project,
+  thumbnail: {
+    ...project.thumbnail,
+    src: withBasePath(project.thumbnail.src),
+  },
+}));

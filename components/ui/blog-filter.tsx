@@ -54,12 +54,10 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
     setSelectedTags([]);
   }
 
-  // Focus search input when dropdown opens; clear search when closed
+  // Focus search input when dropdown opens
   useEffect(() => {
     if (open) {
       requestAnimationFrame(() => searchRef.current?.focus());
-    } else {
-      setSearch("");
     }
   }, [open]);
 
@@ -72,6 +70,7 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
         !dropdownRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
+        setSearch("");
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -85,7 +84,15 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
           <div className="flex items-center gap-3 text-sm">
             <button
               type="button"
-              onClick={() => setOpen((prev) => !prev)}
+              onClick={() =>
+                setOpen((prev) => {
+                  const next = !prev;
+                  if (!next) {
+                    setSearch("");
+                  }
+                  return next;
+                })
+              }
               className="flex items-center gap-1.5 text-sm uppercase tracking-[0.08em] text-accent"
             >
               Categories

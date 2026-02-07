@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
+import { withBasePath } from "@/lib/base-path";
 
 const DEFAULT_MDX_IMAGE_WIDTH = 1200;
 const DEFAULT_MDX_IMAGE_HEIGHT = 630;
@@ -50,14 +51,21 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  img: ({ className = "", alt, width, height, ...props }) => {
+  img: ({ className = "", alt, width, height, src, ...props }) => {
     const resolvedWidth = parseDimension(width) ?? DEFAULT_MDX_IMAGE_WIDTH;
     const resolvedHeight = parseDimension(height) ?? DEFAULT_MDX_IMAGE_HEIGHT;
+    const resolvedSrc =
+      typeof src === "string" ? withBasePath(src) : src;
+
+    if (!resolvedSrc) {
+      return null;
+    }
 
     return (
       <Image
         className={`my-6 h-auto w-full rounded-md border border-rule ${className}`}
         alt={alt ?? ""}
+        src={resolvedSrc}
         width={resolvedWidth}
         height={resolvedHeight}
         sizes="100vw"

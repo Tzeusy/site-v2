@@ -6,6 +6,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import readingTime from "reading-time";
 import { mdxComponents } from "@/components/mdx/mdx-components";
+import { withBasePath } from "@/lib/base-path";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 
@@ -39,12 +40,49 @@ type RawFrontmatter = {
   tags?: unknown;
 };
 
+type HastNode = {
+  type?: string;
+  tagName?: string;
+  properties?: Record<string, unknown>;
+  children?: HastNode[];
+};
+
 const prettyCodeOptions = {
   theme: {
     dark: "github-dark",
     light: "github-light",
   },
 };
+
+function prefixRootRelativeUrls() {
+  const urlAttributes = ["src", "href", "poster", "srcSet"] as const;
+
+  function rewrite(value: unknown) {
+    if (typeof value !== "string") {
+      return value;
+    }
+    if (!value.startsWith("/")) {
+      return value;
+    }
+    return withBasePath(value);
+  }
+
+  function visit(node: HastNode) {
+    if (node.type === "element" && node.properties) {
+      for (const attr of urlAttributes) {
+        if (attr in node.properties) {
+          node.properties[attr] = rewrite(node.properties[attr]);
+        }
+      }
+    }
+
+    if (Array.isArray(node.children)) {
+      node.children.forEach((child) => visit(child));
+    }
+  }
+
+  return (tree: HastNode) => visit(tree);
+}
 
 function slugFromFileName(fileName: string) {
   return fileName.replace(/\.mdx?$/u, "");
@@ -137,9 +175,9 @@ export async function getAllPostSummaries(): Promise<BlogPostSummary[]> {
   return summaries
     .filter((summary): summary is BlogPostSummary => Boolean(summary))
     .sort(
-    (left, right) =>
-      new Date(right.date).getTime() - new Date(left.date).getTime(),
-  );
+      (left, right) =>
+        new Date(right.date).getTime() - new Date(left.date).getTime(),
+    );
 }
 
 export function filterPostSummariesByTag(
@@ -169,7 +207,11 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     options: {
       parseFrontmatter: false,
       mdxOptions: {
-        rehypePlugins: [rehypeSlug, [rehypePrettyCode, prettyCodeOptions]],
+        rehypePlugins: [
+          rehypeSlug,
+          prefixRootRelativeUrls,
+          [rehypePrettyCode, prettyCodeOptions],
+        ],
       },
     },
     components: mdxComponents,
