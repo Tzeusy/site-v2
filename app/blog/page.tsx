@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BlogFilter } from "@/components/ui/blog-filter";
-import { getAllPostSummaries } from "@/lib/blog";
+import { getPublishedPostSummaries } from "@/lib/blog";
 import type { BlogPostSummary } from "@/lib/blog";
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ function collectTagOptions(posts: BlogPostSummary[]) {
 }
 
 export default async function BlogIndexPage() {
-  const posts = await getAllPostSummaries();
+  const posts = await getPublishedPostSummaries();
   const tags = collectTagOptions(posts);
 
   return (

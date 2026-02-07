@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getAdjacentPosts,
-  getAllPostSummaries,
   getPostBySlug,
+  getPublishedPostSummaries,
   getPostSlugs,
 } from "@/lib/blog";
 
@@ -57,7 +57,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  const allPosts = await getAllPostSummaries();
+  const allPosts = await getPublishedPostSummaries();
   const { previousPost, nextPost } = await getAdjacentPosts(slug);
   const relatedPosts = allPosts
     .filter(

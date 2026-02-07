@@ -34,8 +34,8 @@ export default function HomePage() {
           linked project notes.
         </p>
         <p className="text-muted">
-          <Link href="/workflows">Workflows</Link> for tools, setup, and patterns I
-          keep coming back to.
+          <Link href="/productivity">Productivity</Link> for tools, workflows, and
+          patterns I keep coming back to.
         </p>
         <p className="text-muted">
           <Link href="/blog">Blog</Link> for long-form essays.

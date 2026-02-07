@@ -35,7 +35,13 @@ function normalizeFrontmatter(data, slug) {
     title: typeof data.title === "string" ? data.title : "Untitled post",
     summary: typeof data.summary === "string" ? data.summary : "",
     date: normalizeDate(data.date),
+    tags: Array.isArray(data.tags) ? data.tags.map((tag) => String(tag)) : [],
   };
+}
+
+function hasTag(tags, tag) {
+  const normalizedTag = tag.trim().toLowerCase();
+  return tags.some((item) => item.trim().toLowerCase() === normalizedTag);
 }
 
 async function getFeedPosts() {
@@ -55,9 +61,11 @@ async function getFeedPosts() {
     }),
   );
 
-  return posts.sort(
+  return posts
+    .filter((post) => !hasTag(post.tags, "draft"))
+    .sort(
     (left, right) => new Date(right.date).getTime() - new Date(left.date).getTime(),
-  );
+    );
 }
 
 function renderFeedXml(posts) {

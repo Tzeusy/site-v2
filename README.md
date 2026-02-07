@@ -33,6 +33,7 @@ app/                    # Next.js App Router
 ├── layout.tsx          # Root layout (masthead, footer, theme)
 ├── page.tsx            # Home
 ├── about/page.tsx      # About, bio, philosophy
+├── productivity/page.tsx # Productivity graph of active tooling notes
 ├── blog/
 │   ├── page.tsx        # Blog index
 │   └── [slug]/page.tsx # Individual post

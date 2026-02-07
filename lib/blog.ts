@@ -96,6 +96,33 @@ function slugify(input: string) {
     .replace(/\s+/gu, "-");
 }
 
+function normalizeTag(tag: string) {
+  return tag.trim().toLowerCase();
+}
+
+export function hasTag(tags: string[], tag: string) {
+  const normalizedTag = normalizeTag(tag);
+  return tags.some((item) => normalizeTag(item) === normalizedTag);
+}
+
+export function isDraftPost(post: Pick<BlogFrontmatter, "tags">) {
+  return hasTag(post.tags, "draft");
+}
+
+export function isActivePost(post: Pick<BlogFrontmatter, "tags">) {
+  return hasTag(post.tags, "active");
+}
+
+export function getPostSize(post: Pick<BlogFrontmatter, "tags">) {
+  const sizeTag = post.tags.find((tag) => /^size-[1-5]$/u.test(normalizeTag(tag)));
+  if (!sizeTag) {
+    return 2;
+  }
+
+  const parsed = Number.parseInt(sizeTag.slice(sizeTag.indexOf("-") + 1), 10);
+  return Number.isNaN(parsed) ? 2 : parsed;
+}
+
 function extractHeadings(source: string): BlogHeading[] {
   return source
     .split("\n")
@@ -180,6 +207,11 @@ export async function getAllPostSummaries(): Promise<BlogPostSummary[]> {
     );
 }
 
+export async function getPublishedPostSummaries(): Promise<BlogPostSummary[]> {
+  const posts = await getAllPostSummaries();
+  return posts.filter((post) => !isDraftPost(post));
+}
+
 export function filterPostSummariesByTag(
   posts: BlogPostSummary[],
   tag?: string,
@@ -188,9 +220,7 @@ export function filterPostSummariesByTag(
     return posts;
   }
 
-  return posts.filter((post) =>
-    post.tags.some((postTag) => postTag.toLowerCase() === tag.toLowerCase()),
-  );
+  return posts.filter((post) => hasTag(post.tags, tag));
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
@@ -227,7 +257,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 }
 
 export async function getAdjacentPosts(slug: string) {
-  const posts = await getAllPostSummaries();
+  const posts = await getPublishedPostSummaries();
   const currentIndex = posts.findIndex((post) => post.slug === slug);
 
   return {
