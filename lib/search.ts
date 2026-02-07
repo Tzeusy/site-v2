@@ -13,6 +13,7 @@ const staticPages: SearchEntry[] = [
   { type: "page", title: "Home", href: "/" },
   { type: "page", title: "About", href: "/about" },
   { type: "page", title: "Projects", href: "/projects" },
+  { type: "page", title: "Workflows", href: "/workflows" },
   { type: "page", title: "Blog", href: "/blog" },
   { type: "page", title: "Resume", href: "/resume" },
 ];
