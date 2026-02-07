@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
@@ -42,13 +42,24 @@ export function ThemeToggle() {
     localStorage.setItem(THEME_KEY, nextTheme);
   }
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "j") {
+        e.preventDefault();
+        handleToggle();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
   return (
     <button
       type="button"
       onClick={handleToggle}
       className="text-foreground"
-      aria-label="Toggle theme"
-      title="Toggle theme"
+      aria-label="Toggle theme (Cmd+J)"
+      title="Toggle theme (⌘J)"
     >
       <span suppressHydrationWarning>
         {theme === "dark" ? "\u2600" : "\u263e"}

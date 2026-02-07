@@ -11,14 +11,12 @@ export default function HomePage() {
   return (
     <article className="space-y-12">
       <section className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.08em] text-accent">Tze How</p>
+        {/* <p className="text-sm uppercase tracking-[0.08em] text-accent">Tze How</p> */}
         <h1 className="text-balance text-4xl sm:text-5xl">
-          Curious about everything that scales.
+          Welcome to my personal website!
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
-          Site Reliability Engineer at Citadel. I care deeply about how systems
-          grow — the architectures that hold, the abstractions that bend, and
-          the small decisions that compound over time.
+          My name's Tze How, and I'm currently a Site Reliability Engineer at Citadel's Enterprise Data team. I hope you learn something new here, and if you have any questions or want to chat about anything, feel free to reach out!
         </p>
       </section>
 
@@ -35,6 +33,18 @@ export default function HomePage() {
           <Link href="/blog">Blog</Link> for long-form essays.
         </p>
       </nav>
+
+      <section className="space-y-3">
+        <p className="text-sm uppercase tracking-[0.08em] text-accent">Shortcuts</p>
+        <p className="text-muted">
+          <kbd className="rounded border border-rule px-1.5 py-0.5 font-sans text-xs">⌘K</kbd>{" "}
+          for quick-search.
+        </p>
+        <p className="text-muted">
+          <kbd className="rounded border border-rule px-1.5 py-0.5 font-sans text-xs">⌘J</kbd>{" "}
+          to toggle night mode.
+        </p>
+      </section>
     </article>
   );
 }
