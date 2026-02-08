@@ -1,0 +1,74 @@
+---
+title: "Optimizing my BAVD Documentation"
+date: 2026-02-08
+summary: "Optimizing my research and documentation process when tracking my Bicuspid Aortic Valve"
+tags: ["health", "bavd", "research", "personal", "setup", "draft", "infra"]
+---
+
+# About
+
+This documents my personal setup to track my BAVD over time (See "My BAVD Journey"), managing it in as automated and useful a way as possible. Tragic news of a shoddy heart notwithstanding, my immediate next goal after finding out about the condition I had was to build a knowledge base and gaather statistics around the condition. The goal I had when setting out on this project were twofold:
+
+- What core metrics are necessary or useful, and how do I track these over time?
+- Given my lack of a medical background, how can I create a library of documentation and research that can best help myself with identifying symptoms, making judgment calls, and understanding my options?
+
+Fortunately, progress around LLMs really came to a head around the same period that my condition progressed to an 'elective intervention' level of criticality. That has made my research *a lot* easier in the past year.
+
+# Core Interfaces
+
+I've chosen two primary interfaces regarding management of my condition: A dedicated NotebookLM notebook, and a custom ChatGPT agent. Both of these receive the entirety of 'bibliography' (is this the right word?) around my condition; their implicit RAG ties in very well with their pre-trained knowledge on the topic.
+
+## LLMs
+
+Every single report and test result gets scanned and uploaded into the 'knowledge base' of the following LLM platforms, allowing LLMs to have access to the latest state of my reports.
+
+### NotebookLM
+
+![NotebookLM](/blog/2026-02-08-ricing-my-bavd-research/notebooklm.png)
+
+NotebookLM has allowed me to create a compounding knowledge base of all reports along with a means to track my latest status; keeping up with latest models and enabling Web search even allows me to keep a bead on the 'state of the art' for treatments.
+
+### Custom ChatGPT
+
+![Custom ChatGPT](/blog/2026-02-08-ricing-my-bavd-research/chatgpt.png)
+
+This is my day-to-day conversation partner when it comes to asking questions about my condition. I've set it up with a custom system prompt that encourages it to answer in a way that is both empathetic and medically accurate, while also citing sources from my uploaded documents.
+
+## Health Metrics
+
+In managing my condition I also want to keep track of these metrics over time:
+
+- Heart Rate
+- Blood Pressure
+- Height / Weight
+
+The solution I eventually ended up on was a combination of Home Assistant with InfluxDB, coordinating input from a variety of personal devices
+
+- [Withings BPM Connect Blood Pressure Monitor](https://www.withings.com/us/en/bpm-connect) with the [Withings Integration](https://www.home-assistant.io/integrations/withings/)
+- [Xiaomi Mi Body Composition Scale 2](https://www.mi.com/global/product/xiaomi-body-composition-scale-s400/) with the Xiaomi integration
+
+Having these two wired directly to Home Assistant also means that I get automatic uploads *out of the box* - All I need to do is measure daily.
+
+![Withings Data](image.png)
+
+![Xiaomi weighing scale data](image-1.png)
+
+I haven't figured out yet how to wire these up to an LLM on a live 'production' basis with memory; recent ideas like Moltbot have given me ideas but this hasn't concretized into anything yet.
+
+# Resources
+
+- [r/valvereplacement](https://www.reddit.com/r/valvereplacement) has been a *great* help and consolation; in fact this is where I got the idea to talk to Dr El-Hamamsy on the topic.
+- [heart-valve-surgery](https://www.heart-valve-surgery.com/) was pretty useful for research
+- [2025 ESC/EACTS Guidelines for the management of valvular heart disease
+](https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/valvular-heart-disease/) was what made me decide to commit to a surgery at the tender age of 30
+
+# How has this helped?
+
+Having my results uploaded gives me the ability to do lots of things of varying dubiousness in medical accuracy:
+
+- Drafting of emails and suggesting of questions to my doctor(s)
+- Suggestions on best practices and what to do and what not to do with various lifestyle choices in managing my condition
+- Explanation of symptoms, management strategies, and how these link to each other
+- Identifying key metrics in my 2d echo reports and MRI reports, and charting growth and variance over time
+  
+Ultimately the only 'legitimate' medical advice boils down to that given by actual doctors - but these tools together have given me a very good intuition of the space and of what doctors see when they look at my statistics and reports. 

@@ -118,10 +118,6 @@ export function isDraftPost(post: Pick<BlogFrontmatter, "tags">) {
   return hasTag(post.tags, "draft");
 }
 
-export function isActivePost(post: Pick<BlogFrontmatter, "tags">) {
-  return hasTag(post.tags, "active");
-}
-
 export function getPostSize(post: Pick<BlogFrontmatter, "tags">) {
   const sizeTag = post.tags.find((tag) => /^size-[1-5]$/u.test(normalizeTag(tag)));
   if (!sizeTag) {

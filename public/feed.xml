@@ -5,15 +5,8 @@
     <link>https://tze.how</link>
     <description>Long-form essays on reliability, systems, and software practice.</description>
     <language>en-us</language>
-    <lastBuildDate>Mon, 12 Jan 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 03 Dec 2025 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
-    <item>
-      <title>Understanding Async Boundaries</title>
-      <link>https://tze.how/blog/understanding-async-boundaries</link>
-      <guid isPermaLink="true">https://tze.how/blog/understanding-async-boundaries</guid>
-      <description>Where to draw asynchronous seams so failures stay local and behavior remains predictable.</description>
-      <pubDate>Mon, 12 Jan 2026 00:00:00 GMT</pubDate>
-    </item>
     <item>
       <title>Designing for Partial Failure</title>
       <link>https://tze.how/blog/designing-for-partial-failure</link>

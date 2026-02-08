@@ -8,7 +8,6 @@ import {
   getPostSize,
   getPostThumbnail,
   getPublishedPostSummaries,
-  isActivePost,
 } from "@/lib/blog";
 import { withBasePath } from "@/lib/base-path";
 import {
@@ -34,9 +33,17 @@ function buildProductivityGraphCategories(): ProductivityGraphCategory[] {
 export default async function ProductivityPage() {
   const graphCategories = buildProductivityGraphCategories();
   const allPosts = await getPublishedPostSummaries();
-  const activePosts = allPosts.filter((post) => isActivePost(post));
+  const infraPosts = allPosts.filter((post) => {
+    const hasInfraTag = post.tags.some(
+      (tag) => tag.trim().toLowerCase() === "infra",
+    );
+    const hasCategory = post.tags.some((tag) =>
+      productivityCategoryKeyMap.has(normalizeProductivityKey(tag)),
+    );
+    return hasInfraTag && hasCategory;
+  });
   const graphPosts: ProductivityGraphPost[] = await Promise.all(
-    activePosts.map(async (post) => {
+    infraPosts.map(async (post) => {
       const linkedCategoryIds = Array.from(
         new Set(
           post.tags
@@ -79,9 +86,9 @@ export default async function ProductivityPage() {
 
       {graphPosts.length === 0 ? (
         <p className="text-muted">
-          No active productivity posts yet. Add the{" "}
-          <code className="text-foreground">active</code> tag to a post to include it
-          here.
+          No productivity posts yet. Tag a post with{" "}
+          <code className="text-foreground">infra</code> and a category (e.g.{" "}
+          <code className="text-foreground">homelab</code>) to include it here.
         </p>
       ) : null}
     </article>
