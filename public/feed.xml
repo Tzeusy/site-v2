@@ -5,43 +5,8 @@
     <link>https://tze.how</link>
     <description>Long-form essays on reliability, systems, and software practice.</description>
     <language>en-us</language>
-    <lastBuildDate>Sat, 07 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 12 Jan 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
-    <item>
-      <title>Badminton Court Bot</title>
-      <link>https://tze.how/blog/badminton-court-bot</link>
-      <guid isPermaLink="true">https://tze.how/blog/badminton-court-bot</guid>
-      <description>A Telegram bot that checks OnePA.sg court availability in one pass, replacing manual slot-by-slot searching.</description>
-      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
-    <item>
-      <title>Binary Sudoku</title>
-      <link>https://tze.how/blog/binary-sudoku</link>
-      <guid isPermaLink="true">https://tze.how/blog/binary-sudoku</guid>
-      <description>8x8 Binary Sudoku implemented on a Mojo FPGA with constraint logic in hardware and WS2812b LED output.</description>
-      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
-    <item>
-      <title>Handwaving Magicka</title>
-      <link>https://tze.how/blog/handwaving-magicka</link>
-      <guid isPermaLink="true">https://tze.how/blog/handwaving-magicka</guid>
-      <description>Using computer vision and emulated controller input to cast spells in Magicka through real hand gestures.</description>
-      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
-    <item>
-      <title>Myx: Food Ordering</title>
-      <link>https://tze.how/blog/myx-food-ordering</link>
-      <guid isPermaLink="true">https://tze.how/blog/myx-food-ordering</guid>
-      <description>A Vue-based food delivery platform with customer and merchant interfaces, including merchant analytics workflows.</description>
-      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
-    <item>
-      <title>SUTD-MIT Global Leadership Programme</title>
-      <link>https://tze.how/blog/sutd-mit-global-leadership-programme</link>
-      <guid isPermaLink="true">https://tze.how/blog/sutd-mit-global-leadership-programme</guid>
-      <description>A ten-week build sprint designing and assembling an electric boat to sail the Charles River during the SUTD-MIT exchange.</description>
-      <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
     <item>
       <title>Understanding Async Boundaries</title>
       <link>https://tze.how/blog/understanding-async-boundaries</link>
