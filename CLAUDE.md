@@ -12,7 +12,7 @@ Full rewrite of [tze.how](https://tze.how) — a personal site styled as an "Edi
 - **Language:** TypeScript (strict mode)
 - **Styling:** Tailwind CSS 4.1 (v4 CSS-first config, NOT tailwind.config.js)
 - **Package manager:** Bun
-- **Blog:** MDX / markdown files in `content/blog/`, rendered at build time
+- **Blog:** MDX content bundles in `content/blog/{YYYY-MM-DD}-{slug}/`, rendered at build time
 - **Deployment:** Vercel or GitHub Pages with static export
 
 ## Commands
@@ -39,9 +39,10 @@ components/
 ├── layout/             # Masthead, Footer
 ├── ui/                 # ThemeToggle, ProjectEntry, PostLink
 └── mdx/                # MDX components (code blocks, callouts)
-content/blog/           # .md/.mdx blog posts with YAML frontmatter
+content/blog/           # Content bundles: {YYYY-MM-DD}-{slug}/index.mdx + assets
 lib/                    # Markdown processing, utilities
-public/                 # Static assets, resume.pdf
+scripts/                # Build-time helpers (copy-blog-assets, generate-feed)
+public/                 # Static assets, resume.pdf (public/blog/ is generated)
 tailwind.css            # Tailwind v4 entry point (NOT tailwind.config.js)
 ```
 
