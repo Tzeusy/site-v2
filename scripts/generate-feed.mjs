@@ -44,22 +44,27 @@ function hasTag(tags, tag) {
   return tags.some((item) => item.trim().toLowerCase() === normalizedTag);
 }
 
+function slugFromDirName(dirName) {
+  return dirName.replace(/^\d{4}-\d{2}-\d{2}-/u, "");
+}
+
 async function getFeedPosts() {
   const entries = await fs.readdir(BLOG_DIR, { withFileTypes: true });
-  const postFiles = entries
-    .filter((entry) => entry.isFile() && /\.mdx?$/u.test(entry.name))
-    .map((entry) => ({
-      slug: entry.name.replace(/\.mdx?$/u, ""),
-      filePath: path.join(BLOG_DIR, entry.name),
-    }));
+  const postDirs = entries.filter((entry) => entry.isDirectory());
 
   const posts = await Promise.all(
-    postFiles.map(async ({ slug, filePath }) => {
-      const source = await fs.readFile(filePath, "utf8");
-      const { data } = matter(source);
-      return normalizeFrontmatter(data, slug);
+    postDirs.map(async (entry) => {
+      const slug = slugFromDirName(entry.name);
+      const filePath = path.join(BLOG_DIR, entry.name, "index.mdx");
+      try {
+        const source = await fs.readFile(filePath, "utf8");
+        const { data } = matter(source);
+        return normalizeFrontmatter(data, slug);
+      } catch {
+        return null;
+      }
     }),
-  );
+  ).then((results) => results.filter(Boolean));
 
   return posts
     .filter((post) => !hasTag(post.tags, "draft"))

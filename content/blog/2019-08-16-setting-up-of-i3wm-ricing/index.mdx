@@ -21,7 +21,7 @@ Some of the benefits of i3wm:
 5. Extremely lightweight
 
 
-![undefined](/images/blog/setting-up-of-i3wm-ricing-1.png)
+![undefined](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-1.png)
 
 
 *The default i3 layout - not particularly aesthetic, but as many terminal users know functionality trumps form for many UI use cases*
@@ -33,7 +33,7 @@ Turns out, with an open source community one can take this basic window manager 
 ### Desktop Organization
 
 
-![undefined](/images/blog/setting-up-of-i3wm-ricing-2.png)
+![undefined](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-2.png)
 
 
 *Top Polybar: Currently playing, volume control, Internet statistics, Date/time, active programs*
@@ -42,7 +42,7 @@ Turns out, with an open source community one can take this basic window manager 
 The use case of the top polybar is mainly for utility: WiFi opens up my wicd-manager, Spotify control, and the like allowing me to control often-used processes without spawning new windows.
 
 
-![undefined](/images/blog/setting-up-of-i3wm-ricing-3.png)
+![undefined](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-3.png)
 
 
 *Bottom Polybar: Icons for window management, Disk usage, Memory usage, Temperature.*
@@ -51,7 +51,7 @@ The use case of the top polybar is mainly for utility: WiFi opens up my wicd-man
 Windows can be toggled by using \{Modifier Key\} + 1 to 10 for windows 1-10, or \{Mod1 + Mod2\} + 1 to 10 for windows 11 to 20. Switching between windows using the keyboard is much more efficient than even my previous Alt+Tab use case, as this provides instant selection of the desired window and standardizes the order of windows.
 
 
-![undefined](/images/blog/setting-up-of-i3wm-ricing-4.png)
+![undefined](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-4.png)
 
 
 Window management: Either tiled (tiles adjacent) or stacked, depending on use case. These can be stacked in a nested way (see [https://i3wm.org/docs/userguide.html#_tree](https://i3wm.org/docs/userguide.html#_tree)), for an even more compact experience
@@ -68,7 +68,7 @@ exec_always --no-startup-id feh --randomize --bg-fill ~/.images/wallpapers/*
 ```
 
 
-![Compton glass effect](/images/blog/setting-up-of-i3wm-ricing-5.png)
+![Compton glass effect](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-5.png)
 
 
 **Compton** is a compositor which allows for modification of window aesthetics - opacity, shadow, etc. which gives a beautiful blurred-glass effect (goal is to be hardly noticeable) on the background of windows.
@@ -85,7 +85,7 @@ For window icons, I use [Font Awesome](https://fontawesome.com/) - the same libr
 As an example of i3's customizability, I bound my Print-screen to grab a selection using **xclip** and **maim**, making specific-region-screencapping a one-click process.
 
 
-![xclip cut.gif](/images/blog/setting-up-of-i3wm-ricing-6.gif)
+![xclip cut.gif](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-6.gif)
 
 
 ```
@@ -93,7 +93,7 @@ bindsym Print exec --no-startup-id maim -s /tmp/tmp.png && xclip -selection clip
 ```
 
 
-![undefined](/images/blog/setting-up-of-i3wm-ricing-7.png)
+![undefined](/blog/setting-up-of-i3wm-ricing/setting-up-of-i3wm-ricing-7.png)
 
 
 Execution of new programs is controlled via Rofi, which indexes programs in the base Linux executable folders (/bin, /usr/bin, etc) and is accessible via Win+D ([https://github.com/davatorium/rofi](https://github.com/davatorium/rofi)). No more searching for programs via win+search which can take long seconds!

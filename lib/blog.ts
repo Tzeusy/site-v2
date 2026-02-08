@@ -9,7 +9,6 @@ import { mdxComponents } from "@/components/mdx/mdx-components";
 import { withBasePath } from "@/lib/base-path";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
-const BLOG_IMAGE_DIR = path.join(process.cwd(), "public/images/blog");
 
 export type BlogFrontmatter = {
   title: string;
@@ -85,8 +84,17 @@ function prefixRootRelativeUrls() {
   return (tree: HastNode) => visit(tree);
 }
 
-function slugFromFileName(fileName: string) {
-  return fileName.replace(/\.mdx?$/u, "");
+function slugFromDirName(dirName: string) {
+  return dirName.replace(/^\d{4}-\d{2}-\d{2}-/u, "");
+}
+
+/** Resolve a slug back to its content-bundle directory name. */
+async function findPostDir(slug: string): Promise<string | null> {
+  const entries = await fs.readdir(BLOG_DIR, { withFileTypes: true });
+  const match = entries.find(
+    (e) => e.isDirectory() && slugFromDirName(e.name) === slug,
+  );
+  return match ? match.name : null;
 }
 
 function slugify(input: string) {
@@ -159,7 +167,11 @@ function normalizeFrontmatter(frontmatter: RawFrontmatter) {
 }
 
 async function readPostFile(slug: string) {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
+  const dirName = await findPostDir(slug);
+  if (!dirName) {
+    return null;
+  }
+  const filePath = path.join(BLOG_DIR, dirName, "index.mdx");
   try {
     return await fs.readFile(filePath, "utf8");
   } catch (error) {
@@ -177,8 +189,8 @@ async function readPostFile(slug: string) {
 export async function getPostSlugs() {
   const entries = await fs.readdir(BLOG_DIR, { withFileTypes: true });
   return entries
-    .filter((entry) => entry.isFile() && /\.mdx?$/u.test(entry.name))
-    .map((entry) => slugFromFileName(entry.name));
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => slugFromDirName(entry.name));
 }
 
 export async function getAllPostSummaries(): Promise<BlogPostSummary[]> {
@@ -260,12 +272,17 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 export async function getPostThumbnail(
   slug: string,
 ): Promise<string | null> {
+  const dirName = await findPostDir(slug);
+  if (!dirName) {
+    return null;
+  }
+  const dir = path.join(BLOG_DIR, dirName);
   const extensions = ["jpg", "png", "gif", "webp"];
   for (const ext of extensions) {
-    const filePath = path.join(BLOG_IMAGE_DIR, `${slug}-0.${ext}`);
+    const filePath = path.join(dir, `thumbnail.${ext}`);
     try {
       await fs.access(filePath);
-      return `/images/blog/${slug}-0.${ext}`;
+      return `/blog/${slug}/thumbnail.${ext}`;
     } catch {
       // file doesn't exist, try next extension
     }

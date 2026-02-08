@@ -17,7 +17,7 @@ Traceto's parent company is Cynopsis Solutions, a KYC company providing services
 For the explicit purposes of this post, blockchains are in effect **public and decentralized** ledgers, with mechanisms (Proof of Work, Proof of Stake, etc.) built in to prevent tampering with the chain despite its decentralized nature. Of course, blockchains can be much more - like mediums for code execution or alternative stores of value (ERC20 tokens) via Ethereum smart contracts - but we'll stick to the original definition for simplicity's sake. Ledgers, being public, are now *inspectable* - all one has to do to work with this ledger is to download it and transform it into parseable data. 
 
 
-![undefined](/images/blog/ethereum-address-analyzer-1.jpg)
+![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-1.jpg)
 
 
 *[https://etherscan.io/](https://etherscan.io/) is a great place to interact with addresses, for example.*
@@ -35,7 +35,7 @@ Next came a source for much of the fun of the internship: experimenting with dat
 ##### Rule-based Checks
 
 
-![undefined](/images/blog/ethereum-address-analyzer-2.png)
+![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-2.png)
 
 
 Rule based checks are relatively straightforward - if/else conditions on an address-constrained subset of the database. A separate lookup table for historical ETH/USD price was necessary to track at-the-time USD values of transactions.
@@ -44,7 +44,7 @@ Rule based checks are relatively straightforward - if/else conditions on an addr
 ##### Transaction Pattern Visualization
 
 
-![undefined](/images/blog/ethereum-address-analyzer-3.png)
+![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-3.png)
 
 
 Some interesting information can be found here, with transaction patterns leading to potential implications regarding the timezone of the user (This user most likely sleeps between 12AM and 8AM, for example) and the purpose of the account (activity only constrained to business days, etc.)
@@ -53,7 +53,7 @@ Some interesting information can be found here, with transaction patterns leadin
 ##### Account Balance History
 
 
-![undefined](/images/blog/ethereum-address-analyzer-4.jpg)
+![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-4.jpg)
 
 
 *Just good due diligence to have, to be honest*
@@ -62,7 +62,7 @@ Some interesting information can be found here, with transaction patterns leadin
 ##### Transaction Value Distribution
 
 
-![undefined](/images/blog/ethereum-address-analyzer-5.jpg)
+![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-5.jpg)
 
 
 We want to have a good sensing of how much money the user tends to transact. Many patterns can emerge here, like general betting patterns (with standardized amounts of Eth, or low-Eth transactions indicating smart contract activity).

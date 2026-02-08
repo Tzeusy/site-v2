@@ -25,7 +25,7 @@ export const projects: ProjectEntry[] = [
       "Imitation learning for the OpenAI Gym car racing environment, with Layerwise Relevance Propagation to visualize model behavior.",
     blogSlug: "openai-car-racing-adventures",
     thumbnail: {
-      src: "/images/blog/openai-car-racing-adventures-0.jpg",
+      src: "/blog/openai-car-racing-adventures/thumbnail.jpg",
       alt: "OpenAI car racing visualization thumbnail",
     },
     links: [
@@ -39,7 +39,7 @@ export const projects: ProjectEntry[] = [
       "Automating a Niryo One 6-axis robotic arm and coffee machine via ROS and microcontroller integrations for SUTD Open House 2020.",
     blogSlug: "project-jessica",
     thumbnail: {
-      src: "/images/blog/project-jessica-0.jpg",
+      src: "/blog/project-jessica/thumbnail.jpg",
       alt: "Automated Barista robotic arm thumbnail",
     },
     links: [
@@ -56,7 +56,7 @@ export const projects: ProjectEntry[] = [
       "Automated Ethereum address analysis for MAS compliance checks, behavior monitoring, and related address discovery.",
     blogSlug: "ethereum-address-analyzer",
     thumbnail: {
-      src: "/images/blog/ethereum-address-analyzer-0.jpg",
+      src: "/blog/ethereum-address-analyzer/thumbnail.jpg",
       alt: "Ethereum Activity Analyzer thumbnail",
     },
     links: [{ label: "Case study" }],
@@ -67,7 +67,7 @@ export const projects: ProjectEntry[] = [
       "A practical write-up on i3 tiling window manager customization for cleaner workflows and a more focused desktop environment.",
     blogSlug: "setting-up-of-i3wm-ricing",
     thumbnail: {
-      src: "/images/blog/setting-up-of-i3wm-ricing-0.jpg",
+      src: "/blog/setting-up-of-i3wm-ricing/thumbnail.jpg",
       alt: "i3 desktop customization thumbnail",
     },
     links: [{ label: "Write-up" }],
