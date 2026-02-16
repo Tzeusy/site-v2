@@ -246,10 +246,10 @@ export function ProductivityGraph({
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
-      // Only pan on primary button, and not when clicking a link
+      // Only pan on primary button, and not when clicking a link or clickable node
       if (e.button !== 0) return;
       const target = e.target as Element;
-      if (target.closest("a")) return;
+      if (target.closest("a") || target.closest("[data-clickable]")) return;
 
       e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
@@ -479,6 +479,7 @@ export function ProductivityGraph({
         return (
           <g
             key={category.id}
+            data-clickable
             className="cursor-pointer"
             onMouseEnter={() =>
               setFocusedNode({ type: "category", id: category.id })
