@@ -7,6 +7,122 @@ tags: ["health", "bavd", "research", "personal", "draft"]
 
 # Introduction
 
-Mid-2021, when happily leveraging my company's sponsored annual full-health check-ups, one of my visits ended in awkwardness when the doctor conducting my Electrocardiogram said to me, "your heart sounds funny". Innumerable cardiologist conversations later, it has culminated in an eventual open-heart surgery conducted on 28 Jan 2026 in Mount Sinai.
+Mid-2021, when happily leveraging my company's sponsored annual full-health check-ups, one of my visits ended in awkwardness when the doctor said "your heart sounds funny", along with some ominous pronouncements about how my medical insurance going forward is going to be way more expensive. Innumerable cardiologist conversations later, it culminated in an eventual open-heart surgery conducted on in Mount Sinai.
 
-I wanted to spend some time to go through the journey, in case it helps anyone feel better about their own journeys through similar troubles.
+I wanted to spend some time to go through the journey, in case it helps better inform anyone about their own journeys through similar troubles; and perhaps give myself a bit of a retroactive look at my journey many years on.
+
+# The diagnosis
+
+It began with a regular health check-up electrocardiogram in 2021; the cardiologist looked at it, noticed oddness, then chose to listen to my heart and noted a 'murmur'. A followup 2D-echocardiogram confirmed that the likely cause was Bicuspid Aortic Valve Disease, with the cause of the 'wooshing' sound of my heart being the aortic regurgitation that was occuring with every pump.
+
+The issue with bicuspid valves is that it's pretty hard to get definitive imagery on a component so deeply nested within the body; hence the use of echocardiograms, which are essentially ultrasounds pointed at the heart. 2D echocardiograms essentially give us 2D 'cross-sections' of the heart, at a depth defined by the tools' controls; watching this cross-section over time allows one to 'see' the movement of the valve over the plane, and hence approximate the rough structure of said valve.
+
+(TODO: add pictures)
+
+# What is BAVD?
+
+This is a gist gathered over my conversations with doctors, my research, and conversations with various LLMs. In a nutshell:
+
+- Bicuspid Aortic Valve Disease is a congenital condition where instead of the typical three-leaflet setup in my aortic valve ("tricuspid"), there are only two leaflets in mine
+
+![BAVD summary, courtesy of Mayo Clinic](https://newsnetwork.mayoclinic.org/n7-mcnn/7bcc9724adf7b803/uploads/2019/05/a-medical-illustration-of-a-normal-tricupid-aortic-valve-and-a-bicuspid-aortic-valve-which-is-a-contenital-defect-original.jpg)
+
+- This leads to nontrivial amounts of **aortic regurgitation** - when the left ventricle 'pumps blood', some amount of it travels backwards, which can have several physiological downstream impacts:
+- The reduced blood flow can lead to the left ventricle enlarging over time ("LV dilation/remodeling"), as it 'gets stronger' to compensate for the reduced efficiency of each pump.
+- If the jet is eccentric (as mine was), it can cause micro-lesions within the heart.
+- Untreated, this can manifest in "shortness of breath, difficulty exercising, lightheadedness or chest pain.", culminating in possible heart failure after years of accumulated wear.
+
+# Markers and follow-ups
+
+With a bicuspid valve, there's no medicinal solution given that it's a structural issue with the heart; the only fixes possible are physical repair or replacements of the valve. According to my doctors, the aortic valve in particular is difficult to replace via catheter; the only recourse then is to perform **open heart surgery** (!!) to gain physical access to the valve itself. 
+
+Open heart surgery is obviously one of the most drastic actions; it's almost as 'invasive' as it gets for a surgery, the complexities and risks involve balloon, with full general anaesthesia involved and many, many things that can go wrong with all the body parts involved in the operation.
+
+{/* TODO: Wrap this in an italicized section, ideally colorized? */}
+These were the two main guidelines I referred to in my research, guiding the following notes:
+- [2025 ESC/EACTS Guidelines for the management of valvular heart disease](https://academic.oup.com/eurheartj/advance-article/doi/10.1093/eurheartj/ehaf194/8234488)
+- [2020 ACC/AHA Guideline for the Management of Patients With Valvular Heart Disease](https://www.ahajournals.org/doi/10.1161/CIR.0000000000000923)
+{/* END TODO */}
+
+Notwithstanding the severity of the surgery, the **remedies themselves** are not cure-all fixes. The options, as laid out by my Singaporean doctors, were both of *replacing* the valve entirely, with either of:
+
+1. A mechanical valve, which would require me to take blood thinners (warfarin) for the rest of my life.
+    - Mechanical valves, on the other hand, have a series of risks as well, with possible infections and complications with blood thinners making it essentially a 'lifelong-managed' condition, with still impacted reductions in life expectancy and quality-of-life.
+2. A biological valve (usually a pig valve).
+    - Biological valves were outright disqualified for me, as they tend to have durabilities of 7 to 10 years; given my age, the combination of this with the need for 'frequent' reinterventions (each subsequent surgery introduces higher risk) made it infeasible.
+
+Given the drastic downsides of both options, cardiologists generally tend to advocate the delaying of conducting surgery as long as possible. They generally use thresholds on a few markers to guide their decision on whether or not to intervene:
+
+- Ejection fraction: The estimated percentage of blood being successfully pumped with each contraction of the heart
+- Left ventricular diameter exceeding a certain threshold
+
+Given that my estimated regurgitation was 'mild-moderate' at the time of discovery (2021) and only progressing to 'moderate' up through 2024, I was content to manage the condition via periodic (6-month) followups with my cardiologist.
+
+# Escalation
+
+Unfortunately, there seemed to be notable progression in the rate of my regurgitation; having progressed from 'mild-moderate' in 2021 through to 'moderate' in 2024 and 'moderate-severe' in 2025, I got increasingly concerned about the condition. I'd consulted four different cardiologists in Singapore at this point, with the general consensus still being to delay as much as possible, given my EF and LV diameters still remaining within reasonable thresholds. 
+
+On the side, though, I was watching other online sources (notably, http://reddit.com/r/valvereplacement) on how others were handling similar conditions. This turned out to be influential; some surgeons' names frequently surfaced as being world-renowned for their experience, with some centers being reputed for their high volume of treatments of similar conditions. This, along with a fortuitiously timed work trip to New York City in September 2025, led to me scheduling a consult with Dr Ismail El-Hamamsy of Mount Sinai.
+
+{/* TODO: put in an italicized section */}
+Side segue - it was vital that I managed to extract my past medical history in the form of both reports (pdfs) and 2D echocardiogram data (DICOM); this allowed me to share details on tests across four hospitals with relatively little friction.
+{/* END TODO */}
+
+The initial consult was very informative; he has dealt with many patients of my age and profile, and ultimately his perspective was similar (delay as long as possible, watch markers for thresholds). However, the measure he used differed from that of my Singaporean cardiologists; he preferred to use Left Ventricular *Volume* (normalized), rather than the diameter. This is harder to track, as this requires undergoing of an MRI rather than a 2D echo (to give a bit of a benchmark; MRIs cost ~3-5x more in Singapore). He also offered an additional set of operative alternatives to the valve replacements: Aortic valve *repair*, and the *Ross procedure*:
+
+- Aortic valve repair involves repair of the existing valve with prosthetic material and a stent (TODO: word this a little more legibly). He estimated that statistically the durability of this would last about 20-25 years. 
+    - The viability of this is subject to conditions he can only tell during the surgery itself; it involves feeling the pliability of the valve, suitability of the existing leaflets, etc.
+- The Ross procedure involves replacing the aortic valve with the pulmonary valve, and replacing the pulmonary valve with that of a human cadaver's.
+    - This is one of the most 'complex' options given the multiple steps and components involved.
+    - Rough estimates of durability were about 15-20 years.
+    - Also not a given; highly subject to feasibility of the pulmonary valve as a substitute for the aortic valve
+    - Notably - Dr El-Hamamsy is world-renowned for this procedure, with Mt. Sinai being one of the highest volume centers in the world
+- If both the Repair and the Ross is infeasible, to fall back to a mechanical ON-X valve.
+
+Given the short-term nature of my visit, he sent me for an expedited MRI in Mt Sinai, which discovered that my left ventricular volume exceeded his thresholds by ~20%. In a hastily arranged subsequent MRI-review consult, he essentially suggested that the best way to optimize for lifespan and an active lifestyle was to intervene within the next 6 months, to give the left ventricle the best chance to remodel.
+
+All in all, his laid-out plan for me with the goal of me being able to blow my 90th birthday candle was:
+
+1. Repair of the valve, if possible (best case scenario)
+2. When the repair beings to fail OR the repair is deemed infeasible, conduct a Ross
+3. When the Ross fails, follow up with prosthetic or biological valves
+
+This would requires leaving a fair amount of trust to his subjective intra-operative decision making; I'd be going into surgery without a clear idea of the eventual decision made. Of note, however, was his confidence in the operation; maybe because of his experience (he's done ~1300+ similar operations), he was very confident in the chance of success, with an estimated lethality risk of &lt;0.5% (I don't know, this still seemed a little high to me, but I don't have a bayesian anchor for this number...) and a reasonably high estimation that a repair was possible based on the existing imagery he had. This dispelled to some degree my instinctive apprehension over the 'severity' of an *open heart surgery*.
+
+# The Dilemma 
+
+This left me with a bit of a dilemma; Singaporean and American opinions significantly diverged on both my *operative options* as well as *surgical timeline recommendations*. 
+
+I had several followup appointments with cardiologists in Singaporep; even a Ross specialist in Singapore (sadly, Singapore is a much smaller-volume center, but I felt it was good to get as many views as possible). The general consensus was:
+- Mt Sinai is a highly reputable center for heart surgeries; one even congratulated me and shook my hand (probably a little tongue-in-cheek?)
+- The cost is exorbitant compared to one in Singapore; honestly it was only possible because of my extremely generous company insurance coverage.
+- Their general recommendation is still to *delay* given that they are following existing established guidelines; but they acknowledge the experience/credibility of the alternative opinions.
+
+{/* TODO: Lay out an empty markdown table with columns Credibility/Risk/Lifestyle impact/Longevity and rows Singapore (Delay, mechanical valve) and NYC (Operate, Repair/Ross) */}
+
+I eventually decided to go ahead with Dr El-Hamamsy's recommendation, as:
+
+1. My opportunity to do the operation in NYC is limited to the period during which I have generous healthcare coverage; nothing's to say this will remain true 10 years later.
+1. Ross procedure statistics have showed similar-to-general-population life expectancies (though bit of a pinch of salt - Dr El-Hamamsy authored this paper)
+1. Intuitively, I generally agreed with the instinct for preventative measures, to intervene while there is a good chance the heart can remodel to safe thresholds
+1. Based one existing echocardiogram imagery, Dr El-Hamamsy was reasonably confident a repair was possible.
+
+# The Surgery
+
+I flew into NYC on 24th January with my parents and partner, checking into a hotel selected mostly with distance-to-hospital and availability-of-gyms in mind. We had a pre-consult with Dr El-Hamamsy and his team to get pre-clearance for surgery; there were prerequisites like blood tests, a chest X-Ray, screenings for Staphylococcus in my nose, and the like, and it was also a good chance for my family to meet the surgeon who'd be operating on their son.
+
+The pre-operative details were relatively easy to get through; mostly administrative in nature, so I won't delve too deep into the process. There were pretty uncomfortable pre-surgical wipedowns we had to do on the night-before and morning-of.
+
+# Recovery
+
+## Hospitalization
+
+## Post-discharge (NYC)
+
+A few purchases were really beneficial to my recovery in the hotel room:
+
+1. A wedge pillow
+
+# What else I need to worry about
+
+Funnily enough, dental health - infective endocarditis is a possible downstream complication with bicuspid valves and repairs/replacements. Things like antibiotic prophylaxis and daily flossing are now things constantly in the back of my mind whenever it comes to to worrying about my teeth.

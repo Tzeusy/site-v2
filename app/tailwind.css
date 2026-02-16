@@ -7,6 +7,16 @@
   --accent: #44403c;
   --link: #57534e;
   --rule: #e7e5e4;
+
+  --callout-info-bg: #eff6ff;
+  --callout-info-border: #bfdbfe;
+  --callout-tip-bg: #f0fdf4;
+  --callout-tip-border: #bbf7d0;
+  --callout-warning-bg: #fffbeb;
+  --callout-warning-border: #fde68a;
+  --callout-danger-bg: #fef2f2;
+  --callout-danger-border: #fecaca;
+
   color-scheme: light;
 }
 
@@ -28,6 +38,16 @@
   --accent: #d6d3d1;
   --link: #a8a29e;
   --rule: #292524;
+
+  --callout-info-bg: #1e2a3a;
+  --callout-info-border: #2a3f5f;
+  --callout-tip-bg: #1a2e1a;
+  --callout-tip-border: #2a4f2a;
+  --callout-warning-bg: #2a2416;
+  --callout-warning-border: #4f3f1a;
+  --callout-danger-bg: #2a1a1a;
+  --callout-danger-border: #4f2a2a;
+
   color-scheme: dark;
 }
 
