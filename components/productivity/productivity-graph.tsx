@@ -55,6 +55,7 @@ const CATEGORY_RING_RADIUS_Y = HEIGHT * 0.38;
 const MARGIN = 42;
 const CATEGORY_RADIUS = 15;
 const SIM_TICKS = 300;
+const POST_LABEL_ZOOM_THRESHOLD = 1.5;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -224,6 +225,8 @@ export function ProductivityGraph({
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
 
   const [focusedNode, setFocusedNode] = useState<FocusedNode>(null);
+  const [pinnedNode, setPinnedNode] = useState<FocusedNode>(null);
+  const activeNode = pinnedNode ?? focusedNode;
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Pan & zoom state
@@ -280,6 +283,8 @@ export function ProductivityGraph({
 
   const handleWheel = useCallback(
     (e: React.WheelEvent<SVGSVGElement>) => {
+      // Only zoom when Ctrl/Cmd is held; otherwise let page scroll normally
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.92 : 1 / 0.92;
       setZoom((z) => clamp(z * factor, 0.4, 4));
@@ -328,25 +333,81 @@ export function ProductivityGraph({
     [categoryPositions, activePosts],
   );
 
+  const focusedPost = useMemo(() => {
+    if (!activeNode || activeNode.type !== "post") return null;
+    return activePosts.find((p) => p.slug === activeNode.id) ?? null;
+  }, [activeNode, activePosts]);
+
+  const categoryLabelMap = useMemo(
+    () => new Map(categories.map((c) => [c.id, c.label])),
+    [categories],
+  );
+
   function edgeIsVisible(edge: { postSlug: string; categoryId: string }) {
-    if (!focusedNode) return true;
-    if (focusedNode.type === "post") return edge.postSlug === focusedNode.id;
-    return edge.categoryId === focusedNode.id;
+    if (!activeNode) return true;
+    if (activeNode.type === "post") return edge.postSlug === activeNode.id;
+    // Category focus: show all edges of posts linked to the focused category
+    const post = activePosts.find((p) => p.slug === edge.postSlug);
+    return !!post?.categories.includes(activeNode.id);
   }
 
   function categoryIsVisible(categoryId: string) {
-    if (!focusedNode) return true;
-    if (focusedNode.type === "category") return categoryId === focusedNode.id;
-    return activePosts
-      .find((post) => post.slug === focusedNode.id)
-      ?.categories.includes(categoryId);
+    if (!activeNode) return true;
+    if (activeNode.type === "post") {
+      return activePosts
+        .find((post) => post.slug === activeNode.id)
+        ?.categories.includes(categoryId);
+    }
+    // Category focus: show the focused category + depth-1 sibling categories
+    if (categoryId === activeNode.id) return true;
+    const linkedPosts = activePosts.filter((p) =>
+      p.categories.includes(activeNode.id),
+    );
+    return linkedPosts.some((p) => p.categories.includes(categoryId));
   }
 
   function postIsVisible(post: ProductivityGraphPost) {
-    if (!focusedNode) return true;
-    if (focusedNode.type === "post") return post.slug === focusedNode.id;
-    return post.categories.includes(focusedNode.id);
+    if (!activeNode) return true;
+    if (activeNode.type === "post") return post.slug === activeNode.id;
+    return post.categories.includes(activeNode.id);
   }
+
+  const hoverCard = focusedPost ? (
+    <div className="pointer-events-none absolute left-3 top-3 z-10 w-64 rounded border border-rule bg-background p-3 shadow-sm">
+      {focusedPost.image ? (
+        <img
+          src={focusedPost.image}
+          alt=""
+          className="mb-2 h-32 w-full rounded object-cover"
+        />
+      ) : null}
+      <p className="text-sm font-medium leading-snug text-foreground">
+        {focusedPost.title}
+        {draftSet.has(focusedPost.slug) ? (
+          <span className="ml-1.5 inline-block rounded bg-rule px-1.5 py-0.5 text-[10px] uppercase text-muted">
+            draft
+          </span>
+        ) : null}
+      </p>
+      {focusedPost.summary ? (
+        <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted">
+          {focusedPost.summary}
+        </p>
+      ) : null}
+      {focusedPost.categories.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {focusedPost.categories.map((catId) => (
+            <span
+              key={catId}
+              className="rounded bg-rule px-1.5 py-0.5 text-[10px] text-muted"
+            >
+              {categoryLabelMap.get(catId) ?? catId}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  ) : null;
 
   const svgContent = (
     <svg
@@ -395,10 +456,10 @@ export function ProductivityGraph({
             y1={catPos.y}
             x2={postPos.x}
             y2={postPos.y}
-            stroke="var(--rule)"
-            strokeWidth={visible ? 1.6 : 1}
+            stroke="var(--muted)"
+            strokeWidth={visible ? 1.4 : 1}
             strokeDasharray={edgeIsDraft ? "4 3" : undefined}
-            opacity={visible ? 1 : 0.22}
+            opacity={visible ? 0.38 : 0.12}
           />
         );
       })}
@@ -410,15 +471,27 @@ export function ProductivityGraph({
 
         const visible = categoryIsVisible(category.id);
         const isFocused =
-          focusedNode?.type === "category" &&
-          focusedNode.id === category.id;
+          activeNode?.type === "category" &&
+          activeNode.id === category.id;
+        const isPinned =
+          pinnedNode?.type === "category" &&
+          pinnedNode.id === category.id;
         return (
           <g
             key={category.id}
+            className="cursor-pointer"
             onMouseEnter={() =>
               setFocusedNode({ type: "category", id: category.id })
             }
             onMouseLeave={() => setFocusedNode(null)}
+            onClick={(e) => {
+              e.preventDefault();
+              setPinnedNode(
+                isPinned
+                  ? null
+                  : { type: "category", id: category.id },
+              );
+            }}
           >
             <title>{`${category.label} — ${category.description}`}</title>
             <circle
@@ -454,7 +527,7 @@ export function ProductivityGraph({
         const visible = postIsVisible(post);
         const isDraft = draftSet.has(post.slug);
         const isFocused =
-          focusedNode?.type === "post" && focusedNode.id === post.slug;
+          activeNode?.type === "post" && activeNode.id === post.slug;
         const r = isFocused ? pos.radius + 1.5 : pos.radius;
 
         return (
@@ -510,16 +583,18 @@ export function ProductivityGraph({
                 opacity={visible ? 0.92 : 0.24}
               />
             )}
-            <text
-              x={pos.x}
-              y={pos.y - (pos.radius + 7)}
-              textAnchor="middle"
-              fontSize={11 + normalizeSize(post.size)}
-              fill="var(--foreground)"
-              opacity={visible ? 1 : 0.28}
-            >
-              {post.title}
-            </text>
+            {zoom >= POST_LABEL_ZOOM_THRESHOLD ? (
+              <text
+                x={pos.x}
+                y={pos.y - (pos.radius + 7)}
+                textAnchor="middle"
+                fontSize={11 + normalizeSize(post.size)}
+                fill="var(--foreground)"
+                opacity={visible ? 1 : 0.28}
+              >
+                {post.title}
+              </text>
+            ) : null}
           </a>
         );
       })}
@@ -549,7 +624,8 @@ export function ProductivityGraph({
             Exit fullscreen (Esc)
           </button>
         </div>
-        <div className="flex-1 px-4 pb-4">
+        <div className="relative flex-1 px-4 pb-4">
+          {hoverCard}
           {svgContent}
         </div>
       </div>
@@ -558,7 +634,7 @@ export function ProductivityGraph({
 
   return (
     <div
-      className="relative left-1/2 right-1/2 -mx-[50vw] w-screen space-y-4 px-6 sm:px-8"
+      className="relative left-1/2 right-1/2 -ml-[40vw] w-[80vw] space-y-4"
     >
       {showDrafts ? (
         <p className="border border-rule px-4 py-2 text-sm text-muted">
@@ -566,14 +642,15 @@ export function ProductivityGraph({
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded border border-rule bg-background">
+      <div className="relative overflow-hidden rounded border border-rule bg-background">
+        {hoverCard}
         {svgContent}
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          Drag to pan, scroll to zoom. Hover a node to isolate its
-          relationships.
+          Drag to pan, Ctrl+scroll to zoom. Click a category to pin focus. Zoom
+          in to reveal post titles.
         </p>
         <div className="flex shrink-0 gap-4">
           {isViewMoved && (
