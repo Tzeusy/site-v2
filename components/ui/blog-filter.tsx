@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { PostLink } from "@/components/ui/post-link";
 import type { BlogPostSummary } from "@/lib/blog";
 
@@ -11,14 +12,22 @@ type TagOption = {
 
 type BlogFilterProps = {
   posts: BlogPostSummary[];
+  allPosts: BlogPostSummary[];
   tags: TagOption[];
+  draftSlugs: string[];
 };
 
 function normalizeTag(tag: string) {
   return tag.trim().toLowerCase();
 }
 
-export function BlogFilter({ posts, tags }: BlogFilterProps) {
+export function BlogFilter({ posts, allPosts, tags, draftSlugs }: BlogFilterProps) {
+  const searchParams = useSearchParams();
+  const showDrafts = searchParams.get("drafts") === "true";
+
+  const activePosts = showDrafts ? allPosts : posts;
+  const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
+
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -26,13 +35,13 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredPosts = useMemo(() => {
-    if (selectedTags.length === 0) return posts;
+    if (selectedTags.length === 0) return activePosts;
 
     const selectedSet = new Set(selectedTags);
-    return posts.filter((post) =>
+    return activePosts.filter((post) =>
       post.tags.some((tag) => selectedSet.has(normalizeTag(tag))),
     );
-  }, [posts, selectedTags]);
+  }, [activePosts, selectedTags]);
 
   const hasSelection = selectedTags.length > 0;
 
@@ -79,6 +88,12 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
 
   return (
     <div className="space-y-6">
+      {showDrafts ? (
+        <p className="border border-rule px-4 py-2 text-sm text-muted">
+          Draft preview mode — drafts are visible on this page.
+        </p>
+      ) : null}
+
       {tags.length > 0 ? (
         <div ref={dropdownRef} className="relative">
           <div className="flex items-center gap-3 text-sm">
@@ -109,8 +124,8 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
             </button>
             <span className="text-muted">
               {hasSelection
-                ? `Showing ${filteredPosts.length} of ${posts.length}`
-                : `${posts.length} essays`}
+                ? `Showing ${filteredPosts.length} of ${activePosts.length}`
+                : `${activePosts.length} essays`}
             </span>
             {hasSelection ? (
               <button
@@ -173,6 +188,7 @@ export function BlogFilter({ posts, tags }: BlogFilterProps) {
               title={post.title}
               date={post.date}
               readingTime={post.readingTime}
+              isDraft={draftSet.has(post.slug)}
             />
           ))}
         </ol>

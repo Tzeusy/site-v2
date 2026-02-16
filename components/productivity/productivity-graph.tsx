@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   forceSimulation,
   forceLink,
@@ -30,6 +31,8 @@ export type ProductivityGraphPost = {
 type ProductivityGraphProps = {
   categories: ProductivityGraphCategory[];
   posts: ProductivityGraphPost[];
+  allPosts: ProductivityGraphPost[];
+  draftSlugs: string[];
 };
 
 type FocusedNode =
@@ -212,7 +215,14 @@ function computeForceLayout(
 export function ProductivityGraph({
   categories,
   posts,
+  allPosts,
+  draftSlugs,
 }: ProductivityGraphProps) {
+  const searchParams = useSearchParams();
+  const showDrafts = searchParams.get("drafts") === "true";
+  const activePosts = showDrafts ? allPosts : posts;
+  const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
+
   const [focusedNode, setFocusedNode] = useState<FocusedNode>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -300,13 +310,13 @@ export function ProductivityGraph({
   }, [isFullscreen, handleEscape]);
 
   const { categoryPositions, postPositions } = useMemo(
-    () => computeForceLayout(categories, posts),
-    [categories, posts],
+    () => computeForceLayout(categories, activePosts),
+    [categories, activePosts],
   );
 
   const edges = useMemo(
     () =>
-      posts.flatMap((post) =>
+      activePosts.flatMap((post) =>
         post.categories
           .filter((categoryId) => categoryPositions.has(categoryId))
           .map((categoryId) => ({
@@ -315,7 +325,7 @@ export function ProductivityGraph({
             categoryId,
           })),
       ),
-    [categoryPositions, posts],
+    [categoryPositions, activePosts],
   );
 
   function edgeIsVisible(edge: { postSlug: string; categoryId: string }) {
@@ -327,7 +337,7 @@ export function ProductivityGraph({
   function categoryIsVisible(categoryId: string) {
     if (!focusedNode) return true;
     if (focusedNode.type === "category") return categoryId === focusedNode.id;
-    return posts
+    return activePosts
       .find((post) => post.slug === focusedNode.id)
       ?.categories.includes(categoryId);
   }
@@ -357,7 +367,7 @@ export function ProductivityGraph({
       onWheel={handleWheel}
     >
       <defs>
-        {posts.map((post) => {
+        {activePosts.map((post) => {
           const pos = postPositions.get(post.slug);
           if (!pos || !post.image) return null;
           return (
@@ -377,6 +387,7 @@ export function ProductivityGraph({
         if (!postPos || !catPos) return null;
 
         const visible = edgeIsVisible(edge);
+        const edgeIsDraft = draftSet.has(edge.postSlug);
         return (
           <line
             key={edge.key}
@@ -386,6 +397,7 @@ export function ProductivityGraph({
             y2={postPos.y}
             stroke="var(--rule)"
             strokeWidth={visible ? 1.6 : 1}
+            strokeDasharray={edgeIsDraft ? "4 3" : undefined}
             opacity={visible ? 1 : 0.22}
           />
         );
@@ -435,11 +447,12 @@ export function ProductivityGraph({
       })}
 
       {/* Post nodes */}
-      {posts.map((post) => {
+      {activePosts.map((post) => {
         const pos = postPositions.get(post.slug);
         if (!pos) return null;
 
         const visible = postIsVisible(post);
+        const isDraft = draftSet.has(post.slug);
         const isFocused =
           focusedNode?.type === "post" && focusedNode.id === post.slug;
         const r = isFocused ? pos.radius + 1.5 : pos.radius;
@@ -457,7 +470,7 @@ export function ProductivityGraph({
             }
             onBlur={() => setFocusedNode(null)}
           >
-            <title>{post.title}</title>
+            <title>{isDraft ? `${post.title} (draft)` : post.title}</title>
             {post.image ? (
               <>
                 <circle
@@ -469,6 +482,7 @@ export function ProductivityGraph({
                     isFocused ? "var(--foreground)" : "var(--rule)"
                   }
                   strokeWidth={isFocused ? 2 : 1.2}
+                  strokeDasharray={isDraft ? "4 3" : undefined}
                   opacity={visible ? 1 : 0.24}
                 />
                 <image
@@ -490,6 +504,9 @@ export function ProductivityGraph({
                 fill={
                   isFocused ? "var(--foreground)" : "var(--accent)"
                 }
+                stroke={isDraft ? "var(--muted)" : undefined}
+                strokeWidth={isDraft ? 1.2 : undefined}
+                strokeDasharray={isDraft ? "4 3" : undefined}
                 opacity={visible ? 0.92 : 0.24}
               />
             )}
@@ -543,6 +560,12 @@ export function ProductivityGraph({
     <div
       className="relative left-1/2 right-1/2 -mx-[50vw] w-screen space-y-4 px-6 sm:px-8"
     >
+      {showDrafts ? (
+        <p className="border border-rule px-4 py-2 text-sm text-muted">
+          Draft preview mode — draft nodes shown with dashed outlines.
+        </p>
+      ) : null}
+
       <div className="overflow-hidden rounded border border-rule bg-background">
         {svgContent}
       </div>

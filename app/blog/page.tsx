@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { BlogFilter } from "@/components/ui/blog-filter";
-import { getPublishedPostSummaries } from "@/lib/blog";
+import { getAllPostSummaries, isDraftPost } from "@/lib/blog";
 import type { BlogPostSummary } from "@/lib/blog";
 
 export const metadata: Metadata = {
@@ -31,8 +32,12 @@ function collectTagOptions(posts: BlogPostSummary[]) {
 }
 
 export default async function BlogIndexPage() {
-  const posts = await getPublishedPostSummaries();
-  const tags = collectTagOptions(posts);
+  const allPosts = await getAllPostSummaries();
+  const draftSlugs = allPosts
+    .filter((p) => isDraftPost(p))
+    .map((p) => p.slug);
+  const publishedPosts = allPosts.filter((p) => !isDraftPost(p));
+  const tags = collectTagOptions(allPosts);
 
   return (
     <section className="space-y-8">
@@ -41,8 +46,15 @@ export default async function BlogIndexPage() {
         <h1 className="text-4xl sm:text-5xl">Table of contents</h1>
       </header>
 
-      {posts.length > 0 ? (
-        <BlogFilter posts={posts} tags={tags} />
+      {allPosts.length > 0 ? (
+        <Suspense>
+          <BlogFilter
+            posts={publishedPosts}
+            allPosts={allPosts}
+            tags={tags}
+            draftSlugs={draftSlugs}
+          />
+        </Suspense>
       ) : (
         <p className="text-muted">No published essays yet.</p>
       )}

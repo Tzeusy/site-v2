@@ -4,10 +4,12 @@ import {
   type ProductivityGraphCategory,
   type ProductivityGraphPost,
 } from "@/components/productivity/productivity-graph";
+import { Suspense } from "react";
 import {
+  getAllPostSummaries,
   getPostSize,
   getPostThumbnail,
-  getPublishedPostSummaries,
+  isDraftPost,
 } from "@/lib/blog";
 import { withBasePath } from "@/lib/base-path";
 import {
@@ -30,43 +32,57 @@ function buildProductivityGraphCategories(): ProductivityGraphCategory[] {
   }));
 }
 
+function isInfraPost(post: { tags: string[] }) {
+  const hasInfraTag = post.tags.some(
+    (tag) => tag.trim().toLowerCase() === "infra",
+  );
+  const hasCategory = post.tags.some((tag) =>
+    productivityCategoryKeyMap.has(normalizeProductivityKey(tag)),
+  );
+  return hasInfraTag && hasCategory;
+}
+
+async function toGraphPost(post: {
+  slug: string;
+  title: string;
+  summary: string;
+  tags: string[];
+}): Promise<ProductivityGraphPost> {
+  const linkedCategoryIds = Array.from(
+    new Set(
+      post.tags
+        .map((tag) => normalizeProductivityKey(tag))
+        .flatMap((tag) => {
+          const category = productivityCategoryKeyMap.get(tag);
+          return category ? [normalizeProductivityKey(category.id)] : [];
+        }),
+    ),
+  );
+
+  const thumbnail = await getPostThumbnail(post.slug);
+
+  return {
+    slug: post.slug,
+    title: post.title,
+    summary: post.summary,
+    categories: linkedCategoryIds,
+    size: getPostSize(post),
+    image: thumbnail ? withBasePath(thumbnail) : undefined,
+  };
+}
+
 export default async function ProductivityPage() {
   const graphCategories = buildProductivityGraphCategories();
-  const allPosts = await getPublishedPostSummaries();
-  const infraPosts = allPosts.filter((post) => {
-    const hasInfraTag = post.tags.some(
-      (tag) => tag.trim().toLowerCase() === "infra",
-    );
-    const hasCategory = post.tags.some((tag) =>
-      productivityCategoryKeyMap.has(normalizeProductivityKey(tag)),
-    );
-    return hasInfraTag && hasCategory;
-  });
-  const graphPosts: ProductivityGraphPost[] = await Promise.all(
-    infraPosts.map(async (post) => {
-      const linkedCategoryIds = Array.from(
-        new Set(
-          post.tags
-            .map((tag) => normalizeProductivityKey(tag))
-            .flatMap((tag) => {
-              const category = productivityCategoryKeyMap.get(tag);
-              return category ? [normalizeProductivityKey(category.id)] : [];
-            }),
-        ),
-      );
+  const allPosts = await getAllPostSummaries();
 
-      const thumbnail = await getPostThumbnail(post.slug);
+  const allInfraPosts = allPosts.filter(isInfraPost);
+  const publishedInfraPosts = allInfraPosts.filter((p) => !isDraftPost(p));
+  const draftSlugs = allInfraPosts
+    .filter((p) => isDraftPost(p))
+    .map((p) => p.slug);
 
-      return {
-        slug: post.slug,
-        title: post.title,
-        summary: post.summary,
-        categories: linkedCategoryIds,
-        size: getPostSize(post),
-        image: thumbnail ? withBasePath(thumbnail) : undefined,
-      };
-    }),
-  );
+  const publishedGraphPosts = await Promise.all(publishedInfraPosts.map(toGraphPost));
+  const allGraphPosts = await Promise.all(allInfraPosts.map(toGraphPost));
 
   return (
     <article className="space-y-8">
@@ -82,9 +98,16 @@ export default async function ProductivityPage() {
         </p>
       </header>
 
-      <ProductivityGraph categories={graphCategories} posts={graphPosts} />
+      <Suspense>
+        <ProductivityGraph
+          categories={graphCategories}
+          posts={publishedGraphPosts}
+          allPosts={allGraphPosts}
+          draftSlugs={draftSlugs}
+        />
+      </Suspense>
 
-      {graphPosts.length === 0 ? (
+      {allGraphPosts.length === 0 ? (
         <p className="text-muted">
           No productivity posts yet. Tag a post with{" "}
           <code className="text-foreground">infra</code> and a category (e.g.{" "}

@@ -6,6 +6,7 @@ import {
   getPostBySlug,
   getPublishedPostSummaries,
   getPostSlugs,
+  isDraftPost,
 } from "@/lib/blog";
 
 type BlogPostPageProps = {
@@ -68,8 +69,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     .slice(0, 3);
   const showToc = post.headings.length >= 3;
 
+  const isDraft = isDraftPost(post);
+
   return (
     <article className="space-y-10">
+      {isDraft ? (
+        <p className="border border-rule px-4 py-2 text-sm text-muted">
+          This post is a draft and is not listed publicly.
+        </p>
+      ) : null}
+
       <header className="space-y-4">
         <p className="text-sm text-muted">
           <time dateTime={post.date}>{post.date}</time> · {post.readingTime}
