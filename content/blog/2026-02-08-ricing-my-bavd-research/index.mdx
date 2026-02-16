@@ -7,7 +7,7 @@ tags: ["health", "bavd", "research", "personal", "setup", "draft", "infra"]
 
 # About
 
-This documents my personal setup to track my BAVD over time (See "My BAVD Journey"), managing it in as automated and useful a way as possible. Tragic news of a shoddy heart notwithstanding, my immediate next goal after finding out about the condition I had was to build a knowledge base and gaather statistics around the condition. The goal I had when setting out on this project were twofold:
+This documents my personal setup to track my BAVD over time (See "My BAVD Journey"), managing it in as automated and useful a way as possible. Tragic news of a shoddy heart notwithstanding, my immediate next goal after finding out about the condition I had was to build a knowledge base and gather statistics around the condition. The goal I had when setting out on this project was twofold:
 
 - What core metrics are necessary or useful, and how do I track these over time?
 - Given my lack of a medical background, how can I create a library of documentation and research that can best help myself with identifying symptoms, making judgment calls, and understanding my options?
@@ -34,7 +34,7 @@ NotebookLM has allowed me to create a compounding knowledge base of all reports 
 
 This is my day-to-day conversation partner when it comes to asking questions about my condition. I've set it up with a custom system prompt that encourages it to answer in a way that is both empathetic and medically accurate, while also citing sources from my uploaded documents.
 
-![GPT-Generated Post-surgical summary of results](image-2.png)
+![GPT-Generated Post-surgical summary of results](gpt-surgical-summary.png)
 
 ## Health Metrics
 
@@ -44,16 +44,16 @@ In managing my condition I also want to keep track of these metrics over time:
 - Blood Pressure
 - Height / Weight
 
-The solution I eventually ended up on was a combination of Home Assistant with InfluxDB, coordinating input from a variety of personal devices
+The solution I eventually ended up on was a combination of Home Assistant with InfluxDB, coordinating input from a variety of personal devices:
 
 - [Withings BPM Connect Blood Pressure Monitor](https://www.withings.com/us/en/bpm-connect) with the [Withings Integration](https://www.home-assistant.io/integrations/withings/)
 - [Xiaomi Mi Body Composition Scale 2](https://www.mi.com/global/product/xiaomi-body-composition-scale-s400/) with the Xiaomi integration
 
 Having these two wired directly to Home Assistant also means that I get automatic uploads *out of the box* - All I need to do is measure daily.
 
-![Withings Data](image.png)
+![Withings Data](withings-data.png)
 
-![Xiaomi weighing scale data](image-1.png)
+![Xiaomi weighing scale data](xiaomi-scale-data.png)
 
 I haven't figured out yet how to wire these up to an LLM on a live 'production' basis with memory; recent ideas like Moltbot have given me ideas but this hasn't concretized into anything yet.
 
@@ -61,8 +61,7 @@ I haven't figured out yet how to wire these up to an LLM on a live 'production' 
 
 - [r/valvereplacement](https://www.reddit.com/r/valvereplacement) has been a *great* help and consolation; in fact this is where I got the idea to talk to Dr El-Hamamsy on the topic.
 - [heart-valve-surgery](https://www.heart-valve-surgery.com/) was pretty useful for research
-- [2025 ESC/EACTS Guidelines for the management of valvular heart disease
-](https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/valvular-heart-disease/) was what made me decide to commit to a surgery at the tender age of 30
+- [2025 ESC/EACTS Guidelines for the management of valvular heart disease](https://www.escardio.org/guidelines/clinical-practice-guidelines/all-esc-practice-guidelines/valvular-heart-disease/) was what made me decide to commit to a surgery at the tender age of 30
 
 # How has this helped?
 
