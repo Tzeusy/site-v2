@@ -54,17 +54,24 @@ const prettyCodeOptions = {
   },
 };
 
-function prefixRootRelativeUrls() {
+function resolveUrls(slug: string) {
   const urlAttributes = ["src", "href", "poster", "srcSet"] as const;
+
+  function isRelative(value: string) {
+    return !value.startsWith("/") && !value.startsWith("http") && !value.startsWith("#");
+  }
 
   function rewrite(value: unknown) {
     if (typeof value !== "string") {
       return value;
     }
-    if (!value.startsWith("/")) {
-      return value;
+    if (isRelative(value)) {
+      return withBasePath(`/blog/${slug}/${value}`);
     }
-    return withBasePath(value);
+    if (value.startsWith("/")) {
+      return withBasePath(value);
+    }
+    return value;
   }
 
   function visit(node: HastNode) {
@@ -248,7 +255,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       mdxOptions: {
         rehypePlugins: [
           rehypeSlug,
-          prefixRootRelativeUrls,
+          () => resolveUrls(slug),
           [rehypePrettyCode, prettyCodeOptions],
         ],
       },
