@@ -4,6 +4,7 @@ import matter from "gray-matter";
 import { compileMDX } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
+import remarkGfm from "remark-gfm";
 import readingTime from "reading-time";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 import { withBasePath } from "@/lib/base-path";
@@ -253,6 +254,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     options: {
       parseFrontmatter: false,
       mdxOptions: {
+        remarkPlugins: [remarkGfm],
         rehypePlugins: [
           rehypeSlug,
           () => resolveUrls(slug),
