@@ -89,22 +89,6 @@ export const projects: ProjectEntry[] = [
     ],
   },
   {
-    title: "Badminton Court Bot",
-    description:
-      "Telegram bot that checks OnePA.sg court availability in one pass to remove manual slot-by-slot checking.",
-    blogSlug: "badminton-court-bot",
-    thumbnail: {
-      src: "/images/badminton.jpg",
-      alt: "Badminton Court Bot court availability checker",
-    },
-    links: [
-      {
-        label: "GitHub",
-        href: "https://github.com/Tzeusy/badminton_court_bot",
-      },
-    ],
-  },
-  {
     title: "SUTD-MIT Global Leadership Programme",
     description:
       "Ten-week exchange building an electric boat to sail the Charles River in Boston.",

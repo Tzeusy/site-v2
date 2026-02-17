@@ -5,8 +5,29 @@
     <link>https://tze.how</link>
     <description>Long-form essays on reliability, systems, and software practice.</description>
     <language>en-us</language>
-    <lastBuildDate>Mon, 13 Sep 2021 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 08 Feb 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
+    <item>
+      <title>Homelab Motivations</title>
+      <link>https://tze.how/blog/homelab-motivations</link>
+      <guid isPermaLink="true">https://tze.how/blog/homelab-motivations</guid>
+      <description>Thoughts on why I spend so much time messing with my own homelab</description>
+      <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>My Open Heart Surgery</title>
+      <link>https://tze.how/blog/my-open-heart-surgery</link>
+      <guid isPermaLink="true">https://tze.how/blog/my-open-heart-surgery</guid>
+      <description>My trials and tribulations managing my bicuspid aortic valve over the past five years</description>
+      <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Optimizing my BAVD Documentation</title>
+      <link>https://tze.how/blog/ricing-my-bavd-research</link>
+      <guid isPermaLink="true">https://tze.how/blog/ricing-my-bavd-research</guid>
+      <description>Optimizing my research and documentation process when tracking my Bicuspid Aortic Valve</description>
+      <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Gems on the Internet</title>
       <link>https://tze.how/blog/gems-on-the-internet</link>
