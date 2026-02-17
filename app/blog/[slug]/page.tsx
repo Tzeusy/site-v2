@@ -117,7 +117,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         );
       })() : null}
 
-      <section className="space-y-4">{post.content}</section>
+      <section className="space-y-4 text-justify hyphens-auto">{post.content}</section>
 
       {relatedPosts.length > 0 ? (
         <section className="space-y-3 border-t border-rule pt-8">
