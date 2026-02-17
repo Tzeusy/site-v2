@@ -45,6 +45,7 @@ type HastNode = {
   type?: string;
   tagName?: string;
   properties?: Record<string, unknown>;
+  attributes?: { name: string; value: unknown }[];
   children?: HastNode[];
 };
 
@@ -80,6 +81,18 @@ function resolveUrls(slug: string) {
       for (const attr of urlAttributes) {
         if (attr in node.properties) {
           node.properties[attr] = rewrite(node.properties[attr]);
+        }
+      }
+    }
+
+    // MDX parses raw HTML tags as JSX nodes with attributes as an array
+    if (
+      (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") &&
+      Array.isArray(node.attributes)
+    ) {
+      for (const attr of node.attributes) {
+        if ((urlAttributes as readonly string[]).includes(attr.name) && typeof attr.value === "string") {
+          attr.value = rewrite(attr.value) as string;
         }
       }
     }
