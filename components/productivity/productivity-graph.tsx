@@ -283,8 +283,8 @@ export function ProductivityGraph({
 
   const handleWheel = useCallback(
     (e: React.WheelEvent<SVGSVGElement>) => {
-      // Only zoom when Ctrl/Cmd is held; otherwise let page scroll normally
-      if (!e.ctrlKey && !e.metaKey) return;
+      // Only zoom when Shift is held; otherwise let page scroll normally
+      if (!e.shiftKey) return;
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.92 : 1 / 0.92;
       setZoom((z) => clamp(z * factor, 0.4, 4));
@@ -650,7 +650,7 @@ export function ProductivityGraph({
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          Drag to pan, Ctrl+scroll to zoom. Click a category to pin focus. Zoom
+          Drag to pan, Shift+scroll to zoom. Click a category to pin focus. Zoom
           in to reveal post titles.
         </p>
         <div className="flex shrink-0 gap-4">
