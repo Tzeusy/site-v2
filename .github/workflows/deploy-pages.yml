@@ -28,6 +28,9 @@ jobs:
       - name: Build static site
         run: bun run build
 
+      - name: Disable Jekyll
+        run: touch out/.nojekyll
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -46,4 +49,4 @@ jobs:
           git add -A
           git commit -m "deploy from site-v2@${GITHUB_SHA::7}"
           GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
-            git push -f git@github.com:Tzeusy/tzeusy.github.io.git master
+            git push -f git@github.com:Tzeusy/tzeusy.github.io.git HEAD:main
