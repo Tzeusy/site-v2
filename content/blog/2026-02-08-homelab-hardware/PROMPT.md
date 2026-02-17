@@ -120,7 +120,13 @@ You don't need to cover every single product from the source docs. Focus on what
 
 ## Post-Writing
 
-After writing the post, run the `blogpost-editor` skill to check structure, assets, image paths, word count, language quality, and editorial standards. When the editor presents its findings, **autonomously apply all critical and recommended fixes** without waiting for user confirmation. For subjective suggestions (tone, flow, visual pacing), use your best judgement — apply the ones that clearly improve the post, skip the ones that are stylistic preference. Do not ask the user to review the editorial report; just fix what needs fixing and note what you changed.
+After writing the post, run two skills in sequence:
+
+1. **`blogpost-formatter`** — Run first. This handles mechanical fixes: frontmatter normalization, MDX safety, asset hygiene (orphan detection, generic filename renames), and TODO/placeholder sweeps. Apply all auto-fixes it produces. These are deterministic, non-editorial changes that harden the post for build.
+
+2. **`blogpost-editor`** — Run second, on the formatter's output. This performs the editorial review: structure, language quality, spelling, grammar, tone, and visual pacing. **Autonomously apply all critical and recommended fixes** without waiting for user confirmation. For subjective suggestions (tone, flow, visual pacing), use your best judgement — apply the ones that clearly improve the post, skip the ones that are stylistic preference.
+
+Do not ask the user to review either report; just fix what needs fixing and note what you changed.
 
 ## What NOT to Do
 
