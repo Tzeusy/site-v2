@@ -23,7 +23,7 @@ export type BlogPostSummary = BlogFrontmatter & {
 };
 
 export type BlogHeading = {
-  level: 2 | 3;
+  level: 1 | 2 | 3;
   text: string;
   id: string;
 };
@@ -138,10 +138,10 @@ export function getPostSize(post: Pick<BlogFrontmatter, "tags">) {
 function extractHeadings(source: string): BlogHeading[] {
   return source
     .split("\n")
-    .map((line) => line.match(/^(##|###)\s+(.+)$/u))
+    .map((line) => line.match(/^(#{1,3})\s+(.+)$/u))
     .filter((match): match is RegExpMatchArray => Boolean(match))
     .map((match) => ({
-      level: match[1] === "##" ? 2 : 3,
+      level: match[1].length as 1 | 2 | 3,
       text: match[2].trim(),
       id: slugify(match[2]),
     }));

@@ -97,22 +97,25 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         ) : null}
       </header>
 
-      {showToc ? (
-        <nav className="space-y-2 border-y border-rule py-4">
-          <p className="text-sm uppercase tracking-[0.08em] text-accent">
-            In this essay
-          </p>
-          <ol className="space-y-1 text-sm text-muted">
-            {post.headings.map((heading) => (
-              <li key={heading.id}>
-                <a href={`#${heading.id}`} className="no-underline hover:underline">
-                  {heading.text}
-                </a>
-              </li>
-            ))}
-          </ol>
-        </nav>
-      ) : null}
+      {showToc ? (() => {
+        const minLevel = Math.min(...post.headings.map((h) => h.level));
+        return (
+          <nav className="space-y-2 border-y border-rule py-4">
+            <p className="text-sm uppercase tracking-[0.08em] text-accent">
+              In this essay
+            </p>
+            <ol className="space-y-1 text-sm text-muted">
+              {post.headings.map((heading) => (
+                <li key={heading.id} style={{ paddingLeft: `${(heading.level - minLevel) * 1}rem` }}>
+                  <a href={`#${heading.id}`} className="no-underline hover:underline">
+                    {heading.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        );
+      })() : null}
 
       <section className="space-y-4">{post.content}</section>
 
