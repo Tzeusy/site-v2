@@ -11,7 +11,7 @@ The OpenAI Car Racing gym environment is a continuous control image-based task, 
 
 # Problem Scope
 
-![Introduction](/blog/openai-car-racing-adventures/openai-car-racing-adventures-1.png)
+![Introduction](/blog/openai-car-racing-adventures/environment-overview.png)
 
 The [OpenAI Car Racing Gym environment](https://gymnasium.farama.org/environments/box2d/car_racing/) takes in continuous input, with a 96x96 pixel state and a time-to-completion based reward scheme. New racing tracks are generated every iteration - these tracks include turns of varying sharpness, and will always loop back to their starting point in a counter-clockwise manner. The environment provides a -0.1 reward per frame and +1000/N for every track tile visited, where N is the total number of tiles in the track, imposing an upper bound of 1000 for possible rewards. The controls for the car are Left, Right, Accelerate, and Brake, which are non-exclusive. Additional indicators at the bottom of the screen provided include true speed, four ABS sensors, steering wheel position, and gyroscope.
 
@@ -19,7 +19,7 @@ The [OpenAI Car Racing Gym environment](https://gymnasium.farama.org/environment
 
 <div style={{ maxWidth: '30%' }}>
 
-![Neural network architecture](/blog/openai-car-racing-adventures/openai-car-racing-adventures-2.png)
+![Neural network architecture](/blog/openai-car-racing-adventures/neural-network-architecture.png)
 
 </div>
 
@@ -33,7 +33,7 @@ We implemented several Reinforcement Learning models in our initial exploration 
 
 The Q learning algorithm was our first approach as an initial exploration of the feasibility of solving the racing car problem. We implemented Double Deep Q Learning, notably to avoid the problem of overestimation caused by traditional Q Learning. Double Q Learning uses two Q-value estimators, using each to update the other. These independent estimators hence each reduce overestimation, avoiding the maximization bias of using only one Q value estimator.
 
-![Double Deep Q Learning](/blog/openai-car-racing-adventures/openai-car-racing-adventures-3.png)
+![Double Deep Q Learning](/blog/openai-car-racing-adventures/double-deep-q-learning.png)
 
 ## REINFORCE with Baseline
 
@@ -43,33 +43,33 @@ REINFORCE with Baseline was our second model of choice since it gives a n-step r
 
 We also chose to try out A2C as A2C tends to be more stable than Double Q Learning. On top of that, A2C updates the model more frequently than REINFORCE. A2C rolls an episode out for *t* max steps, updates the model, then continues again. We were hoping that by doing so, our model would be able to learn more quickly.
 
-![Advantage Actor-Critic](/blog/openai-car-racing-adventures/openai-car-racing-adventures-4.png)
+![Advantage Actor-Critic](/blog/openai-car-racing-adventures/advantage-actor-critic.png)
 
 ## Imitation Learning
 
 Taking inspiration from alternative approaches towards solving reinforcement learning problems, we decided to implement Imitation Learning as a possible way of developing an effective car racing model, as previous models yielded poor results after weeks of training. The Imitation Learning algorithm uses an underlying Double Deep Q Learning approach, but introduces an additional element via a suggested action involved. We suggest an implementation which penalizes the model reward attained if the choice taken is dissimilar to that suggested by the user. This penalty comes in the form of a modification to the reward initially yielded by the environment via direct addition or subtraction (e.g. a value of 5). This suggested implementation is as follows:
 
-![Imitation Learning](/blog/openai-car-racing-adventures/openai-car-racing-adventures-5.png)
+![Imitation Learning](/blog/openai-car-racing-adventures/imitation-learning.png)
 
 # Results
 
-![REINFORCE performance](/blog/openai-car-racing-adventures/openai-car-racing-adventures-6.png)
+![REINFORCE performance](/blog/openai-car-racing-adventures/reinforce-baseline-performance.png)
 
 *REINFORCE with Baseline: Peak mean-100 score of -200 (consistently fatal accidents)*
 
-![Advantage Actor-Critic Performance](/blog/openai-car-racing-adventures/openai-car-racing-adventures-7.png)
+![Advantage Actor-Critic Performance](/blog/openai-car-racing-adventures/a2c-performance.png)
 
 *Advantage Actor-Critic: Peak mean-100 score of -50 (One successful turn, or handles long initial stretch well)*
 
-![DDQN with RMSProp optimizer performance](/blog/openai-car-racing-adventures/openai-car-racing-adventures-8.png)
+![DDQN with RMSProp optimizer performance](/blog/openai-car-racing-adventures/ddqn-rmsprop-performance.png)
 
 *DDQN with RMSProp optimizer: Peak mean-100 score of 47.*
 
-![DDQN with ADAM optimizer performance](/blog/openai-car-racing-adventures/openai-car-racing-adventures-9.png)
+![DDQN with ADAM optimizer performance](/blog/openai-car-racing-adventures/ddqn-adam-performance.png)
 
 *DDQN with ADAM optimizer: Peak mean-100 score of 300, with occasional successful completions of the track (generally, scores >700 are successful runs)*
 
-![DDQN with Imitation Learning parameters performance](/blog/openai-car-racing-adventures/openai-car-racing-adventures-10.png)
+![DDQN with Imitation Learning parameters performance](/blog/openai-car-racing-adventures/ddqn-imitation-learning-performance.png)
 
 *DDQN with Imitation Learning parameters: Peak mean-100 score of 620, with far more frequent completions of the track, though still not consistent. Note the vastly reduced number of training episodes needed.*
 
@@ -79,7 +79,7 @@ Upon subsequent exploration of feasible model generation, we found that imitatio
 
 With our implementation of Imitation Learning, we were surprised at how quickly the model improved with the presence of human input. We hence decided to craft the user interfacing platform to show this phenomenon, allowing users to set hyperparameters before engaging in this imitation learning system. The intended user flow is for the user to input suggested actions for every frame of the episode, watching the user-guided model rapidly learn how to navigate on the racing track. Developments in the LRP can also be observed, showing the gradual appearance of notable features within the CNN over episodes. We observe that with this approach, the model is able to successfully make basic turns after only 10 episodes (about 5 minutes) of training, and able to complete the track after 20 to 25 (depending on the users). This is in strict contrast to the training time needed for other methods, such as DDQN, which required over 1400 episodes (about 12 hours) before the first successful completed run of the track.
 
-![Layer Wise Relevance Propagation Visualization](/blog/openai-car-racing-adventures/openai-car-racing-adventures-11.gif)
+![Layer Wise Relevance Propagation Visualization](/blog/openai-car-racing-adventures/lrp-visualization.gif)
 
 *Significant regions of the road are clearly highlighted in the LRP layer, applied to visualize the neural network's regions of significance*
 
