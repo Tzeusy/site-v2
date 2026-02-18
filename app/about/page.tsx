@@ -30,12 +30,12 @@ export default function AboutPage() {
     <article className="space-y-10">
       {/* Header */}
       <header className="space-y-4">
-        <p className="text-sm uppercase tracking-[0.08em] text-accent">About</p>
+        <p className="text-sm uppercase tracking-[0.08em] text-accent">About Me</p>
         <h1 className="text-balance text-4xl sm:text-5xl">
-          Composing systems from the shoulders of giants.
+          Tze How (Lee)
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
-          Singaporean engineer building transparent, powerful software by
+          I&rsquo;m a Singaporean software engineer building transparent, powerful software by
           standing on the shoulders of giants.
         </p>
         <p className="text-sm text-muted">
@@ -54,6 +54,12 @@ export default function AboutPage() {
       <section className="space-y-5 border-t border-rule pt-10">
         <h2 className="font-serif text-2xl">Bio</h2>
         <p className="max-w-[65ch] text-muted">
+          Today I work as a Site Reliability Engineer on Citadel&rsquo;s
+          Enterprise Data team, where I help serve reference data to the firm —
+          optimizing for both performance and correctness, and improving the data
+          platform that underpins the activities of the largest market-maker in the world.
+        </p>
+        <p className="max-w-[65ch] text-muted">
           I studied Computer Science and Design at the Singapore University of
           Technology and Design, where the curriculum pairs engineering rigour
           with design thinking. That combination shaped how I approach
@@ -61,44 +67,53 @@ export default function AboutPage() {
           not afterthoughts.
         </p>
         <p className="max-w-[65ch] text-muted">
-          Along the way I built across a wide surface: imitation-learning agents
-          for OpenAI Gym, a ROS-controlled robotic barista, FPGA hardware games,
-          Ethereum compliance tooling, and food-delivery platforms. That
-          curiosity keeps pulling me into new domains — the common thread is
-          the same question: what makes something work reliably at the next
-          order of magnitude?
+          I&rsquo;ve worked across a range of disciplines, mostly centered around Software Engineering
+          within finance. I maintain side hobbies in maintaining my own homelab and its
+          accompanying electronics and hardware, messing with things like CAD and 3D printing on and off.
         </p>
-        <p className="max-w-[65ch] text-muted">
-          A highlight was the SUTD–MIT Global Leadership Programme, a ten-week
-          exchange in Boston where our team designed and sailed an electric boat
-          on the Charles River. It was a crash course in cross-disciplinary
-          collaboration under real constraints.
-        </p>
-        <p className="max-w-[65ch] text-muted">
-          Today I work as a Site Reliability Engineer on Citadel&rsquo;s
-          Enterprise Data team, where I help serve reference data to the firm —
-          optimizing for both performance and correctness. The throughline from
-          school to work is the same: leverage what exists, make it visible, and
-          compose it into something greater than the parts.
-        </p>
+      </section>
+
+      {/* Education */}
+      <section className="space-y-5 border-t border-rule pt-10">
+        <h2 className="font-serif text-2xl">Education</h2>
+        <div className="space-y-6 max-w-[65ch]">
+          <div className="space-y-1">
+            <h3 className="font-serif text-lg text-foreground">
+              Singapore University of Technology and Design
+            </h3>
+            <p className="text-sm text-muted">B. Eng, Computer Science &middot; 2016–2019 &middot; CGPA 4.77/5.0 (summa cum laude)</p>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
+              <li>SUTD Distinguished Undergraduate Scholarship — 2 awarded in total cohort</li>
+              <li>SUTD Honours List (Dean&rsquo;s List equivalent) — every eligible year</li>
+              <li>Singapore Computer Systems Excellence Award</li>
+              <li>SUTD-MIT Global Leadership Program (Summer 2017)</li>
+            </ul>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-serif text-lg text-foreground">
+              NUS High School of Math and Science
+            </h3>
+            <p className="text-sm text-muted">NUS High Diploma (High Distinction) &middot; 2008–2013</p>
+            <p className="text-sm text-muted">Honours in Physics, Biology, Chemistry. Major in Mathematics.</p>
+          </div>
+        </div>
       </section>
 
       {/* Philosophy */}
       <section className="space-y-5 border-t border-rule pt-10">
         <h2 className="font-serif text-2xl">Philosophy</h2>
         <p className="max-w-[65ch] text-muted">
-          &ldquo;Leveraging ecosystems&rdquo; is not a euphemism for gluing
-          libraries together. It means choosing mature, well-understood
-          foundations — ROS for robotics, OpenAI Gym for RL, Telegram and
-          Etherscan APIs for bots and on-chain analysis — then composing them
-          into systems whose behaviour is transparent and whose seams are
-          visible.
+          I believe that technology grows like an ever-spreading tree, with
+          branches upon branches that are each unlocked by prior work over
+          generations. Standing on the shoulders of giants is a motif that
+          runs through how I approach software, and life in general.
         </p>
         <p className="max-w-[65ch] text-muted">
-          In SRE work the same principle holds: observability stacks,
-          infrastructure-as-code, and platform abstractions succeed when they
-          make the system legible, not when they hide complexity. Good software
-          lets you see through it.
+          I&rsquo;m a strong believer in the potential of technology to
+          improve peoples&rsquo; lives, and I think that the present is always the most
+          exciting time to be alive. I believe that the spirit of problem solving is
+          how we got to where we are as a species, and that maintaining a deep curiosity
+          about problems and ecosystems is how we thrive in tomorrow&rsquo;s world.
         </p>
       </section>
 
@@ -135,10 +150,18 @@ export default function AboutPage() {
 
       {/* Now */}
       <section className="space-y-5 border-t border-rule pt-10">
-        <h2 className="font-serif text-2xl">Now — February 2025</h2>
+        <h2 className="font-serif text-2xl">Current Projects — February 2026</h2>
         <ul className="max-w-[65ch] list-disc space-y-2 pl-5 text-muted">
           <li>Serving reference data to the firm on Citadel&rsquo;s Enterprise Data team.</li>
-          <li>Rebuilding this site with Next.js, Tailwind CSS v4, and MDX.</li>
+          <li>Messing around with the latest generation of LLMs, and experimenting with what&rsquo;s made possible with today&rsquo;s latest and greatest tools.</li>
+          <li>Rebuilding this site with Next.js, Tailwind CSS v4, and MDX. Or, well, architecting and writing blogposts for this site while Claude and Codex build it.</li>
+          <li>Exploring how close I am to my dream of building my own <a
+            href="https://github.com/Tzeusy/butlers/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Jarvis
+          </a></li>
           <li>Reading about systems thinking and software composition.</li>
         </ul>
       </section>
