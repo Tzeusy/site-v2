@@ -54,10 +54,10 @@ export default function AboutPage() {
       <section className="space-y-5 border-t border-rule pt-10">
         <h2 className="font-serif text-2xl">Bio</h2>
         <p className="max-w-[65ch] text-muted">
-          Today I work as a Site Reliability Engineer on Citadel&rsquo;s
-          Enterprise Data team, where I help serve reference data to the firm —
-          optimizing for both performance and correctness, and improving the data
-          platform that underpins the activities of the largest market-maker in the world.
+          I currently work as a Site Reliability Engineer on Citadel&rsquo;s
+          Enterprise Data team, where we serve reference data to the firm —
+          serving metadata on all tradeable instruments in a performant and auditable manner,
+          and underpinning the trading activities of the largest market-maker in the world.
         </p>
         <p className="max-w-[65ch] text-muted">
           I studied Computer Science and Design at the Singapore University of
@@ -70,6 +70,30 @@ export default function AboutPage() {
           I&rsquo;ve worked across a range of disciplines, mostly centered around Software Engineering
           within finance. I maintain side hobbies in maintaining my own homelab and its
           accompanying electronics and hardware, messing with things like CAD and 3D printing on and off.
+        </p>
+      </section>
+
+      {/* Philosophy */}
+      <section className="space-y-5 border-t border-rule pt-10">
+        <h2 className="font-serif text-2xl">Philosophy</h2>
+        <p className="max-w-[65ch] text-muted">
+          I believe that technology grows like an ever-spreading tree, with
+          branches upon branches that are each unlocked by prior work over
+          generations. Standing on the shoulders of giants is a motif that
+          runs through how I approach software, and life in general.
+        </p>
+        <p className="max-w-[65ch] text-muted">
+          I&rsquo;m a strong believer in the potential of technology to
+          improve peoples&rsquo; lives, and I think that the present is always the most
+          exciting time to be alive. I believe that the spirit of problem solving is
+          how we got to where we are as a species, and that maintaining a deep curiosity
+          about problems and ecosystems is how we thrive in tomorrow&rsquo;s world.
+        </p>
+        <p className="max-w-[65ch] text-muted">
+          I&rsquo;m also very curious about the fields of economics and game theory, especially
+          on how ideas here shape the world that we live in. There are several adjacent
+          spaces like effective altruism and rationality that I actively keep up with, and
+          learn from on a day to day basis.
         </p>
       </section>
 
@@ -97,24 +121,6 @@ export default function AboutPage() {
             <p className="text-sm text-muted">Honours in Physics, Biology, Chemistry. Major in Mathematics.</p>
           </div>
         </div>
-      </section>
-
-      {/* Philosophy */}
-      <section className="space-y-5 border-t border-rule pt-10">
-        <h2 className="font-serif text-2xl">Philosophy</h2>
-        <p className="max-w-[65ch] text-muted">
-          I believe that technology grows like an ever-spreading tree, with
-          branches upon branches that are each unlocked by prior work over
-          generations. Standing on the shoulders of giants is a motif that
-          runs through how I approach software, and life in general.
-        </p>
-        <p className="max-w-[65ch] text-muted">
-          I&rsquo;m a strong believer in the potential of technology to
-          improve peoples&rsquo; lives, and I think that the present is always the most
-          exciting time to be alive. I believe that the spirit of problem solving is
-          how we got to where we are as a species, and that maintaining a deep curiosity
-          about problems and ecosystems is how we thrive in tomorrow&rsquo;s world.
-        </p>
       </section>
 
       {/* Selected work */}
