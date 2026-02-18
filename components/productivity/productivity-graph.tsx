@@ -235,6 +235,7 @@ export function ProductivityGraph({
   const [zoom, setZoom] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
+  const pinchStart = useRef<{ dist: number; zoom: number } | null>(null);
 
   const viewBox = useMemo(() => {
     const w = WIDTH / zoom;
@@ -260,6 +261,8 @@ export function ProductivityGraph({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
+      // Skip single-finger pan while pinching
+      if (pinchStart.current) return;
       if (!dragStart.current || !svgRef.current) return;
 
       const svg = svgRef.current;
@@ -291,6 +294,35 @@ export function ProductivityGraph({
     },
     [],
   );
+
+  // Pinch-to-zoom for touch devices
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<SVGSVGElement>) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        pinchStart.current = { dist: Math.hypot(dx, dy), zoom };
+      }
+    },
+    [zoom],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent<SVGSVGElement>) => {
+      if (e.touches.length === 2 && pinchStart.current) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const scale = dist / pinchStart.current.dist;
+        setZoom(clamp(pinchStart.current.zoom * scale, 0.4, 4));
+      }
+    },
+    [],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    pinchStart.current = null;
+  }, []);
 
   const resetView = useCallback(() => {
     setPan({ x: 0, y: 0 });
@@ -416,9 +448,10 @@ export function ProductivityGraph({
       className={[
         isFullscreen
           ? "h-full w-full"
-          : "h-[560px] w-full min-w-[720px]",
+          : "h-[360px] w-full sm:h-[560px]",
         isDragging ? "cursor-grabbing" : "cursor-grab",
       ].join(" ")}
+      style={{ touchAction: "none" }}
       role="img"
       aria-label="Productivity graph connecting categories and active posts"
       onPointerDown={handlePointerDown}
@@ -426,6 +459,9 @@ export function ProductivityGraph({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       <defs>
         {activePosts.map((post) => {
@@ -635,7 +671,7 @@ export function ProductivityGraph({
 
   return (
     <div
-      className="relative left-1/2 right-1/2 -ml-[40vw] w-[80vw] space-y-4"
+      className="relative left-1/2 right-1/2 -ml-[50vw] w-[100vw] space-y-4 sm:-ml-[40vw] sm:w-[80vw]"
     >
       {showDrafts ? (
         <p className="border border-rule px-4 py-2 text-sm text-muted">
@@ -650,8 +686,9 @@ export function ProductivityGraph({
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          Drag to pan, Shift+scroll to zoom. Click a category to pin focus. Zoom
-          in to reveal post titles.
+          <span className="hidden sm:inline">Drag to pan, Shift+scroll to zoom.</span>
+          <span className="sm:hidden">Drag to pan, pinch to zoom.</span>
+          {" "}Click a category to pin focus. Zoom in to reveal post titles.
         </p>
         <div className="flex shrink-0 gap-4">
           {isViewMoved && (
