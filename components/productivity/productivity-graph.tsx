@@ -2,15 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  forceSimulation,
-  forceLink,
-  forceManyBody,
-  forceCollide,
-  forceX,
-  forceY,
-} from "d3-force";
-import type { SimulationNodeDatum, SimulationLinkDatum } from "d3-force";
+import Graph from "graphology";
 import { withBasePath } from "@/lib/base-path";
 
 export type ProductivityGraphCategory = {
@@ -40,22 +32,71 @@ type FocusedNode =
   | { type: "post"; id: string }
   | null;
 
-type SimNode = SimulationNodeDatum & {
-  nodeId: string;
-  nodeType: "category" | "post";
-  radius: number;
+type GraphNodeType = "category" | "post";
+
+type GraphNode = {
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  label: string;
+  nodeType: GraphNodeType;
+  slug?: string;
+  categoryId?: string;
+  summary?: string;
+  image?: string;
+  isDraft?: boolean;
+  hidden?: boolean;
+  zIndex?: number;
+  hovered?: boolean;
 };
 
-const WIDTH = 980;
-const HEIGHT = 620;
-const CENTER_X = WIDTH / 2;
-const CENTER_Y = HEIGHT / 2;
-const CATEGORY_RING_RADIUS_X = WIDTH * 0.4;
-const CATEGORY_RING_RADIUS_Y = HEIGHT * 0.38;
-const MARGIN = 42;
-const CATEGORY_RADIUS = 15;
-const SIM_TICKS = 300;
-const POST_LABEL_ZOOM_THRESHOLD = 1.5;
+type GraphEdge = {
+  size: number;
+  color: string;
+  postSlug: string;
+  categoryId: string;
+  isDraft: boolean;
+  type?: string;
+  curvature?: number;
+  hidden?: boolean;
+  zIndex?: number;
+};
+
+type GraphEngineModules = {
+  SigmaCtor: typeof import("sigma").default;
+  EdgeCurveProgram: typeof import("@sigma/edge-curve").default;
+  ForceAtlas2LayoutCtor: typeof import("graphology-layout-forceatlas2/worker").default;
+  forceAtlas2: typeof import("graphology-layout-forceatlas2").default;
+  noverlap: typeof import("graphology-layout-noverlap").default;
+};
+
+type SigmaCameraLike = {
+  animatedReset: (options: { duration: number }) => void;
+  animatedZoom: (options: { duration: number }) => void;
+  animatedUnzoom: (options: { duration: number }) => void;
+};
+
+type SigmaLike = {
+  refresh: () => void;
+  setGraph: (graph: Graph<GraphNode, GraphEdge>) => void;
+  getCamera: () => SigmaCameraLike;
+  on: (event: string, handler: (payload?: { node: string }) => void) => void;
+  kill: () => void;
+};
+
+const CATEGORY_RING_RADIUS = 9.5;
+const LAYOUT_DURATION_MS = 7000;
+const CATEGORY_SIZE = 9;
+const POST_BASE_SIZE = 4.8;
+const POST_LABEL_ZOOM_THRESHOLD = 1.35;
+const BACKGROUND_RGB = { r: 246, g: 246, b: 246 };
+const CATEGORY_COLOR = "#111827";
+const CATEGORY_COLOR_ACTIVE = "#0f172a";
+const POST_COLOR = "#2563eb";
+const POST_DRAFT_COLOR = "#94a3b8";
+const EDGE_COLOR = "#cbd5e1";
+const EDGE_DRAFT_COLOR = "#cbd5e1";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -65,12 +106,48 @@ function normalizeSize(size: number) {
   return clamp(Number.isFinite(size) ? Math.round(size) : 2, 1, 5);
 }
 
-function radiusForSize(size: number) {
-  return 8 + normalizeSize(size) * 2;
-}
-
 function round2(n: number) {
   return Math.round(n * 100) / 100;
+}
+
+function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return { r: 100, g: 100, b: 100 };
+  return {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  };
+}
+
+function rgbToHex(r: number, g: number, b: number) {
+  return (
+    "#" +
+    [r, g, b]
+      .map((x) => {
+        const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16);
+        return hex.length === 1 ? `0${hex}` : hex;
+      })
+      .join("")
+  );
+}
+
+function dimColor(hex: string, amount: number) {
+  const rgb = hexToRgb(hex);
+  return rgbToHex(
+    BACKGROUND_RGB.r + (rgb.r - BACKGROUND_RGB.r) * amount,
+    BACKGROUND_RGB.g + (rgb.g - BACKGROUND_RGB.g) * amount,
+    BACKGROUND_RGB.b + (rgb.b - BACKGROUND_RGB.b) * amount,
+  );
+}
+
+function brightenColor(hex: string, factor: number) {
+  const rgb = hexToRgb(hex);
+  return rgbToHex(
+    rgb.r + ((255 - rgb.r) * (factor - 1)) / factor,
+    rgb.g + ((255 - rgb.g) * (factor - 1)) / factor,
+    rgb.b + ((255 - rgb.b) * (factor - 1)) / factor,
+  );
 }
 
 function hashString(input: string) {
@@ -84,133 +161,107 @@ function hashString(input: string) {
 
 function categoryRingPoint(index: number, total: number) {
   const angle = -Math.PI / 2 + (index / Math.max(total, 1)) * Math.PI * 2;
-  return {
-    x: round2(CENTER_X + Math.cos(angle) * CATEGORY_RING_RADIUS_X),
-    y: round2(CENTER_Y + Math.sin(angle) * CATEGORY_RING_RADIUS_Y),
-  };
+  return { x: round2(Math.cos(angle) * CATEGORY_RING_RADIUS), y: round2(Math.sin(angle) * CATEGORY_RING_RADIUS) };
 }
 
-type LayoutResult = {
-  categoryPositions: Map<string, { x: number; y: number }>;
-  postPositions: Map<string, { x: number; y: number; radius: number }>;
+function nodeIdForCategory(id: string) {
+  return `cat:${id}`;
+}
+
+function nodeIdForPost(slug: string) {
+  return `post:${slug}`;
+}
+
+function focusFromNodeId(nodeId: string): FocusedNode {
+  if (nodeId.startsWith("cat:")) return { type: "category", id: nodeId.slice(4) };
+  if (nodeId.startsWith("post:")) return { type: "post", id: nodeId.slice(5) };
+  return null;
+}
+
+function nodeIdFromFocus(node: FocusedNode) {
+  if (!node) return null;
+  return node.type === "category" ? nodeIdForCategory(node.id) : nodeIdForPost(node.id);
+}
+
+type GraphBuildResult = {
+  graph: Graph<GraphNode, GraphEdge>;
 };
 
-function computeForceLayout(
+function buildGraph(
   categories: ProductivityGraphCategory[],
   posts: ProductivityGraphPost[],
-): LayoutResult {
-  const catNodes: SimNode[] = categories.map((cat, i) => {
+  draftSet: Set<string>,
+): GraphBuildResult {
+  const graph = new Graph<GraphNode, GraphEdge>();
+  const categoryPositions = new Map<string, { x: number; y: number }>();
+
+  categories.forEach((cat, i) => {
     const pt = categoryRingPoint(i, categories.length);
-    return {
-      nodeId: `cat-${cat.id}`,
-      nodeType: "category" as const,
+    categoryPositions.set(cat.id, pt);
+    const nodeId = nodeIdForCategory(cat.id);
+    graph.addNode(nodeId, {
       x: pt.x,
       y: pt.y,
-      fx: pt.x,
-      fy: pt.y,
-      radius: CATEGORY_RADIUS,
-    };
+      size: CATEGORY_SIZE,
+      color: CATEGORY_COLOR,
+      label: cat.label,
+      nodeType: "category",
+      categoryId: cat.id,
+    });
   });
 
-  const catIndexById = new Map(catNodes.map((n, i) => [n.nodeId, i]));
-
-  const postNodes: SimNode[] = posts.map((post) => {
-    const linkedCatNodes = post.categories
-      .map((catId) => catNodes[catIndexById.get(`cat-${catId}`) ?? -1])
-      .filter(Boolean);
+  posts.forEach((post) => {
+    const linkedCategoryPositions = post.categories
+      .map((categoryId) => categoryPositions.get(categoryId))
+      .filter(Boolean) as { x: number; y: number }[];
 
     const cx =
-      linkedCatNodes.length > 0
-        ? linkedCatNodes.reduce((s, n) => s + (n.x ?? CENTER_X), 0) /
-          linkedCatNodes.length
-        : CENTER_X;
+      linkedCategoryPositions.length > 0
+        ? linkedCategoryPositions.reduce((sum, p) => sum + p.x, 0) / linkedCategoryPositions.length
+        : 0;
     const cy =
-      linkedCatNodes.length > 0
-        ? linkedCatNodes.reduce((s, n) => s + (n.y ?? CENTER_Y), 0) /
-          linkedCatNodes.length
-        : CENTER_Y;
+      linkedCategoryPositions.length > 0
+        ? linkedCategoryPositions.reduce((sum, p) => sum + p.y, 0) / linkedCategoryPositions.length
+        : 0;
 
-    // Deterministic jitter from slug hash
     const h = hashString(post.slug);
     const angle = ((h % 360) * Math.PI) / 180;
-    const jitter = 10 + (h % 30);
+    const jitter = 0.8 + (h % 40) / 12;
+    const isDraft = draftSet.has(post.slug);
+    const nodeId = nodeIdForPost(post.slug);
 
-    return {
-      nodeId: `post-${post.slug}`,
-      nodeType: "post" as const,
+    graph.addNode(nodeId, {
       x: cx + Math.cos(angle) * jitter,
       y: cy + Math.sin(angle) * jitter,
-      radius: radiusForSize(post.size),
-    };
+      size: POST_BASE_SIZE + normalizeSize(post.size) * 1.25,
+      color: isDraft ? POST_DRAFT_COLOR : POST_COLOR,
+      label: post.title,
+      nodeType: "post",
+      slug: post.slug,
+      summary: post.summary,
+      image: post.image,
+      isDraft,
+    });
+
+    post.categories
+      .filter((categoryId) => categoryPositions.has(categoryId))
+      .forEach((categoryId) => {
+        const categoryNodeId = nodeIdForCategory(categoryId);
+        const edgeId = `${nodeId}->${categoryNodeId}`;
+        if (graph.hasEdge(edgeId)) return;
+        graph.addEdgeWithKey(edgeId, nodeId, categoryNodeId, {
+          size: 1,
+          color: isDraft ? EDGE_DRAFT_COLOR : EDGE_COLOR,
+          postSlug: post.slug,
+          categoryId,
+          isDraft,
+          type: "curved",
+          curvature: 0.12 + ((h % 7) * 0.01),
+        });
+      });
   });
 
-  const allNodes = [...catNodes, ...postNodes];
-  const nodeIndex = new Map(allNodes.map((n, i) => [n.nodeId, i]));
-
-  const links: SimulationLinkDatum<SimNode>[] = posts.flatMap((post) =>
-    post.categories
-      .filter((catId) => nodeIndex.has(`cat-${catId}`))
-      .map((catId) => ({
-        source: nodeIndex.get(`post-${post.slug}`)!,
-        target: nodeIndex.get(`cat-${catId}`)!,
-      })),
-  );
-
-  const CATEGORY_CHARGE = -150;
-  const POST_CHARGE = CATEGORY_CHARGE / 3;
-
-  const sim = forceSimulation<SimNode>(allNodes)
-    .force(
-      "link",
-      forceLink<SimNode, SimulationLinkDatum<SimNode>>(links)
-        .distance(60)
-        .strength(0.6),
-    )
-    .force(
-      "charge",
-      forceManyBody<SimNode>().strength((d) =>
-        d.nodeType === "category" ? CATEGORY_CHARGE : POST_CHARGE,
-      ),
-    )
-    .force(
-      "collide",
-      forceCollide<SimNode>()
-        .radius((d) => d.radius + 8)
-        .strength(0.7),
-    )
-    .force("x", forceX<SimNode>(CENTER_X).strength(0.03))
-    .force("y", forceY<SimNode>(CENTER_Y).strength(0.03))
-    .stop();
-
-  for (let i = 0; i < SIM_TICKS; i++) {
-    sim.tick();
-  }
-
-  // Clamp to bounds
-  for (const node of allNodes) {
-    if (node.fx == null) {
-      node.x = clamp(node.x ?? CENTER_X, MARGIN, WIDTH - MARGIN);
-    }
-    if (node.fy == null) {
-      node.y = clamp(node.y ?? CENTER_Y, MARGIN, HEIGHT - MARGIN);
-    }
-  }
-
-  const categoryPositions = new Map(
-    catNodes.map((n) => [
-      n.nodeId.slice(4), // strip "cat-" prefix
-      { x: round2(n.x ?? 0), y: round2(n.y ?? 0) },
-    ]),
-  );
-
-  const postPositions = new Map(
-    postNodes.map((n) => [
-      n.nodeId.slice(5), // strip "post-" prefix
-      { x: round2(n.x ?? 0), y: round2(n.y ?? 0), radius: n.radius },
-    ]),
-  );
-
-  return { categoryPositions, postPositions };
+  return { graph };
 }
 
 export function ProductivityGraph({
@@ -227,110 +278,31 @@ export function ProductivityGraph({
   const [focusedNode, setFocusedNode] = useState<FocusedNode>(null);
   const [pinnedNode, setPinnedNode] = useState<FocusedNode>(null);
   const activeNode = pinnedNode ?? focusedNode;
+  const [hoveredPostSlug, setHoveredPostSlug] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isLayoutRunning, setIsLayoutRunning] = useState(false);
 
-  // Pan & zoom state
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
-  const pinchStart = useRef<{ dist: number; zoom: number } | null>(null);
-
-  const viewBox = useMemo(() => {
-    const w = WIDTH / zoom;
-    const h = HEIGHT / zoom;
-    const x = pan.x - (w - WIDTH) / 2;
-    const y = pan.y - (h - HEIGHT) / 2;
-    return `${round2(x)} ${round2(y)} ${round2(w)} ${round2(h)}`;
-  }, [pan, zoom]);
-
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent<SVGSVGElement>) => {
-      // Only pan on primary button, and not when clicking a link or clickable node
-      if (e.button !== 0) return;
-      const target = e.target as Element;
-      if (target.closest("a") || target.closest("[data-clickable]")) return;
-
-      e.currentTarget.setPointerCapture(e.pointerId);
-      setIsDragging(true);
-      dragStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
-    },
-    [pan],
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sigmaRef = useRef<SigmaLike | null>(null);
+  const graphRef = useRef<Graph<GraphNode, GraphEdge> | null>(null);
+  const layoutRef = useRef<{ start: () => void; stop: () => void; kill: () => void } | null>(
+    null,
   );
-
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent<SVGSVGElement>) => {
-      // Skip single-finger pan while pinching
-      if (pinchStart.current) return;
-      if (!dragStart.current || !svgRef.current) return;
-
-      const svg = svgRef.current;
-      const rect = svg.getBoundingClientRect();
-      // Convert screen pixels to SVG units
-      const scaleX = (WIDTH / zoom) / rect.width;
-      const scaleY = (HEIGHT / zoom) / rect.height;
-
-      const dx = (e.clientX - dragStart.current.x) * scaleX;
-      const dy = (e.clientY - dragStart.current.y) * scaleY;
-
-      setPan({ x: dragStart.current.panX - dx, y: dragStart.current.panY - dy });
-    },
-    [zoom],
-  );
-
-  const handlePointerUp = useCallback(() => {
-    setIsDragging(false);
-    dragStart.current = null;
-  }, []);
-
-  const handleWheel = useCallback(
-    (e: React.WheelEvent<SVGSVGElement>) => {
-      // Only zoom when Shift is held; otherwise let page scroll normally
-      if (!e.shiftKey) return;
-      e.preventDefault();
-      const factor = e.deltaY > 0 ? 0.92 : 1 / 0.92;
-      setZoom((z) => clamp(z * factor, 0.4, 4));
-    },
-    [],
-  );
-
-  // Pinch-to-zoom for touch devices
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent<SVGSVGElement>) => {
-      if (e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        pinchStart.current = { dist: Math.hypot(dx, dy), zoom };
-      }
-    },
-    [zoom],
-  );
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent<SVGSVGElement>) => {
-      if (e.touches.length === 2 && pinchStart.current) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const dist = Math.hypot(dx, dy);
-        const scale = dist / pinchStart.current.dist;
-        setZoom(clamp(pinchStart.current.zoom * scale, 0.4, 4));
-      }
-    },
-    [],
-  );
-
-  const handleTouchEnd = useCallback(() => {
-    pinchStart.current = null;
-  }, []);
-
-  const resetView = useCallback(() => {
-    setPan({ x: 0, y: 0 });
-    setZoom(1);
-  }, []);
+  const engineRef = useRef<GraphEngineModules | null>(null);
+  const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeNodeIdRef = useRef<string | null>(null);
+  const pinnedNodeIdRef = useRef<string | null>(null);
+  const visibilityRef = useRef<{ nodes: Set<string> | null; edges: Set<string> | null }>({
+    nodes: null,
+    edges: null,
+  });
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
-    if (e.key === "Escape") setIsFullscreen(false);
+    if (e.key === "Escape") {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -346,63 +318,358 @@ export function ProductivityGraph({
     };
   }, [isFullscreen, handleEscape]);
 
-  const { categoryPositions, postPositions } = useMemo(
-    () => computeForceLayout(categories, activePosts),
-    [categories, activePosts],
-  );
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      const fullscreen = document.fullscreenElement === wrapperRef.current;
+      setIsFullscreen(fullscreen);
+      sigmaRef.current?.refresh();
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, []);
 
-  const edges = useMemo(
-    () =>
-      activePosts.flatMap((post) =>
-        post.categories
-          .filter((categoryId) => categoryPositions.has(categoryId))
-          .map((categoryId) => ({
-            key: `${post.slug}__${categoryId}`,
-            postSlug: post.slug,
-            categoryId,
-          })),
-      ),
-    [categoryPositions, activePosts],
+  const postsBySlug = useMemo(
+    () => new Map(activePosts.map((post) => [post.slug, post])),
+    [activePosts],
   );
-
-  const focusedPost = useMemo(() => {
-    if (!activeNode || activeNode.type !== "post") return null;
-    return activePosts.find((p) => p.slug === activeNode.id) ?? null;
-  }, [activeNode, activePosts]);
 
   const categoryLabelMap = useMemo(
     () => new Map(categories.map((c) => [c.id, c.label])),
     [categories],
   );
 
-  function edgeIsVisible(edge: { postSlug: string; categoryId: string }) {
-    if (!activeNode) return true;
-    if (activeNode.type === "post") return edge.postSlug === activeNode.id;
-    // Category focus: show all edges of posts linked to the focused category
-    const post = activePosts.find((p) => p.slug === edge.postSlug);
-    return !!post?.categories.includes(activeNode.id);
-  }
+  const focusedPost = useMemo(() => {
+    if (!hoveredPostSlug) return null;
+    return postsBySlug.get(hoveredPostSlug) ?? null;
+  }, [hoveredPostSlug, postsBySlug]);
 
-  function categoryIsVisible(categoryId: string) {
-    if (!activeNode) return true;
-    if (activeNode.type === "post") {
-      return activePosts
-        .find((post) => post.slug === activeNode.id)
-        ?.categories.includes(categoryId);
+  const { graph: sigmaGraph } = useMemo(
+    () => buildGraph(categories, activePosts, draftSet),
+    [categories, activePosts, draftSet],
+  );
+  const latestGraphRef = useRef(sigmaGraph);
+
+  const loadGraphEngine = useCallback(async (): Promise<GraphEngineModules> => {
+    if (engineRef.current) return engineRef.current;
+
+    const [sigmaMod, edgeCurveMod, fa2WorkerMod, fa2Mod, noverlapMod] = await Promise.all([
+      import("sigma"),
+      import("@sigma/edge-curve"),
+      import("graphology-layout-forceatlas2/worker"),
+      import("graphology-layout-forceatlas2"),
+      import("graphology-layout-noverlap"),
+    ]);
+
+    const engine: GraphEngineModules = {
+      SigmaCtor: sigmaMod.default,
+      EdgeCurveProgram: edgeCurveMod.default,
+      ForceAtlas2LayoutCtor: fa2WorkerMod.default,
+      forceAtlas2: fa2Mod.default,
+      noverlap: noverlapMod.default,
+    };
+    engineRef.current = engine;
+    return engine;
+  }, []);
+
+  const stopLayout = useCallback(() => {
+    if (layoutTimeoutRef.current) {
+      clearTimeout(layoutTimeoutRef.current);
+      layoutTimeoutRef.current = null;
     }
-    // Category focus: show the focused category + depth-1 sibling categories
-    if (categoryId === activeNode.id) return true;
-    const linkedPosts = activePosts.filter((p) =>
-      p.categories.includes(activeNode.id),
-    );
-    return linkedPosts.some((p) => p.categories.includes(categoryId));
-  }
+    if (layoutRef.current) {
+      layoutRef.current.stop();
+      layoutRef.current.kill();
+      layoutRef.current = null;
+    }
+    setIsLayoutRunning(false);
+  }, []);
 
-  function postIsVisible(post: ProductivityGraphPost) {
-    if (!activeNode) return true;
-    if (activeNode.type === "post") return post.slug === activeNode.id;
-    return post.categories.includes(activeNode.id);
-  }
+  const refreshVisibility = useCallback(() => {
+    const graph = graphRef.current;
+    const activeNodeId = activeNodeIdRef.current;
+
+    if (!graph || !activeNodeId || !graph.hasNode(activeNodeId)) {
+      visibilityRef.current = { nodes: null, edges: null };
+      return;
+    }
+
+    const visibleNodes = new Set<string>();
+    const visibleEdges = new Set<string>();
+    visibleNodes.add(activeNodeId);
+
+    const nodeAttributes = graph.getNodeAttributes(activeNodeId);
+
+    if (nodeAttributes.nodeType === "post") {
+      graph.forEachEdge(activeNodeId, (edgeId, _attrs, source, target) => {
+        visibleEdges.add(edgeId);
+        visibleNodes.add(source);
+        visibleNodes.add(target);
+      });
+    } else {
+      const linkedPosts: string[] = [];
+
+      graph.forEachNeighbor(activeNodeId, (neighborNodeId) => {
+        const neighbor = graph.getNodeAttributes(neighborNodeId);
+        if (neighbor.nodeType === "post") {
+          linkedPosts.push(neighborNodeId);
+          visibleNodes.add(neighborNodeId);
+        }
+      });
+
+      linkedPosts.forEach((postNodeId) => {
+        graph.forEachEdge(postNodeId, (edgeId, _attrs, source, target) => {
+          visibleEdges.add(edgeId);
+          visibleNodes.add(source);
+          visibleNodes.add(target);
+        });
+      });
+    }
+
+    visibilityRef.current = { nodes: visibleNodes, edges: visibleEdges };
+  }, []);
+
+  const runLayout = useCallback(
+    async (graph: Graph<GraphNode, GraphEdge>) => {
+      if (graph.order === 0) return;
+      stopLayout();
+      const engine = await loadGraphEngine();
+
+      const inferred = engine.forceAtlas2.inferSettings(graph);
+      const settings = {
+        ...inferred,
+        gravity: 0.12,
+        scalingRatio: 9,
+        slowDown: graph.order > 300 ? 1.9 : 1.4,
+        barnesHutOptimize: graph.order > 150,
+        strongGravityMode: false,
+        adjustSizes: true,
+        outboundAttractionDistribution: true,
+      };
+
+      const layout = new engine.ForceAtlas2LayoutCtor(graph, { settings });
+      layoutRef.current = layout;
+      layout.start();
+      setIsLayoutRunning(true);
+
+      layoutTimeoutRef.current = setTimeout(() => {
+        if (!layoutRef.current) return;
+        layoutRef.current.stop();
+        layoutRef.current.kill();
+        layoutRef.current = null;
+        engine.noverlap.assign(graph, {
+          maxIterations: 24,
+          settings: { ratio: 1.1, margin: 6, expansion: 1.05 },
+        });
+        sigmaRef.current?.refresh();
+        setIsLayoutRunning(false);
+      }, LAYOUT_DURATION_MS);
+    },
+    [loadGraphEngine, stopLayout],
+  );
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    let cancelled = false;
+
+    void (async () => {
+      const engine = await loadGraphEngine();
+      if (cancelled || !containerRef.current) return;
+
+      const sigma = new engine.SigmaCtor(
+        new Graph<GraphNode, GraphEdge>(),
+        containerRef.current,
+        {
+          renderLabels: true,
+          labelFont: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+          labelSize: 11,
+          labelWeight: "500",
+          labelDensity: 0.15,
+          labelGridCellSize: 70,
+          defaultNodeColor: POST_COLOR,
+          defaultEdgeColor: EDGE_COLOR,
+          defaultEdgeType: "curved",
+          edgeProgramClasses: { curved: engine.EdgeCurveProgram as unknown as never },
+          zIndex: true,
+          hideEdgesOnMove: true,
+          minCameraRatio: 0.04,
+          maxCameraRatio: 4,
+          labelRenderedSizeThreshold: POST_LABEL_ZOOM_THRESHOLD,
+          nodeReducer: (node, data) => {
+            const result = { ...data };
+            const activeNodeId = activeNodeIdRef.current;
+            const pinnedNodeId = pinnedNodeIdRef.current;
+            const visibleNodes = visibilityRef.current.nodes;
+            const isVisible = !visibleNodes || visibleNodes.has(node);
+            const isActive = activeNodeId === node;
+            const isPinned = pinnedNodeId === node;
+
+            if (!isVisible) {
+              result.color = dimColor(data.color, 0.18);
+              result.size = Math.max(1.6, (data.size || 4) * 0.7);
+              result.label = "";
+              result.zIndex = 0;
+              return result;
+            }
+
+            if (isActive || isPinned) {
+              result.color =
+                data.nodeType === "category"
+                  ? CATEGORY_COLOR_ACTIVE
+                  : brightenColor(data.color, 1.4);
+              result.size = (data.size || 4) * 1.3;
+              result.zIndex = 2;
+            }
+            return result;
+          },
+          edgeReducer: (edge, data) => {
+            const result = { ...data };
+            const visibleEdges = visibilityRef.current.edges;
+            const activeNodeId = activeNodeIdRef.current;
+            const isVisible = !visibleEdges || visibleEdges.has(edge);
+            const graph = graphRef.current;
+            const extremities = graph ? graph.extremities(edge) : null;
+            const isConnectedToActive =
+              !!activeNodeId &&
+              !!extremities &&
+              (extremities[0] === activeNodeId || extremities[1] === activeNodeId);
+
+            if (!isVisible) {
+              result.color = dimColor(data.color, 0.12);
+              result.size = 0.25;
+              result.zIndex = 0;
+              return result;
+            }
+
+            if (isConnectedToActive) {
+              result.color = brightenColor(data.color, 1.35);
+              result.size = Math.max(1.8, (data.size || 1) * 1.8);
+              result.zIndex = 2;
+              return result;
+            }
+
+            result.size = Math.max(0.7, data.size || 1);
+            return result;
+          },
+        },
+      ) as unknown as SigmaLike;
+
+      sigmaRef.current = sigma;
+      const initialGraph = latestGraphRef.current;
+      graphRef.current = initialGraph;
+      sigma.setGraph(initialGraph);
+      sigma.getCamera().animatedReset({ duration: 280 });
+      window.setTimeout(() => {
+        void runLayout(initialGraph);
+      }, 0);
+
+      sigma.on("enterNode", (event) => {
+        const node = event?.node;
+        if (!node) return;
+        const graph = graphRef.current;
+        if (!graph || !graph.hasNode(node)) return;
+        const attrs = graph.getNodeAttributes(node);
+        const focus = focusFromNodeId(node);
+        setFocusedNode(focus);
+        if (attrs.nodeType === "post" && attrs.slug) {
+          setHoveredPostSlug(attrs.slug);
+        } else {
+          setHoveredPostSlug(null);
+        }
+        if (containerRef.current) containerRef.current.style.cursor = "pointer";
+      });
+
+      sigma.on("leaveNode", () => {
+        setFocusedNode(null);
+        setHoveredPostSlug(null);
+        if (containerRef.current) containerRef.current.style.cursor = "grab";
+      });
+
+      sigma.on("clickNode", (event) => {
+        const node = event?.node;
+        if (!node) return;
+        const graph = graphRef.current;
+        if (!graph || !graph.hasNode(node)) return;
+
+        const attrs = graph.getNodeAttributes(node);
+        const focus = focusFromNodeId(node);
+
+        if (!focus) return;
+        if (attrs.nodeType === "post" && attrs.slug) {
+          window.location.href = withBasePath(`/blog/${attrs.slug}`);
+          return;
+        }
+
+        setPinnedNode((prev) => {
+          if (prev && prev.type === focus.type && prev.id === focus.id) {
+            return null;
+          }
+          return focus;
+        });
+      });
+
+      sigma.on("clickStage", () => {
+        setPinnedNode(null);
+        setFocusedNode(null);
+        setHoveredPostSlug(null);
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      stopLayout();
+      sigmaRef.current?.kill();
+      sigmaRef.current = null;
+      graphRef.current = null;
+    };
+  }, [loadGraphEngine, runLayout, stopLayout]);
+
+  useEffect(() => {
+    latestGraphRef.current = sigmaGraph;
+    if (!sigmaRef.current) return;
+    graphRef.current = sigmaGraph;
+    sigmaRef.current.setGraph(sigmaGraph);
+    sigmaRef.current.getCamera().animatedReset({ duration: 280 });
+    window.setTimeout(() => {
+      void runLayout(sigmaGraph);
+    }, 0);
+  }, [runLayout, sigmaGraph]);
+
+  useEffect(() => {
+    activeNodeIdRef.current = nodeIdFromFocus(activeNode);
+    pinnedNodeIdRef.current = nodeIdFromFocus(pinnedNode);
+    refreshVisibility();
+    sigmaRef.current?.refresh();
+  }, [activeNode, pinnedNode, refreshVisibility]);
+
+  const zoomIn = useCallback(() => {
+    sigmaRef.current?.getCamera().animatedZoom({ duration: 200 });
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    sigmaRef.current?.getCamera().animatedUnzoom({ duration: 200 });
+  }, []);
+
+  const resetView = useCallback(() => {
+    sigmaRef.current?.getCamera().animatedReset({ duration: 260 });
+    setPinnedNode(null);
+  }, []);
+
+  const rerunLayout = useCallback(() => {
+    const graph = graphRef.current;
+    if (!graph) return;
+    void runLayout(graph);
+  }, [runLayout]);
+
+  const toggleFullscreen = useCallback(async () => {
+    if (!wrapperRef.current) return;
+    if (document.fullscreenElement === wrapperRef.current) {
+      await document.exitFullscreen();
+      return;
+    }
+    await wrapperRef.current.requestFullscreen();
+  }, []);
 
   const hoverCard = focusedPost ? (
     <div className="pointer-events-none absolute left-3 top-3 z-10 w-64 rounded border border-rule bg-background p-3 shadow-sm">
@@ -441,271 +708,76 @@ export function ProductivityGraph({
     </div>
   ) : null;
 
-  const svgContent = (
-    <svg
-      ref={svgRef}
-      viewBox={viewBox}
-      className={[
-        isFullscreen
-          ? "h-full w-full"
-          : "h-[360px] w-full sm:h-[560px]",
-        isDragging ? "cursor-grabbing" : "cursor-grab",
-      ].join(" ")}
-      style={{ touchAction: "none" }}
-      role="img"
-      aria-label="Productivity graph connecting categories and active posts"
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onWheel={handleWheel}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      <defs>
-        {activePosts.map((post) => {
-          const pos = postPositions.get(post.slug);
-          if (!pos || !post.image) return null;
-          return (
-            <clipPath key={`clip-${post.slug}`} id={`clip-${post.slug}`}>
-              <circle cx={pos.x} cy={pos.y} r={pos.radius} />
-            </clipPath>
-          );
-        })}
-      </defs>
-
-      <rect x={0} y={0} width={WIDTH} height={HEIGHT} fill="transparent" />
-
-      {/* Edges */}
-      {edges.map((edge) => {
-        const postPos = postPositions.get(edge.postSlug);
-        const catPos = categoryPositions.get(edge.categoryId);
-        if (!postPos || !catPos) return null;
-
-        const visible = edgeIsVisible(edge);
-        const edgeIsDraft = draftSet.has(edge.postSlug);
-        return (
-          <line
-            key={edge.key}
-            x1={catPos.x}
-            y1={catPos.y}
-            x2={postPos.x}
-            y2={postPos.y}
-            stroke="var(--muted)"
-            strokeWidth={visible ? 1.4 : 1}
-            strokeDasharray={edgeIsDraft ? "4 3" : undefined}
-            opacity={visible ? 0.38 : 0.12}
-          />
-        );
-      })}
-
-      {/* Category nodes */}
-      {categories.map((category) => {
-        const point = categoryPositions.get(category.id);
-        if (!point) return null;
-
-        const visible = categoryIsVisible(category.id);
-        const isFocused =
-          activeNode?.type === "category" &&
-          activeNode.id === category.id;
-        const isPinned =
-          pinnedNode?.type === "category" &&
-          pinnedNode.id === category.id;
-        return (
-          <g
-            key={category.id}
-            data-clickable
-            className="cursor-pointer"
-            onMouseEnter={() =>
-              setFocusedNode({ type: "category", id: category.id })
-            }
-            onMouseLeave={() => setFocusedNode(null)}
-            onClick={(e) => {
-              e.preventDefault();
-              setPinnedNode(
-                isPinned
-                  ? null
-                  : { type: "category", id: category.id },
-              );
-            }}
-          >
-            <title>{`${category.label} — ${category.description}`}</title>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={isFocused ? 18 : CATEGORY_RADIUS}
-              fill={
-                isFocused ? "var(--foreground)" : "var(--background)"
-              }
-              stroke="var(--foreground)"
-              strokeWidth={1.3}
-              opacity={visible ? 1 : 0.28}
-            />
-            <text
-              x={point.x}
-              y={point.y + 33}
-              textAnchor="middle"
-              fontSize="12"
-              fill="var(--muted)"
-              opacity={visible ? 1 : 0.28}
-            >
-              {category.label}
-            </text>
-          </g>
-        );
-      })}
-
-      {/* Post nodes */}
-      {activePosts.map((post) => {
-        const pos = postPositions.get(post.slug);
-        if (!pos) return null;
-
-        const visible = postIsVisible(post);
-        const isDraft = draftSet.has(post.slug);
-        const isFocused =
-          activeNode?.type === "post" && activeNode.id === post.slug;
-        const r = isFocused ? pos.radius + 1.5 : pos.radius;
-
-        return (
-          <a
-            key={post.slug}
-            href={withBasePath(`/blog/${post.slug}`)}
-            onMouseEnter={() =>
-              setFocusedNode({ type: "post", id: post.slug })
-            }
-            onMouseLeave={() => setFocusedNode(null)}
-            onFocus={() =>
-              setFocusedNode({ type: "post", id: post.slug })
-            }
-            onBlur={() => setFocusedNode(null)}
-          >
-            <title>{isDraft ? `${post.title} (draft)` : post.title}</title>
-            {post.image ? (
-              <>
-                <circle
-                  cx={pos.x}
-                  cy={pos.y}
-                  r={r}
-                  fill="var(--background)"
-                  stroke={
-                    isFocused ? "var(--foreground)" : "var(--rule)"
-                  }
-                  strokeWidth={isFocused ? 2 : 1.2}
-                  strokeDasharray={isDraft ? "4 3" : undefined}
-                  opacity={visible ? 1 : 0.24}
-                />
-                <image
-                  href={post.image}
-                  x={pos.x - pos.radius}
-                  y={pos.y - pos.radius}
-                  width={pos.radius * 2}
-                  height={pos.radius * 2}
-                  clipPath={`url(#clip-${post.slug})`}
-                  preserveAspectRatio="xMidYMid slice"
-                  opacity={visible ? 0.92 : 0.24}
-                />
-              </>
-            ) : (
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r={r}
-                fill={
-                  isFocused ? "var(--foreground)" : "var(--accent)"
-                }
-                stroke={isDraft ? "var(--muted)" : undefined}
-                strokeWidth={isDraft ? 1.2 : undefined}
-                strokeDasharray={isDraft ? "4 3" : undefined}
-                opacity={visible ? 0.92 : 0.24}
-              />
-            )}
-            {zoom >= POST_LABEL_ZOOM_THRESHOLD ? (
-              <text
-                x={pos.x}
-                y={pos.y - (pos.radius + 7)}
-                textAnchor="middle"
-                fontSize={11 + normalizeSize(post.size)}
-                fill="var(--foreground)"
-                opacity={visible ? 1 : 0.28}
-              >
-                {post.title}
-              </text>
-            ) : null}
-          </a>
-        );
-      })}
-    </svg>
-  );
-
-  const isViewMoved = pan.x !== 0 || pan.y !== 0 || zoom !== 1;
-
-  if (isFullscreen) {
-    return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-background">
-        <div className="flex justify-end gap-4 px-4 py-3">
-          {isViewMoved && (
-            <button
-              type="button"
-              onClick={resetView}
-              className="text-sm text-muted hover:text-foreground"
-            >
-              Reset view
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsFullscreen(false)}
-            className="text-sm text-muted hover:text-foreground"
-          >
-            Exit fullscreen (Esc)
-          </button>
-        </div>
-        <div className="relative flex-1 px-4 pb-4">
-          {hoverCard}
-          {svgContent}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className="relative left-1/2 right-1/2 -ml-[50vw] w-[100vw] space-y-4 sm:-ml-[40vw] sm:w-[80vw]"
     >
       {showDrafts ? (
         <p className="border border-rule px-4 py-2 text-sm text-muted">
-          Draft preview mode — draft nodes shown with dashed outlines.
+          Draft preview mode — draft nodes are rendered in muted color.
         </p>
       ) : null}
 
-      <div className="relative overflow-hidden rounded border border-rule bg-background">
+      <div
+        ref={wrapperRef}
+        className={[
+          "relative overflow-hidden rounded border border-rule bg-background",
+          isFullscreen ? "h-screen w-screen rounded-none border-none" : "h-[360px] sm:h-[560px]",
+        ].join(" ")}
+      >
         {hoverCard}
-        {svgContent}
+        <div
+          ref={containerRef}
+          className="h-full w-full cursor-grab active:cursor-grabbing"
+          role="img"
+          aria-label="Productivity graph connecting categories and active posts"
+        />
+        {isLayoutRunning ? (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-rule bg-background/95 px-3 py-1 text-xs text-muted">
+            Optimizing layout...
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          <span className="hidden sm:inline">Drag to pan, Shift+scroll to zoom.</span>
-          <span className="sm:hidden">Drag to pan, pinch to zoom.</span>
-          {" "}Click a category to pin focus. Zoom in to reveal post titles.
+          Drag to pan and scroll to zoom. Click a category to pin focus; click a post to open it.
         </p>
         <div className="flex shrink-0 gap-4">
-          {isViewMoved && (
-            <button
-              type="button"
-              onClick={resetView}
-              className="text-sm text-muted hover:text-foreground"
-            >
-              Reset view
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => setIsFullscreen(true)}
+            onClick={zoomOut}
             className="text-sm text-muted hover:text-foreground"
           >
-            Fullscreen
+            Zoom out
+          </button>
+          <button
+            type="button"
+            onClick={zoomIn}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Zoom in
+          </button>
+          <button
+            type="button"
+            onClick={resetView}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Reset view
+          </button>
+          <button
+            type="button"
+            onClick={isLayoutRunning ? stopLayout : rerunLayout}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            {isLayoutRunning ? "Stop layout" : "Run layout"}
+          </button>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
           </button>
         </div>
       </div>
