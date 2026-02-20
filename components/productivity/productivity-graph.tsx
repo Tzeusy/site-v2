@@ -601,8 +601,8 @@ export function ProductivityGraph({
 
       const display = sigma.getNodeDisplayData(nodeId);
       if (!display || display.hidden) return;
-
-      const point = sigma.graphToViewport({ x: display.x, y: display.y });
+      const nodePosition = graph.getNodeAttributes(nodeId);
+      const point = sigma.graphToViewport({ x: nodePosition.x, y: nodePosition.y });
       const isVisible = !visibleNodes || visibleNodes.has(nodeId);
       const categoryIds = attrs.categoryIds?.filter((id) => categoryColors.has(id)) ?? [];
       const ringColors =
