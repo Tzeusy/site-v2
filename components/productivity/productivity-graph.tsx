@@ -101,6 +101,7 @@ type ThemePalette = {
 
 const CATEGORY_RING_RADIUS = 9.5;
 const LAYOUT_DURATION_MS = 7000;
+const MAX_LAYOUT_SPAN = 16;
 const CATEGORY_SIZE = 9;
 const POST_BASE_SIZE = 4.8;
 const POST_LABEL_ZOOM_THRESHOLD = 1.35;
@@ -212,6 +213,42 @@ function focusFromNodeId(nodeId: string): FocusedNode {
 function nodeIdFromFocus(node: FocusedNode) {
   if (!node) return null;
   return node.type === "category" ? nodeIdForCategory(node.id) : nodeIdForPost(node.id);
+}
+
+function compactGraphSpread(
+  graph: Graph<GraphNode, GraphEdge>,
+  options: { maxSpan: number },
+) {
+  if (graph.order < 2) return;
+
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+
+  graph.forEachNode((_nodeId, attrs) => {
+    minX = Math.min(minX, attrs.x);
+    maxX = Math.max(maxX, attrs.x);
+    minY = Math.min(minY, attrs.y);
+    maxY = Math.max(maxY, attrs.y);
+  });
+
+  const spanX = maxX - minX;
+  const spanY = maxY - minY;
+  const span = Math.max(spanX, spanY);
+
+  if (!Number.isFinite(span) || span <= 0 || span <= options.maxSpan) return;
+
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const scale = options.maxSpan / span;
+
+  graph.forEachNode((nodeId, attrs) => {
+    graph.mergeNodeAttributes(nodeId, {
+      x: cx + (attrs.x - cx) * scale,
+      y: cy + (attrs.y - cy) * scale,
+    });
+  });
 }
 
 type GraphBuildResult = {
@@ -552,7 +589,7 @@ export function ProductivityGraph({
       const settings = {
         ...inferred,
         gravity: 0.06,
-        scalingRatio: 9,
+        scalingRatio: 5.5,
         slowDown: graph.order > 300 ? 1.9 : 1.4,
         barnesHutOptimize: graph.order > 150,
         strongGravityMode: false,
@@ -572,7 +609,12 @@ export function ProductivityGraph({
         layoutRef.current = null;
         engine.noverlap.assign(graph, {
           maxIterations: 24,
-          settings: { ratio: 1.1, margin: 6, expansion: 1.05 },
+          settings: { ratio: 1.02, margin: 2, expansion: 1.02 },
+        });
+        compactGraphSpread(graph, { maxSpan: MAX_LAYOUT_SPAN });
+        engine.noverlap.assign(graph, {
+          maxIterations: 10,
+          settings: { ratio: 1.01, margin: 1.2, expansion: 1.01 },
         });
         sigmaRef.current?.refresh();
         setIsLayoutRunning(false);
