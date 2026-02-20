@@ -101,7 +101,6 @@ type ThemePalette = {
 };
 
 const CATEGORY_RING_RADIUS = 9.5;
-const LAYOUT_DURATION_MS = 7000;
 const MAX_LAYOUT_SPAN = 16;
 const CATEGORY_SIZE = 10.5;
 const POST_BASE_SIZE = 4.2;
@@ -414,11 +413,7 @@ export function ProductivityGraph({
   const outlineCanvasRef = useRef<HTMLCanvasElement>(null);
   const sigmaRef = useRef<SigmaLike | null>(null);
   const graphRef = useRef<Graph<GraphNode, GraphEdge> | null>(null);
-  const layoutRef = useRef<{ start: () => void; stop: () => void; kill: () => void } | null>(
-    null,
-  );
   const engineRef = useRef<GraphEngineModules | null>(null);
-  const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeNodeIdRef = useRef<string | null>(null);
   const pinnedNodeIdRef = useRef<string | null>(null);
   const themeRef = useRef<ThemePalette>(THEME_FALLBACK);
@@ -637,19 +632,6 @@ export function ProductivityGraph({
     ctx.globalAlpha = 1;
   }, []);
 
-  const stopLayout = useCallback(() => {
-    if (layoutTimeoutRef.current) {
-      clearTimeout(layoutTimeoutRef.current);
-      layoutTimeoutRef.current = null;
-    }
-    if (layoutRef.current) {
-      layoutRef.current.stop();
-      layoutRef.current.kill();
-      layoutRef.current = null;
-    }
-    setIsLayoutRunning(false);
-  }, []);
-
   const refreshVisibility = useCallback(() => {
     const graph = graphRef.current;
     const activeNodeId = activeNodeIdRef.current;
@@ -695,10 +677,14 @@ export function ProductivityGraph({
   }, []);
 
   const runLayout = useCallback(
-    async (graph: Graph<GraphNode, GraphEdge>) => {
+    async (
+      graph: Graph<GraphNode, GraphEdge>,
+      options?: { engine?: GraphEngineModules; showIndicator?: boolean },
+    ) => {
       if (graph.order === 0) return;
-      stopLayout();
-      const engine = await loadGraphEngine();
+      const engine = options?.engine ?? (await loadGraphEngine());
+      const showIndicator = options?.showIndicator ?? true;
+      if (showIndicator) setIsLayoutRunning(true);
 
       const inferred = engine.forceAtlas2.inferSettings(graph);
       const settings = {
@@ -712,30 +698,23 @@ export function ProductivityGraph({
         outboundAttractionDistribution: true,
       };
 
-      const layout = new engine.ForceAtlas2LayoutCtor(graph, { settings });
-      layoutRef.current = layout;
-      layout.start();
-      setIsLayoutRunning(true);
-
-      layoutTimeoutRef.current = setTimeout(() => {
-        if (!layoutRef.current) return;
-        layoutRef.current.stop();
-        layoutRef.current.kill();
-        layoutRef.current = null;
-        engine.noverlap.assign(graph, {
-          maxIterations: 24,
-          settings: { ratio: 1.02, margin: 2, expansion: 1.02 },
-        });
-        compactGraphSpread(graph, { maxSpan: MAX_LAYOUT_SPAN });
-        engine.noverlap.assign(graph, {
-          maxIterations: 10,
-          settings: { ratio: 1.01, margin: 1.2, expansion: 1.01 },
-        });
-        sigmaRef.current?.refresh();
-        setIsLayoutRunning(false);
-      }, LAYOUT_DURATION_MS);
+      engine.forceAtlas2.assign(graph, {
+        iterations: graph.order > 180 ? 220 : 160,
+        settings,
+      });
+      engine.noverlap.assign(graph, {
+        maxIterations: 24,
+        settings: { ratio: 1.02, margin: 2, expansion: 1.02 },
+      });
+      compactGraphSpread(graph, { maxSpan: MAX_LAYOUT_SPAN });
+      engine.noverlap.assign(graph, {
+        maxIterations: 10,
+        settings: { ratio: 1.01, margin: 1.2, expansion: 1.01 },
+      });
+      sigmaRef.current?.refresh();
+      if (showIndicator) setIsLayoutRunning(false);
     },
-    [loadGraphEngine, stopLayout],
+    [loadGraphEngine],
   );
 
   useEffect(() => {
@@ -836,12 +815,10 @@ export function ProductivityGraph({
       sigmaRef.current = sigma;
       const initialGraph = latestGraphRef.current;
       graphRef.current = initialGraph;
+      await runLayout(initialGraph, { engine, showIndicator: false });
       sigma.setGraph(initialGraph);
       applyThemeToCurrentGraph();
       sigma.getCamera().animatedReset({ duration: 280 });
-      window.setTimeout(() => {
-        void runLayout(initialGraph);
-      }, 0);
       drawPostOutlines();
 
       const handleAfterRender = () => drawPostOutlines();
@@ -910,7 +887,7 @@ export function ProductivityGraph({
 
     return () => {
       cancelled = true;
-      stopLayout();
+      setIsLayoutRunning(false);
       if (sigmaRef.current && afterRenderHandlerRef.current) {
         sigmaRef.current.off("afterRender", afterRenderHandlerRef.current);
       }
@@ -923,19 +900,26 @@ export function ProductivityGraph({
       sigmaRef.current = null;
       graphRef.current = null;
     };
-  }, [applyThemeToCurrentGraph, drawPostOutlines, loadGraphEngine, runLayout, stopLayout]);
+  }, [applyThemeToCurrentGraph, drawPostOutlines, loadGraphEngine, runLayout]);
 
   useEffect(() => {
+    let cancelled = false;
     latestGraphRef.current = sigmaGraph;
-    if (!sigmaRef.current) return;
-    graphRef.current = sigmaGraph;
-    sigmaRef.current.setGraph(sigmaGraph);
-    applyThemeToCurrentGraph();
-    sigmaRef.current.getCamera().animatedReset({ duration: 280 });
-    window.setTimeout(() => {
-      void runLayout(sigmaGraph);
+    if (!sigmaRef.current) return () => {};
+
+    void (async () => {
+      await runLayout(sigmaGraph, { showIndicator: false });
+      if (cancelled || !sigmaRef.current) return;
+      graphRef.current = sigmaGraph;
+      sigmaRef.current.setGraph(sigmaGraph);
+      applyThemeToCurrentGraph();
+      sigmaRef.current.getCamera().animatedReset({ duration: 280 });
       drawPostOutlines();
-    }, 0);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [applyThemeToCurrentGraph, drawPostOutlines, runLayout, sigmaGraph]);
 
   useEffect(() => {
@@ -962,7 +946,7 @@ export function ProductivityGraph({
   const rerunLayout = useCallback(() => {
     const graph = graphRef.current;
     if (!graph) return;
-    void runLayout(graph);
+    void runLayout(graph, { showIndicator: true });
   }, [runLayout]);
 
   const toggleFullscreen = useCallback(async () => {
@@ -1075,10 +1059,10 @@ export function ProductivityGraph({
           </button>
           <button
             type="button"
-            onClick={isLayoutRunning ? stopLayout : rerunLayout}
+            onClick={rerunLayout}
             className="text-sm text-muted hover:text-foreground"
           >
-            {isLayoutRunning ? "Stop layout" : "Run layout"}
+            Rebalance layout
           </button>
           <button
             type="button"
