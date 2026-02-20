@@ -5,91 +5,100 @@ summary: "What I was up to in the summer of 2018"
 tags: ["blockchain", "ethereum", "data-engineering", "data-visualization", "fintech"]
 ---
 
-#### Introduction
+# Introduction
 
 
-For my 2018 summer internship at traceto.io, I built a Ethereum Blockchain parser to analyze address blockchain activity of specified addresses. Being a KYC company (under Cynopsis Solutions), my managers felt there was value in the offering of a service that could do some level of due diligence on crypto addresses, analyzing things like volume of transactions, exchanges with which trades are made, etc. and I set to the task. The codebase is proprietary and hence can't be made available, but I can provide an overview of the product, with a quick introduction at the same time.
+For my 2018 summer internship at traceto.io, I built an Ethereum blockchain parser to analyze on-chain activity for specified addresses. Being a KYC company (under Cynopsis Solutions), my managers felt there was value in offering a service that could do some level of due diligence on crypto addresses, analyzing things like transaction volume, exchanges with which trades are made, etc., and I set to the task. The codebase is proprietary and hence can't be made available, but I can provide an overview of the product, with a quick introduction at the same time.
 
 
-Traceto's parent company is Cynopsis Solutions, a KYC company providing services that involve 'greenlighting' customers for financial institutions. The purpose of this can range from adhering to requirements set by, for example, the Monetary Authority of Singapore (MAS) or the Financial Industry Regulatory Authority (FINRA)/Financial Action Task Force (FATF). Many of these laws are rule-based - things like "Flag when (>$20k USD Transaction, or >3 Transactions Totalling $50k in a set number of days), and the like - which often makes these easily circumvented, but at the same time provides a 'first-layer' of tripping of rules.
+Traceto's parent company is Cynopsis Solutions, a KYC company providing services that involve 'greenlighting' customers for financial institutions. The purpose of this can range from adhering to requirements set by, for example, the Monetary Authority of Singapore (MAS) or the Financial Industry Regulatory Authority (FINRA)/Financial Action Task Force (FATF). In my internship context, we generally worked with rule-based patterns (for example, thresholds on transfer size or transaction bursts over short windows) as a first-layer filter for review. These are illustrative examples of internal screening logic at the time, not universal legal thresholds.
 
 
-For the explicit purposes of this post, blockchains are in effect **public and decentralized** ledgers, with mechanisms (Proof of Work, Proof of Stake, etc.) built in to prevent tampering with the chain despite its decentralized nature. Of course, blockchains can be much more - like mediums for code execution or alternative stores of value (ERC20 tokens) via Ethereum smart contracts - but we'll stick to the original definition for simplicity's sake. Ledgers, being public, are now *inspectable* - all one has to do to work with this ledger is to download it and transform it into parseable data. 
+For the explicit purposes of this post, blockchains are in effect **public and decentralized** ledgers, with mechanisms (Proof of Work, Proof of Stake, etc.) built in to prevent tampering with the chain despite its decentralized nature. Of course, blockchains can be much more - like mediums for code execution or alternative stores of value (ERC20 tokens) via Ethereum smart contracts - but we'll stick to the original definition for simplicity's sake. On Ethereum, this public ledger is *inspectable* once downloaded and transformed into parseable data, even though mapping wallet activity to real-world identity is often probabilistic.
 
 
-![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-1.jpg)
+![Etherscan address activity example](/blog/ethereum-address-analyzer/ethereum-address-analyzer-1.jpg)
 
 
 *[https://etherscan.io/](https://etherscan.io/) is a great place to interact with addresses, for example.*
 
 
-#### Getting To It
+## In this post
+
+- How the Ethereum data pipeline was set up (node -> JSON-RPC -> PostgreSQL)
+- The rule-based checks we used as initial screening
+- Visualization tools for behavioral and financial analysis
+- Deployment constraints and why this stayed offline
+- Where I expected this work to go next
 
 
-This data was first downloaded via the Go Ethereum (Geth) CLI using a full Ethereum node, interfaced via the JSON RPC, and subsequently stored into a local PostgreSQL database. Storage of the Ethereum blockchain at the time took up roughly 400GB, which was a hundred million rows, but still relatively quick to navigate for infrequent queries. Clustering was later worked into this database to reduce lookup times, since data was chronological and splitting via the datetime index allowed for much faster re-indexing (cutting N to a fraction in a process that took time on the order of n log n) while maintaining identical functionality (lookups using datetime index are still trivial to make).
+# Getting To It
+
+
+This data was first downloaded via the Go Ethereum (Geth) CLI using a full Ethereum node, interfaced via the JSON RPC, and subsequently stored into a local PostgreSQL database. In my 2018 setup, blockchain storage was roughly 400GB and around a hundred million rows, but still relatively quick to navigate for infrequent queries. Clustering was later worked into this database to reduce lookup times, since data was chronological and splitting via the datetime index allowed for much faster re-indexing (cutting N to a fraction in a process that took time on the order of n log n) while maintaining identical functionality (lookups using datetime index are still trivial to make).
 
 
 Next came a source for much of the fun of the internship: experimenting with data visualization methods and building analysis tools. To tackle this, I toyed with both Python plotting libraries (matplotlib/seaborn) and JavaScript ones (d3/highcharts/chart.js), eventually settling on d3.js to build the various tools. Some of these tools I'll detail here:
 
 
-##### Rule-based Checks
+## Rule-based Checks
 
 
-![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-2.png)
+![Rule-based checks dashboard](/blog/ethereum-address-analyzer/ethereum-address-analyzer-2.png)
 
 
 Rule based checks are relatively straightforward - if/else conditions on an address-constrained subset of the database. A separate lookup table for historical ETH/USD price was necessary to track at-the-time USD values of transactions.
 
 
-##### Transaction Pattern Visualization
+## Transaction Pattern Visualization
 
 
-![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-3.png)
+![Transaction pattern visualization by time](/blog/ethereum-address-analyzer/ethereum-address-analyzer-3.png)
 
 
 Some interesting information can be found here, with transaction patterns leading to potential implications regarding the timezone of the user (This user most likely sleeps between 12AM and 8AM, for example) and the purpose of the account (activity only constrained to business days, etc.)
 
 
-##### Account Balance History
+## Account Balance History
 
 
-![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-4.jpg)
+![Account balance history chart](/blog/ethereum-address-analyzer/ethereum-address-analyzer-4.jpg)
 
 
 *Just good due diligence to have, to be honest*
 
 
-##### Transaction Value Distribution
+## Transaction Value Distribution
 
 
-![undefined](/blog/ethereum-address-analyzer/ethereum-address-analyzer-5.jpg)
+![Transaction value distribution chart](/blog/ethereum-address-analyzer/ethereum-address-analyzer-5.jpg)
 
 
 We want to have a good sensing of how much money the user tends to transact. Many patterns can emerge here, like general betting patterns (with standardized amounts of Eth, or low-Eth transactions indicating smart contract activity).
 
 
-Two other products were developed
+Two other products were developed:
 
 
-- Basic statistical overview regarding address specific information: Number of associated addresses, number of normal/internal transactions (Ethereum specific), average volume, and the like.
+- Basic statistical overview regarding address specific information: number of associated addresses, number of normal/internal transactions (Ethereum specific), and average volume.
 
 
-- A web-association system to analyze commonly associated entities (other addresses), which yielded information regarding common exchanges used, smart contracts/ERC 20 or ERC 721 tokens used, and the like.
+- A web-association system to analyze commonly associated entities (other addresses), which yielded information regarding common exchanges used and smart contracts/ERC 20 or ERC 721 tokens used.
 
 
-#### Deployment
+# Deployment
 
 
 Rendering was done on a local headless Chromium browser, before being converted into a PDF. I initially toyed with the idea of making this available on an online webportal, but soon realized issues with scalability. Webportal access to dynamically generated reports (based on users' providing addresses to analyze) would have substantial lag time, as processing of relevant data was not instantaneous, requiring several iterations through the 100 million + row database, and for one case (a Web of associated addresses) even potentially exponential growth.
 
 
-#### Going Forward
+# Going Forward
 
 
-This product was initially intended to serve as groundwork for a more data-centric approach towards solving the KYC/AML problem. I had initially intended to obtain some sort of 'shady' Ethereum address database (trawling the dark web, perhaps?) to potentially try to train a classification model on suspicious versus nonsuspicious addresses, and this was a precursor to that. It ended up being fleshed out as a product standing on its own, and at the time of conclusion for my Internship the company had started to offer this platform as a product to its clients, generating archivable address-specific reports that could be used to watch for suspicious activity.
+This product was initially intended to serve as groundwork for a more data-centric approach towards solving the KYC/AML problem. I had initially intended to obtain a curated dataset of known suspicious Ethereum addresses from public and commercial intelligence sources to potentially train a classification model on suspicious versus non-suspicious addresses, and this was a precursor to that. It ended up being fleshed out as a product standing on its own, and at the time of conclusion for my internship the company had started to offer this platform as a product to its clients, generating archivable address-specific reports that could be used to watch for suspicious activity.
 
 
-#### Technologies
+# Technologies
 
 
 Ethereum (Blockchain downloaded via Geth, postprocessed into PostgreSQL), MetaMask for contract interactions/testing

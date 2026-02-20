@@ -5,10 +5,65 @@ summary: "Using computer vision and emulated controller input to cast spells in 
 tags: ["computer-vision", "gesture-recognition", "gaming", "real-time", "emulation", "draft"]
 ---
 
-## Write-up in progress
+<Callout type="info">
+This is a retroactive blog post reflecting on our magicka2-real-spellcasting [project](https://github.com/Yustynn/magicka2-real-spellcasting) for Hack N Roll 2019.
+</Callout>
 
-This project used computer vision and emulated controller input to cast spells
-in Magicka through hand gestures.
+# Introduction
 
-A full retrospective is in progress and will include architecture decisions,
-gesture model behavior, and lessons from real-time input constraints.
+Way back in 2019, before headsets like today's Meta Quest line and Apple Vision Pro were mainstream consumer products, we had the bright idea of trying to play Magicka with hand gestures Harry Potter-style, rather than with the typical mouse and keyboard. We figured Hack N Roll 2019 was probably a good place to try it out!
+
+[Magicka 2](https://en.wikipedia.org/wiki/Magicka_2) is a multiplayer action-adventure game where players control wizards that have access to eight 'elements'. These elements interact with each other dynamically; with things like "Water" and "Fire" combining to create "Steam". On top of that, specific combinations of elements can be combined to create custom spells, like "Meteor Shower" being cast by the exact sequence of Fire/Rock/Steam/Rock/Fire. This is similar in a way to Invoker from DoTA; except instead of three elements and 10 spells, Magicka has eight elements and a much larger number of possible spell combinations.
+
+Usually this is played via keyboard (casting elements mapped to keys) or a controller, using the joystick to identify elements.
+
+This began with some requirements scoping:
+
+1. The 'feeling of awesomeness' lies entirely in being able to convert memorized gestures to spells in Magicka
+1. Movement still needs to be intuitive, and simultaneous movement + casting is common. Movement also dictates the *direction* of an invoked spell.
+1. Given the nature of the event (a 24 hour Hackathon), we likely have to write wrappers around existing control interfaces for the game, rather than wiring our own mappings from our controls directly to game inputs
+
+# Components
+
+## Event framework
+
+We decided to use asyncio for this task, as this is a heavily I/O-constrained use case. Multithreading was also an option but would have been much more complex to manage given the GIL. In hindsight, this would probably have been much better written as a Go application.
+
+## Control interface
+
+We decided to emulate an Xbox controller for the task, as it allows for full 360-degree navigation (mouse/keyboards are tied down to 8 directions via WASD). Existing bindings existed for emulation of Xbox controls, meaning we wouldn't need to interface with the game itself, only the OS; the game 'simply sees' an Xbox controller. This was done leveraging the [evdev](https://python-evdev.readthedocs.io/en/latest/) library.
+
+Various other interfaces were also necessary, like OpenCV interaction with a webcam.
+
+To allow for simultaneous movement and spells, we simply split control by hand: left hand for movement, and right hand for custom spells. The left hand would permanently be used for movement; clenching a fist to indicate an 'anchor', and moving the clenched fist up/down/left/right to map to the 360 degree movement options of the game.
+
+## ML Inference
+
+The 'magic sauce' lies here - mapping gestures to spells. Given time constraints and the idea of pursuing a proof of concept, we decided to use the well-known MNIST dataset for image recognition; the general pipeline would then be:
+
+`Camera watches player's right hand for distinct gestures -> gesture is converted into a JPG -> JPG is mapped to a digit via MNIST -> target spell is inferred -> Spell's element invocation sequence is invoked.`
+
+This unfortunately comes pegged with a bunch of latency problems; end to end, this (highly unoptimized) pipeline can take up to a second to complete the full gesture recognition loop. However, this is something we figured was fine for a POC; and in principle the lower bound could plausibly get down to something on the order of single-digit milliseconds with modern hardware and optimized pipelines (just look at today's VR games!).
+
+There were a few other constraints here - requirements for high contrast for reliable hand tracking (so we had to hold colored balls; think green screens), poor cardinality mapping (we only have 10 'digits' in MNIST, which pales in comparison to the thousands of combinations of possible elements and spells) being some of them - but ultimately all we wanted to do was be able to cast Meteor Showers using our hands, so we bulldozed on and designed for that.
+
+# End Result
+
+The culmination of the hackathon was a jankily wired up Python-based `OpenCV`/`asyncio`/`evdev` application forwarding commands to a live Magicka instance on our laptops. We threw in multiplayer support (multiple webcams on multiple laptops each emulating 'one controller') just so we could sling Meteor Showers at each other as well.
+
+![Magicka Spell Slinging](magicka.gif)
+
+The end result was that in the last hours of the hackathon, our sleep deprived selves were having a blast throwing spells at each other as everyone hectically rushed to finish their projects.
+
+Very tragically, however, the judges completely forgot to judge us (they said they'd loop around to our table, and never did), so we never got to show it off and compete for prizes :(
+
+## Reflections on past me
+
+Looking back on our silly project 8 years ago, there are quite a few things that would likely be very different today.
+
+- Interfaces for input control have developed significantly since then; for example, the Nintendo Switch's [Joy-Cons](https://en.wikipedia.org/wiki/Joy-Con) or the Quest's [Oculus Touch](https://en.wikipedia.org/wiki/Quest_2#Controllers) controllers have feature sets that include full gyroscopic inputs and accelerometers. Figuring out whether we can access their SDKs is a different matter.... but would likely unlock *much more* flexibility. 
+    - For example, a joystick on a controller could've been used for movements, unlocking *both hands* for spellcasting!
+- The state of CV has progressed significantly, though that might not be necessary given gyroscopic input controllers
+- Given our relatively clear requirements and availability of existing libraries, it could've probably been vibe-coded relatively easily on a language like Go today.
+- Speeding up ML inference by leveraging GPUs and worker pools
+- Some way to access the elements themselves rather than simply the ensuing spells. This is probably a conversation the Magicka developers themselves have had, when designing controller support; the current state (right joystick) feels a little underoptimized to me, as spellcasting is *much* faster on keyboard rather than controller. 8 cardinal directions -> 8 element mapping, maybe? 
