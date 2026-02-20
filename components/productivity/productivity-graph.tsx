@@ -40,6 +40,7 @@ type GraphNode = {
   size: number;
   color: string;
   label: string;
+  type?: string;
   nodeType: GraphNodeType;
   slug?: string;
   categoryId?: string;
@@ -66,6 +67,7 @@ type GraphEdge = {
 type GraphEngineModules = {
   SigmaCtor: typeof import("sigma").default;
   EdgeCurveProgram: typeof import("@sigma/edge-curve").default;
+  NodeImageProgram: typeof import("@sigma/node-image").NodeImageProgram;
   ForceAtlas2LayoutCtor: typeof import("graphology-layout-forceatlas2/worker").default;
   forceAtlas2: typeof import("graphology-layout-forceatlas2").default;
   noverlap: typeof import("graphology-layout-noverlap").default;
@@ -81,8 +83,20 @@ type SigmaLike = {
   refresh: () => void;
   setGraph: (graph: Graph<GraphNode, GraphEdge>) => void;
   getCamera: () => SigmaCameraLike;
-  on: (event: string, handler: (payload?: { node: string }) => void) => void;
+  getContainer: () => HTMLElement;
+  getNodeDisplayData: (key: string) => { x: number; y: number; size: number; hidden: boolean } | undefined;
+  graphToViewport: (coordinates: { x: number; y: number }) => { x: number; y: number };
+  setSetting: (key: string, value: unknown) => void;
+  on: (event: string, handler: (payload?: { node?: string }) => void) => void;
+  off: (event: string, handler: (payload?: { node?: string }) => void) => void;
   kill: () => void;
+};
+
+type ThemePalette = {
+  background: string;
+  foreground: string;
+  muted: string;
+  rule: string;
 };
 
 const CATEGORY_RING_RADIUS = 9.5;
@@ -90,13 +104,14 @@ const LAYOUT_DURATION_MS = 7000;
 const CATEGORY_SIZE = 9;
 const POST_BASE_SIZE = 4.8;
 const POST_LABEL_ZOOM_THRESHOLD = 1.35;
-const BACKGROUND_RGB = { r: 246, g: 246, b: 246 };
-const CATEGORY_COLOR = "#111827";
-const CATEGORY_COLOR_ACTIVE = "#0f172a";
-const POST_COLOR = "#2563eb";
+const THEME_FALLBACK: ThemePalette = {
+  background: "#fafaf9",
+  foreground: "#1c1917",
+  muted: "#78716c",
+  rule: "#e7e5e4",
+};
+const POST_COLOR = "#3b82f6";
 const POST_DRAFT_COLOR = "#94a3b8";
-const EDGE_COLOR = "#cbd5e1";
-const EDGE_DRAFT_COLOR = "#cbd5e1";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -132,12 +147,13 @@ function rgbToHex(r: number, g: number, b: number) {
   );
 }
 
-function dimColor(hex: string, amount: number) {
+function dimColor(hex: string, amount: number, backgroundHex: string) {
   const rgb = hexToRgb(hex);
+  const bg = hexToRgb(backgroundHex);
   return rgbToHex(
-    BACKGROUND_RGB.r + (rgb.r - BACKGROUND_RGB.r) * amount,
-    BACKGROUND_RGB.g + (rgb.g - BACKGROUND_RGB.g) * amount,
-    BACKGROUND_RGB.b + (rgb.b - BACKGROUND_RGB.b) * amount,
+    bg.r + (rgb.r - bg.r) * amount,
+    bg.g + (rgb.g - bg.g) * amount,
+    bg.b + (rgb.b - bg.b) * amount,
   );
 }
 
@@ -148,6 +164,21 @@ function brightenColor(hex: string, factor: number) {
     rgb.g + ((255 - rgb.g) * (factor - 1)) / factor,
     rgb.b + ((255 - rgb.b) * (factor - 1)) / factor,
   );
+}
+
+function readCssVar(name: string, fallback: string) {
+  if (typeof window === "undefined") return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
+}
+
+function resolveThemePalette(): ThemePalette {
+  return {
+    background: readCssVar("--background", THEME_FALLBACK.background),
+    foreground: readCssVar("--foreground", THEME_FALLBACK.foreground),
+    muted: readCssVar("--muted", THEME_FALLBACK.muted),
+    rule: readCssVar("--rule", THEME_FALLBACK.rule),
+  };
 }
 
 function hashString(input: string) {
@@ -203,8 +234,9 @@ function buildGraph(
       x: pt.x,
       y: pt.y,
       size: CATEGORY_SIZE,
-      color: CATEGORY_COLOR,
+      color: THEME_FALLBACK.foreground,
       label: cat.label,
+      type: "circle",
       nodeType: "category",
       categoryId: cat.id,
     });
@@ -236,6 +268,7 @@ function buildGraph(
       size: POST_BASE_SIZE + normalizeSize(post.size) * 1.25,
       color: isDraft ? POST_DRAFT_COLOR : POST_COLOR,
       label: post.title,
+      type: "image",
       nodeType: "post",
       slug: post.slug,
       summary: post.summary,
@@ -251,7 +284,7 @@ function buildGraph(
         if (graph.hasEdge(edgeId)) return;
         graph.addEdgeWithKey(edgeId, nodeId, categoryNodeId, {
           size: 1,
-          color: isDraft ? EDGE_DRAFT_COLOR : EDGE_COLOR,
+          color: isDraft ? THEME_FALLBACK.muted : THEME_FALLBACK.rule,
           postSlug: post.slug,
           categoryId,
           isDraft,
@@ -284,6 +317,7 @@ export function ProductivityGraph({
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const outlineCanvasRef = useRef<HTMLCanvasElement>(null);
   const sigmaRef = useRef<SigmaLike | null>(null);
   const graphRef = useRef<Graph<GraphNode, GraphEdge> | null>(null);
   const layoutRef = useRef<{ start: () => void; stop: () => void; kill: () => void } | null>(
@@ -293,6 +327,9 @@ export function ProductivityGraph({
   const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeNodeIdRef = useRef<string | null>(null);
   const pinnedNodeIdRef = useRef<string | null>(null);
+  const themeRef = useRef<ThemePalette>(THEME_FALLBACK);
+  const afterRenderHandlerRef = useRef<(() => void) | null>(null);
+  const resizeOutlineHandlerRef = useRef<(() => void) | null>(null);
   const visibilityRef = useRef<{ nodes: Set<string> | null; edges: Set<string> | null }>({
     nodes: null,
     edges: null,
@@ -354,9 +391,10 @@ export function ProductivityGraph({
   const loadGraphEngine = useCallback(async (): Promise<GraphEngineModules> => {
     if (engineRef.current) return engineRef.current;
 
-    const [sigmaMod, edgeCurveMod, fa2WorkerMod, fa2Mod, noverlapMod] = await Promise.all([
+    const [sigmaMod, edgeCurveMod, nodeImageMod, fa2WorkerMod, fa2Mod, noverlapMod] = await Promise.all([
       import("sigma"),
       import("@sigma/edge-curve"),
+      import("@sigma/node-image"),
       import("graphology-layout-forceatlas2/worker"),
       import("graphology-layout-forceatlas2"),
       import("graphology-layout-noverlap"),
@@ -365,12 +403,86 @@ export function ProductivityGraph({
     const engine: GraphEngineModules = {
       SigmaCtor: sigmaMod.default,
       EdgeCurveProgram: edgeCurveMod.default,
+      NodeImageProgram: nodeImageMod.NodeImageProgram,
       ForceAtlas2LayoutCtor: fa2WorkerMod.default,
       forceAtlas2: fa2Mod.default,
       noverlap: noverlapMod.default,
     };
     engineRef.current = engine;
     return engine;
+  }, []);
+
+  useEffect(() => {
+    const applyTheme = () => {
+      themeRef.current = resolveThemePalette();
+      if (!sigmaRef.current) return;
+      sigmaRef.current.setSetting("labelColor", { color: themeRef.current.foreground });
+      sigmaRef.current.refresh();
+    };
+
+    applyTheme();
+    const observer = new MutationObserver(applyTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme", "style"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const drawPostOutlines = useCallback(() => {
+    const sigma = sigmaRef.current;
+    const graph = graphRef.current;
+    const canvas = outlineCanvasRef.current;
+    if (!sigma || !graph || !canvas) return;
+
+    const container = sigma.getContainer();
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    if (width <= 0 || height <= 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const pixelWidth = Math.round(width * dpr);
+    const pixelHeight = Math.round(height * dpr);
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+    }
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([2.4, 2.8]);
+
+    const palette = themeRef.current;
+    const visibleNodes = visibilityRef.current.nodes;
+
+    graph.forEachNode((nodeId, attrs) => {
+      if (attrs.nodeType !== "post") return;
+
+      const display = sigma.getNodeDisplayData(nodeId);
+      if (!display || display.hidden) return;
+
+      const point = sigma.graphToViewport({ x: display.x, y: display.y });
+      const isVisible = !visibleNodes || visibleNodes.has(nodeId);
+      const outlineBaseColor = attrs.isDraft ? palette.muted : palette.rule;
+
+      ctx.globalAlpha = isVisible ? 0.96 : 0.4;
+      ctx.strokeStyle = isVisible
+        ? outlineBaseColor
+        : dimColor(outlineBaseColor, 0.55, palette.background);
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, Math.max(6, display.size + 1.8), 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
   }, []);
 
   const stopLayout = useCallback(() => {
@@ -439,7 +551,7 @@ export function ProductivityGraph({
       const inferred = engine.forceAtlas2.inferSettings(graph);
       const settings = {
         ...inferred,
-        gravity: 0.12,
+        gravity: 0.06,
         scalingRatio: 9,
         slowDown: graph.order > 300 ? 1.9 : 1.4,
         barnesHutOptimize: graph.order > 150,
@@ -485,10 +597,12 @@ export function ProductivityGraph({
           labelFont: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
           labelSize: 11,
           labelWeight: "500",
+          labelColor: { color: themeRef.current.foreground },
           labelDensity: 0.15,
           labelGridCellSize: 70,
           defaultNodeColor: POST_COLOR,
-          defaultEdgeColor: EDGE_COLOR,
+          defaultEdgeColor: THEME_FALLBACK.rule,
+          nodeProgramClasses: { image: engine.NodeImageProgram as unknown as never },
           defaultEdgeType: "curved",
           edgeProgramClasses: { curved: engine.EdgeCurveProgram as unknown as never },
           zIndex: true,
@@ -498,6 +612,7 @@ export function ProductivityGraph({
           labelRenderedSizeThreshold: POST_LABEL_ZOOM_THRESHOLD,
           nodeReducer: (node, data) => {
             const result = { ...data };
+            const palette = themeRef.current;
             const activeNodeId = activeNodeIdRef.current;
             const pinnedNodeId = pinnedNodeIdRef.current;
             const visibleNodes = visibilityRef.current.nodes;
@@ -505,8 +620,12 @@ export function ProductivityGraph({
             const isActive = activeNodeId === node;
             const isPinned = pinnedNodeId === node;
 
+            if (data.nodeType === "category") {
+              result.color = palette.foreground;
+            }
+
             if (!isVisible) {
-              result.color = dimColor(data.color, 0.18);
+              result.color = dimColor(data.color, 0.18, palette.background);
               result.size = Math.max(1.6, (data.size || 4) * 0.7);
               result.label = "";
               result.zIndex = 0;
@@ -516,7 +635,7 @@ export function ProductivityGraph({
             if (isActive || isPinned) {
               result.color =
                 data.nodeType === "category"
-                  ? CATEGORY_COLOR_ACTIVE
+                  ? brightenColor(palette.foreground, 1.25)
                   : brightenColor(data.color, 1.4);
               result.size = (data.size || 4) * 1.3;
               result.zIndex = 2;
@@ -525,6 +644,7 @@ export function ProductivityGraph({
           },
           edgeReducer: (edge, data) => {
             const result = { ...data };
+            const palette = themeRef.current;
             const visibleEdges = visibilityRef.current.edges;
             const activeNodeId = activeNodeIdRef.current;
             const isVisible = !visibleEdges || visibleEdges.has(edge);
@@ -536,7 +656,7 @@ export function ProductivityGraph({
               (extremities[0] === activeNodeId || extremities[1] === activeNodeId);
 
             if (!isVisible) {
-              result.color = dimColor(data.color, 0.12);
+              result.color = dimColor(data.color, 0.12, palette.background);
               result.size = 0.25;
               result.zIndex = 0;
               return result;
@@ -563,6 +683,11 @@ export function ProductivityGraph({
       window.setTimeout(() => {
         void runLayout(initialGraph);
       }, 0);
+      drawPostOutlines();
+
+      const handleAfterRender = () => drawPostOutlines();
+      afterRenderHandlerRef.current = handleAfterRender;
+      sigma.on("afterRender", handleAfterRender);
 
       sigma.on("enterNode", (event) => {
         const node = event?.node;
@@ -614,16 +739,32 @@ export function ProductivityGraph({
         setFocusedNode(null);
         setHoveredPostSlug(null);
       });
+
+      const handleResize = () => drawPostOutlines();
+      resizeOutlineHandlerRef.current = handleResize;
+      window.addEventListener("resize", handleResize);
+
+      if (containerRef.current) {
+        containerRef.current.style.cursor = "grab";
+      }
     })();
 
     return () => {
       cancelled = true;
       stopLayout();
+      if (sigmaRef.current && afterRenderHandlerRef.current) {
+        sigmaRef.current.off("afterRender", afterRenderHandlerRef.current);
+      }
+      if (resizeOutlineHandlerRef.current) {
+        window.removeEventListener("resize", resizeOutlineHandlerRef.current);
+      }
+      afterRenderHandlerRef.current = null;
+      resizeOutlineHandlerRef.current = null;
       sigmaRef.current?.kill();
       sigmaRef.current = null;
       graphRef.current = null;
     };
-  }, [loadGraphEngine, runLayout, stopLayout]);
+  }, [drawPostOutlines, loadGraphEngine, runLayout, stopLayout]);
 
   useEffect(() => {
     latestGraphRef.current = sigmaGraph;
@@ -633,15 +774,17 @@ export function ProductivityGraph({
     sigmaRef.current.getCamera().animatedReset({ duration: 280 });
     window.setTimeout(() => {
       void runLayout(sigmaGraph);
+      drawPostOutlines();
     }, 0);
-  }, [runLayout, sigmaGraph]);
+  }, [drawPostOutlines, runLayout, sigmaGraph]);
 
   useEffect(() => {
     activeNodeIdRef.current = nodeIdFromFocus(activeNode);
     pinnedNodeIdRef.current = nodeIdFromFocus(pinnedNode);
     refreshVisibility();
     sigmaRef.current?.refresh();
-  }, [activeNode, pinnedNode, refreshVisibility]);
+    drawPostOutlines();
+  }, [activeNode, drawPostOutlines, pinnedNode, refreshVisibility]);
 
   const zoomIn = useCallback(() => {
     sigmaRef.current?.getCamera().animatedZoom({ duration: 200 });
@@ -731,6 +874,11 @@ export function ProductivityGraph({
           className="h-full w-full cursor-grab active:cursor-grabbing"
           role="img"
           aria-label="Productivity graph connecting categories and active posts"
+        />
+        <canvas
+          ref={outlineCanvasRef}
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          aria-hidden
         />
         {isLayoutRunning ? (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-rule bg-background/95 px-3 py-1 text-xs text-muted">
