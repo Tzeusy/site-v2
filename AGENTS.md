@@ -193,3 +193,6 @@ git push                # Push to remote
 ## Notes to self
 
 - `/productivity` graph uses a Sigma/Graphology engine; keep Sigma-related imports dynamically loaded inside client effects to avoid prerender failures (`WebGL2RenderingContext is not defined`).
+- Sigma canvas node labels can look soft with fractional placement; use a custom `defaultDrawNodeLabel` that snaps text coordinates to whole pixels for crisper titles.
+- Keep `/blog` index links subtle (hover underline), and force visible underlines only for inline links inside individual post bodies using the `blog-post-content-underlines` class on the content section.
+- New files added under `content/blog/<date-slug>/` are not auto-synced in `npm run dev`; run `node scripts/copy-blog-assets.mjs` (or `npm run build`) to refresh `public/blog/<slug>/` assets.

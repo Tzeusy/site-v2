@@ -123,18 +123,36 @@ body {
   position: absolute;
   height: 1.5px;
   border-radius: 999px;
+  transform-origin: left center;
   background: linear-gradient(
-    to right,
-    color-mix(in oklab, var(--foreground) 5%, transparent),
-    color-mix(in oklab, white 90%, var(--foreground))
+    to left,
+    color-mix(in oklab, #ffbf66 24%, transparent),
+    color-mix(in oklab, white 92%, #ffc671)
   );
   box-shadow:
-    0 0 10px color-mix(in oklab, white 85%, transparent),
-    0 0 24px color-mix(in oklab, white 70%, transparent);
-  transform: rotate(-28deg);
+    0 0 10px color-mix(in oklab, #ffd08f 85%, transparent),
+    0 0 24px color-mix(in oklab, #ffac4f 72%, transparent),
+    0 0 38px color-mix(in oklab, #ff9a3d 54%, transparent);
+  transform: translate3d(0, 0, 0) rotate(-29.5deg) scaleX(0);
   animation-name: weather-meteor-streak;
   animation-iteration-count: infinite;
-  animation-timing-function: ease-in;
+  animation-timing-function: linear;
+  will-change: transform, opacity;
+}
+
+.weather-meteor::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  background: color-mix(in oklab, white 90%, #ffd08a);
+  box-shadow:
+    0 0 10px color-mix(in oklab, #ffe8c8 88%, transparent),
+    0 0 20px color-mix(in oklab, #ffbe72 72%, transparent);
 }
 
 .weather-meteor-layer {
@@ -145,17 +163,22 @@ body {
 
 @keyframes weather-meteor-streak {
   0% {
-    transform: translate3d(0, 0, 0) rotate(-28deg);
+    transform: translate3d(0, 0, 0) rotate(-29.5deg) scaleX(0);
     opacity: 0;
   }
-  8% {
+  12% {
     opacity: 1;
   }
-  62% {
-    opacity: 0.25;
+  30% {
+    transform: translate3d(-13.8vw, 7.8vh, 0) rotate(-29.5deg) scaleX(1);
+    opacity: 0.92;
+  }
+  80% {
+    transform: translate3d(-36.8vw, 20.8vh, 0) rotate(-29.5deg) scaleX(1);
+    opacity: 0.28;
   }
   100% {
-    transform: translate3d(-46vw, 26vh, 0) rotate(-28deg);
+    transform: translate3d(-46vw, 26vh, 0) rotate(-29.5deg) scaleX(1);
     opacity: 0;
   }
 }
@@ -384,6 +407,14 @@ a {
 }
 
 a:hover {
+  text-decoration-color: currentColor;
+}
+
+.blog-post-content-underlines a {
+  text-decoration-color: currentColor;
+}
+
+.about-link-underlines a {
   text-decoration-color: currentColor;
 }
 

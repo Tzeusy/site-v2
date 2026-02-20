@@ -53,7 +53,7 @@ The design philosophy is "quiet, confident, literate" — typography-driven, not
 - **No animations**, parallax, card-lifting effects, sliding panels, or hover transforms
 - **Narrow readable column** (~65–75 chars wide) with generous margins
 - **Color is rare** — use the exact palette from README.md (light: `#fafaf9` bg, `#1c1917` text; dark: `#171412` bg, `#e7e5e4` text)
-- **Links:** calm blue `#2563eb` (light) / `#60a5fa` (dark), underline on hover only
+- **Links:** calm blue `#2563eb` (light) / `#60a5fa` (dark); keep nav/index links subtle (hover underline), but keep inline links inside individual blog post content underlined for scanability
 - **Typography carries the design** — hierarchy via size not weight, line spacing 1.6–1.8
 - **Font:** IBM Plex Serif/Sans, Literata, or Inter
 - **Code blocks:** syntax highlighting via shiki / rehype-pretty-code

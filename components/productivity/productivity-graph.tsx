@@ -97,6 +97,25 @@ type ThemePalette = {
   rule: string;
 };
 
+type SigmaLabelColorSetting =
+  | { attribute: string; color?: string }
+  | { color: string; attribute?: undefined };
+
+type SigmaLabelSettings = {
+  labelFont: string;
+  labelSize: number;
+  labelWeight: string;
+  labelColor: SigmaLabelColorSetting;
+};
+
+type SigmaNodeLabelData = {
+  label?: string | null;
+  x: number;
+  y: number;
+  size: number;
+  [key: string]: unknown;
+};
+
 const CATEGORY_RING_RADIUS = 9.5;
 const MAX_LAYOUT_SPAN = 16;
 const CATEGORY_SIZE = 10.5;
@@ -198,6 +217,34 @@ function relativeLuminance(hex: string) {
 
 function isDarkTheme(theme: ThemePalette) {
   return relativeLuminance(theme.background) < 0.45;
+}
+
+function resolveSigmaLabelColor(data: SigmaNodeLabelData, labelColor: SigmaLabelColorSetting) {
+  if ("attribute" in labelColor && labelColor.attribute) {
+    const value = data[labelColor.attribute];
+    if (typeof value === "string" && value.length > 0) return value;
+    return labelColor.color ?? "#000";
+  }
+  return labelColor.color ?? "#000";
+}
+
+function drawCrispNodeLabel(
+  context: CanvasRenderingContext2D,
+  data: SigmaNodeLabelData,
+  settings: SigmaLabelSettings,
+) {
+  if (!data.label) return;
+  const label = typeof data.label === "string" ? data.label : String(data.label);
+  if (!label) return;
+
+  const size = settings.labelSize;
+  context.font = `${settings.labelWeight} ${size}px ${settings.labelFont}`;
+  context.fillStyle = resolveSigmaLabelColor(data, settings.labelColor);
+
+  // Snap text anchor points to whole pixels so labels render crisply on canvas.
+  const x = Math.round(data.x + data.size + 3);
+  const y = Math.round(data.y + size / 3);
+  context.fillText(label, x, y);
 }
 
 function buildCategoryColorMap(
@@ -655,9 +702,11 @@ export function ProductivityGraph({
         containerRef.current,
         {
           renderLabels: true,
-          labelFont: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-          labelSize: 11,
-          labelWeight: "500",
+          defaultDrawNodeLabel: drawCrispNodeLabel,
+          labelFont:
+            "var(--font-inter), Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
+          labelSize: 12,
+          labelWeight: "600",
           labelColor: { color: themeRef.current.foreground },
           labelDensity: 0.15,
           labelGridCellSize: 70,

@@ -107,7 +107,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <ol className="space-y-1 text-sm text-muted">
               {post.headings.map((heading) => (
                 <li key={heading.id} style={{ paddingLeft: `${(heading.level - minLevel) * 1}rem` }}>
-                  <a href={`#${heading.id}`} className="no-underline hover:underline">
+                  <a href={`#${heading.id}`}>
                     {heading.text}
                   </a>
                 </li>
@@ -117,7 +117,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         );
       })() : null}
 
-      <section className="space-y-4 text-justify hyphens-auto">{post.content}</section>
+      <section className="blog-post-content-underlines space-y-4 text-justify hyphens-auto">
+        {post.content}
+      </section>
 
       {relatedPosts.length > 0 ? (
         <section className="space-y-3 border-t border-rule pt-8">

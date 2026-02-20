@@ -24,7 +24,7 @@ export function PostLink({ slug, title, date, readingTime, isDraft }: PostLinkPr
     <li className="border-b border-rule py-3">
       <Link
         href={`/blog/${slug}`}
-        className="grid grid-cols-[1fr_auto] items-baseline gap-4 no-underline"
+        className="grid grid-cols-[1fr_auto] items-baseline gap-4"
       >
         <span className="text-lg text-foreground">
           {title}

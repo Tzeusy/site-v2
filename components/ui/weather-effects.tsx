@@ -18,7 +18,7 @@ type Meteor = {
   top: string;
   delay: string;
   duration: string;
-  width: number;
+  length: number;
   opacity: number;
 };
 
@@ -43,13 +43,13 @@ const SNOW_FLAKES: SnowFlake[] = Array.from({ length: 40 }, (_, index) => ({
   opacity: 0.35 + (index % 5) * 0.1,
 }));
 
-const METEORS: Meteor[] = Array.from({ length: 18 }, (_, index) => ({
+const METEORS: Meteor[] = Array.from({ length: 10 }, (_, index) => ({
   left: `${((index * 17.8) % 120 - 10).toFixed(2)}%`,
   top: `${((index * 5.4) % 24).toFixed(2)}%`,
-  delay: `${((index * 1.07) % 15).toFixed(2)}s`,
-  duration: `${(2.6 + (index % 4) * 0.45).toFixed(2)}s`,
-  width: 80 + (index % 6) * 24,
-  opacity: 0.22 + (index % 4) * 0.12,
+  delay: `${((index * 2.73) % 24).toFixed(2)}s`,
+  duration: `${(1.35 + (index % 4) * 0.22).toFixed(2)}s`,
+  length: 80 + (index % 6) * 24,
+  opacity: 0.3 + (index % 4) * 0.13,
 }));
 
 export function WeatherEffects() {
@@ -94,7 +94,7 @@ export function WeatherEffects() {
             style={{
               left: meteor.left,
               top: meteor.top,
-              width: `${meteor.width}px`,
+              width: `${meteor.length}px`,
               animationDelay: `-${meteor.delay}`,
               animationDuration: meteor.duration,
               opacity: meteor.opacity,

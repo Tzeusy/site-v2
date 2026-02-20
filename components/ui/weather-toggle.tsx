@@ -105,7 +105,7 @@ export function WeatherToggle() {
       onClick={handleToggle}
       className="text-foreground"
       aria-label={`Cycle weather (${mod}_)`}
-      title={`Cycle weather (${mod}_)`}
+      title={`Cycle weather (just for fun!) (${mod}_)`}
     >
       <span suppressHydrationWarning>{activeWeather.icon}</span>
     </button>

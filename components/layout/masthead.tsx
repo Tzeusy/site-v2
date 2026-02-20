@@ -32,8 +32,8 @@ export function Masthead() {
             </Link>
           ))}
           <SearchTrigger />
-          <WeatherToggle />
           <ThemeToggle />
+          <WeatherToggle />
         </nav>
       </div>
     </header>

@@ -61,15 +61,15 @@ export default function AboutPage() {
         </p>
         <p className="max-w-[65ch] text-muted">
           I studied Computer Science and Design at the Singapore University of
-          Technology and Design, where the curriculum pairs engineering rigour
+          Technology and Design, where the curriculum pairs software engineering
           with design thinking. That combination shaped how I approach
           software — treating clarity and usability as first-class constraints,
           not afterthoughts.
         </p>
         <p className="max-w-[65ch] text-muted">
-          I&rsquo;ve worked across a range of disciplines, mostly centered around Software Engineering
-          within finance. I maintain side hobbies in maintaining my own homelab and its
-          accompanying electronics and hardware, messing with things like CAD and 3D printing on and off.
+          My career has mostly centered around Software Engineering within finance. I maintain side hobbies
+          in maintaining my own homelab and its accompanying electronics and hardware, messing with things
+          like CAD and 3D printing on and off in my free time.
         </p>
       </section>
 
@@ -158,7 +158,6 @@ export default function AboutPage() {
       <section className="space-y-5 border-t border-rule pt-10">
         <h2 className="font-serif text-2xl">Current Projects — February 2026</h2>
         <ul className="max-w-[65ch] list-disc space-y-2 pl-5 text-muted">
-          <li>Serving reference data to the firm on Citadel&rsquo;s Enterprise Data team.</li>
           <li>Recovering from an <a
             href="/blog/my-open-heart-surgery"
             target="_blank"
@@ -175,7 +174,6 @@ export default function AboutPage() {
           >
             Jarvis
           </a></li>
-          <li>Reading about systems thinking and software composition.</li>
         </ul>
       </section>
 

@@ -10,16 +10,16 @@ tags: ["homelab", "active", "size-2", "infra"]
 I've always been fascinated by homelabs, as they've always represented an opportunity for me to explore and learn about technical system infrastructure without the demands of a day job. The main goal of my homelab is to:
 
 1. Education:
-    - A personal sandbox to try any and all open source softwareI'm curious about.
+    - A personal sandbox to try any and all open source software I'm curious about.
     - An opportunity to interact with hardware, expanding my domain knowledge around spaces where my job doesn't take me
 2. Firewalled data haven for personal infrastructure (smart home setups, microservices)
 3. An environment to 'export' my personal learnings and growth over time, as I gain more experience as a Software Engineer and a SRE.
     - As my work exposes me to new systems and services (Airflow, etc.) I want to concretize/experiment my lessons, and running my own infra is the best way to enable that in a cheap and riskless manner.
 4. Experimentation
-    - Corporate infrastructure is often months or even years behind the latest and greatest industry offerings, due to bureaucracy, legacy code, and simply misaligned incentives. It takes months for me to get a Python packaged approved internally within the firm, and that's *pre-validation* when I can't guarantee the potential benefits; how else am I to understand new libraries and offerings?
-    - Most recently: I've been having *so much fun* at home with Claude and Codex recently that I dread going back to my company's Gemini-only AI ecosystem :sad:
+    - Corporate infrastructure is often months or even years behind the latest generations of industry offerings, due to bureaucracy, legacy code, and simply misaligned incentives. It takes months for me to get a Python packaged approved internally within the firm, and that's *pre-validation* when I can't guarantee the potential benefits; how else am I to understand new libraries and offerings?
+    - Most recently: I've been having *so much fun* at home with Claude and Codex recently that I dread going back to my company's Gemini-only AI ecosystem...
 
-In fact, when mentoring junior engineers and interns, I've frequently mentioned homelabs as a fantastic mode of exploration, when they ask about how best to hone their skills and well-roundedness as software engineers. Software *architecture* design is an instinct you only really pick up with thousands of hours of interaction and understanding; what better way to gain access to these hours, when you only really see these in bursts of a few hours at a time every few weeks at work?
+In fact, when mentoring junior engineers and interns, I've frequently mentioned homelabs as a fantastic source of learning, when they ask about how best to hone their skills and well-roundedness as software engineers. Software *architecture* design is an instinct you only really pick up with thousands of hours of interaction and iteration; what better way to gain access to these hours, when you only really see these in bursts of a few hours at a time every few weeks at work?
 
 # Requirements
 
@@ -27,8 +27,8 @@ Given the abovementioned goals, my homelab has to be able to:
 
 1. Be able to trivially scale-up and scale-down open-source infrastructure (docker images, helm charts, native builds off git repositories)
 2. Provide some semblance of security; 
-    - Network firewalling, to reduce risks of data exfiltration (admittedly this is a little tough for me and I haven't focused on this as much as I should've)
-    - Using *mirrors* for pypi packages, docker images, etc. to snapshot images
+    - Network firewalling, to reduce risks of data exfiltration (admittedly this is a little rough for me and I haven't focused on this as much as I should've)
+    - Using internal mirrors for pypi packages, docker images, and the like, which gives me some measure of control over dependencies and what's running live.
     - Also a way for me to understand how these things are usually done on a corporate level
 3. Support infrastructure and applications with drastically varying requirements (CPU, RAM, GPU, heck, even CPU architectures)
 

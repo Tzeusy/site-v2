@@ -7,20 +7,21 @@ tags: ["health", "bavd", "research", "personal", "setup", "infra"]
 
 # About
 
-This documents my personal setup to track my BAVD over time (See "My BAVD Journey"), managing it in as automated and useful a way as possible. Tragic news of a shoddy heart notwithstanding, my immediate next goal after finding out about the condition I had was to build a knowledge base and gather statistics around the condition. The goal I had when setting out on this project was twofold:
+This documents my personal setup to track my BAVD over time (See [My Open Heart Surgery](/blog/my-open-heart-surgery)), managing it in as automated and useful a way as possible. Setting the tragic news of a shoddy heart valve aside, my immediate next goal after finding out about the condition I had was to build a knowledge base and a stream of data points the condition. The goal I had when setting out on this project was twofold:
 
-- What core metrics are necessary or useful, and how do I track these over time?
-- Given my lack of a medical background, how can I create a library of documentation and research that can best help myself with identifying symptoms, making judgment calls, and understanding my options?
+- What core metrics are necessary or useful, and how do I track these over time in as frictionless a way as possible?
+- Given my lack of a medical background, how can I create a library of documentation and research that can best help myself with identifying symptoms, making judgment calls, and understanding my options? 
+- What format of documentation would be useful as a standard *lingua franca* between cardiologists in different countries and hospitals?
 
-Fortunately, progress around LLMs really came to a head around the same period that my condition progressed to an 'elective intervention' level of criticality. That has made my research *a lot* easier in the past year.
+Fortunately, progress around LLMs really came to a head around the same period that my condition progressed to an 'elective intervention' level of criticality. That has made my setup *a lot* easier in the past year.
 
 # Core Interfaces
 
-I've chosen two primary interfaces regarding management of my condition: A dedicated NotebookLM notebook, and a custom ChatGPT agent. Both of these receive the entirety of 'bibliography' (is this the right word?) around my condition; their implicit RAG ties in very well with their pre-trained knowledge on the topic.
+## Knowledge Bases
 
-## LLMs
+As part my experimentation, I set up both a dedicated NotebookLM notebook and a custom ChatGPT agent. Both of these receive the entirety of 'bibliography' (is this the right word?) around my condition; their implicit RAG ties in very well with their pre-trained knowledge on the topic, and the rising-tide of SOTA models that underlie them works very well to make the knowledge base self-improving over time.
 
-Every single report and test result gets scanned and uploaded into the 'knowledge base' of the following LLM platforms, allowing LLMs to have access to the latest state of my reports.
+Every single report and test result gets scanned and uploaded into the 'knowledge base' of the following LLM platforms, allowing LLMs to have access to the latest state of my reports, both diagnostic and operational.
 
 ### NotebookLM
 
@@ -39,6 +40,10 @@ This is my day-to-day conversation partner when it comes to asking questions abo
 This has been very useful; for example, it can retroactively generate statistics for all existing results (cross-check, of course...):
 
 ![GPT-Generated Table of tracked metrics over time](gpt-metrics-table.png)
+
+### Gaps
+
+I also have a wealth of DICOM data from my echocardiograms; however, these are essentially series of videos. There isn't currently a trivial way to get these ingested and parseable in a useful way by existing LLM tools.
 
 ## Health Metrics
 
@@ -77,3 +82,22 @@ Having my results uploaded gives me the ability to do lots of things of varying 
 - Identifying key metrics in my 2d echo reports and MRI reports, and charting growth and variance over time
   
 Ultimately the only 'legitimate' medical advice boils down to that given by actual doctors - but these tools together have given me a very good intuition of the space and of what doctors see when they look at my statistics and reports. 
+
+# Some ideas for the future...
+
+## 2D image -> 3D structure visualization
+
+2D echocardiograms give planar views of the heart; what if we could convert these into 3D models? Modern techniques like [photogrammetry](https://en.wikipedia.org/wiki/Photogrammetry) are getting ever-better year on year; this feels like the sort of problem it only takes a sufficiently motivated engineer to piece together existing infrastructure to build...
+
+![2D echocardiogram aortic valve view](2d-echocardiogram-aortic-valve-view.gif)
+
+## DICOM analysis
+
+*(See the 'Gaps' section above)* Analyzing these programmatically would likely need:
+
+1. Ability to ingest DICOM data
+2. Video ingestion pipeline for modern 
+3. Pre-training on similar- imagery and their relevant diagnostic significance
+4. Analytical skill on *which images* to analyze, and specifically *which parts* to measure (e.g. left ventricular end-systolic diameter - when is the end of the systole? Between which points do I draw the line to calculate diameter?)
+
+I can see parts 1- and 2- being already available; however, the volume of 3. in latest SOTA models is dubious at best, and 4. seems like it would need a dedicated fine-tuned approach given the specialized flow of analysis for each procedure. Not to mention, getting this pipeline to generate data with both sufficient accuracy to match that of current cardiologists is tough; now imagine the compliance/regulatory problems that might come with it...
