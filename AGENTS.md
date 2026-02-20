@@ -189,3 +189,7 @@ git push                # Push to remote
 - Always `bd sync` before ending session
 
 <!-- end-bv-agent-instructions -->
+
+## Notes to self
+
+- `/productivity` graph uses a Sigma/Graphology engine; keep Sigma-related imports dynamically loaded inside client effects to avoid prerender failures (`WebGL2RenderingContext is not defined`).
