@@ -103,8 +103,9 @@ type ThemePalette = {
 const CATEGORY_RING_RADIUS = 9.5;
 const LAYOUT_DURATION_MS = 7000;
 const MAX_LAYOUT_SPAN = 16;
-const CATEGORY_SIZE = 9;
-const POST_BASE_SIZE = 4.8;
+const CATEGORY_SIZE = 14;
+const POST_BASE_SIZE = 4.2;
+const POST_SIZE_STEP = 0.7;
 const POST_LABEL_ZOOM_THRESHOLD = 1.35;
 const THEME_FALLBACK: ThemePalette = {
   background: "#fafaf9",
@@ -356,9 +357,9 @@ function buildGraph(
     graph.addNode(nodeId, {
       x: cx + Math.cos(angle) * jitter,
       y: cy + Math.sin(angle) * jitter,
-      size: POST_BASE_SIZE + normalizeSize(post.size) * 1.25,
+      size: POST_BASE_SIZE + normalizeSize(post.size) * POST_SIZE_STEP,
       color: isDraft ? POST_DRAFT_COLOR : POST_COLOR,
-      label: post.title,
+      label: `[${post.title}]`,
       type: "image",
       nodeType: "post",
       slug: post.slug,
