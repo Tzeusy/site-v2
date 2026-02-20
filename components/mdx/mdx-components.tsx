@@ -2,6 +2,7 @@ import type { MDXComponents } from "mdx/types";
 import Image from "next/image";
 import { withBasePath } from "@/lib/base-path";
 import { Callout } from "@/components/mdx/callout";
+import { Collapsible } from "@/components/mdx/collapsible";
 import { YouTube } from "@/components/mdx/youtube";
 
 const DEFAULT_MDX_IMAGE_WIDTH = 1200;
@@ -85,5 +86,6 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   Callout,
+  Collapsible,
   YouTube,
 };
