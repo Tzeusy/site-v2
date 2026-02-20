@@ -44,6 +44,7 @@ type GraphNode = {
   nodeType: GraphNodeType;
   slug?: string;
   categoryId?: string;
+  categoryIds?: string[];
   summary?: string;
   image?: string;
   isDraft?: boolean;
@@ -167,6 +168,57 @@ function brightenColor(hex: string, factor: number) {
   );
 }
 
+function hslToHex(h: number, s: number, l: number) {
+  const sat = clamp(s, 0, 100) / 100;
+  const light = clamp(l, 0, 100) / 100;
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const hp = ((h % 360) + 360) % 360 / 60;
+  const x = c * (1 - Math.abs((hp % 2) - 1));
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (hp >= 0 && hp < 1) [r, g, b] = [c, x, 0];
+  else if (hp < 2) [r, g, b] = [x, c, 0];
+  else if (hp < 3) [r, g, b] = [0, c, x];
+  else if (hp < 4) [r, g, b] = [0, x, c];
+  else if (hp < 5) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+
+  const m = light - c / 2;
+  return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
+}
+
+function relativeLuminance(hex: string) {
+  const { r, g, b } = hexToRgb(hex);
+  const toLinear = (v: number) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const [R, G, B] = [toLinear(r), toLinear(g), toLinear(b)];
+  return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+}
+
+function isDarkTheme(theme: ThemePalette) {
+  return relativeLuminance(theme.background) < 0.45;
+}
+
+function buildCategoryColorMap(
+  categories: ProductivityGraphCategory[],
+  theme: ThemePalette,
+) {
+  const dark = isDarkTheme(theme);
+  const saturation = dark ? 44 : 40;
+  const lightness = dark ? 66 : 74;
+  const map = new Map<string, string>();
+
+  categories.forEach((category, index) => {
+    const hue = (index * 137.508 + 24) % 360;
+    map.set(category.id, hslToHex(hue, saturation, lightness));
+  });
+  return map;
+}
+
 function readCssVar(name: string, fallback: string) {
   if (typeof window === "undefined") return fallback;
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -259,6 +311,8 @@ function buildGraph(
   categories: ProductivityGraphCategory[],
   posts: ProductivityGraphPost[],
   draftSet: Set<string>,
+  categoryColors: Map<string, string>,
+  theme: ThemePalette,
 ): GraphBuildResult {
   const graph = new Graph<GraphNode, GraphEdge>();
   const categoryPositions = new Map<string, { x: number; y: number }>();
@@ -271,7 +325,7 @@ function buildGraph(
       x: pt.x,
       y: pt.y,
       size: CATEGORY_SIZE,
-      color: THEME_FALLBACK.foreground,
+      color: categoryColors.get(cat.id) ?? theme.foreground,
       label: cat.label,
       type: "circle",
       nodeType: "category",
@@ -308,6 +362,7 @@ function buildGraph(
       type: "image",
       nodeType: "post",
       slug: post.slug,
+      categoryIds: post.categories,
       summary: post.summary,
       image: post.image,
       isDraft,
@@ -319,9 +374,10 @@ function buildGraph(
         const categoryNodeId = nodeIdForCategory(categoryId);
         const edgeId = `${nodeId}->${categoryNodeId}`;
         if (graph.hasEdge(edgeId)) return;
+        const categoryColor = categoryColors.get(categoryId) ?? theme.rule;
         graph.addEdgeWithKey(edgeId, nodeId, categoryNodeId, {
           size: 1,
-          color: isDraft ? THEME_FALLBACK.muted : THEME_FALLBACK.rule,
+          color: isDraft ? dimColor(categoryColor, 0.58, theme.background) : categoryColor,
           postSlug: post.slug,
           categoryId,
           isDraft,
@@ -365,6 +421,7 @@ export function ProductivityGraph({
   const activeNodeIdRef = useRef<string | null>(null);
   const pinnedNodeIdRef = useRef<string | null>(null);
   const themeRef = useRef<ThemePalette>(THEME_FALLBACK);
+  const categoryColorsRef = useRef<Map<string, string>>(new Map());
   const afterRenderHandlerRef = useRef<(() => void) | null>(null);
   const resizeOutlineHandlerRef = useRef<(() => void) | null>(null);
   const visibilityRef = useRef<{ nodes: Set<string> | null; edges: Set<string> | null }>({
@@ -419,11 +476,56 @@ export function ProductivityGraph({
     return postsBySlug.get(hoveredPostSlug) ?? null;
   }, [hoveredPostSlug, postsBySlug]);
 
+  const initialCategoryColors = useMemo(
+    () => buildCategoryColorMap(categories, themeRef.current),
+    [categories],
+  );
+
   const { graph: sigmaGraph } = useMemo(
-    () => buildGraph(categories, activePosts, draftSet),
-    [categories, activePosts, draftSet],
+    () => buildGraph(categories, activePosts, draftSet, initialCategoryColors, themeRef.current),
+    [activePosts, categories, draftSet, initialCategoryColors],
   );
   const latestGraphRef = useRef(sigmaGraph);
+
+  useEffect(() => {
+    categoryColorsRef.current = initialCategoryColors;
+  }, [initialCategoryColors]);
+
+  const applyThemeToCurrentGraph = useCallback(() => {
+    const graph = graphRef.current;
+    const sigma = sigmaRef.current;
+    const theme = themeRef.current;
+    const categoryColors = buildCategoryColorMap(categories, theme);
+    categoryColorsRef.current = categoryColors;
+
+    if (!graph) return;
+
+    graph.forEachNode((nodeId, attrs) => {
+      if (attrs.nodeType === "category" && attrs.categoryId) {
+        graph.mergeNodeAttributes(nodeId, {
+          color: categoryColors.get(attrs.categoryId) ?? theme.foreground,
+        });
+        return;
+      }
+      if (attrs.nodeType === "post") {
+        graph.mergeNodeAttributes(nodeId, {
+          color: attrs.isDraft ? POST_DRAFT_COLOR : POST_COLOR,
+        });
+      }
+    });
+
+    graph.forEachEdge((edgeId, attrs) => {
+      const base = categoryColors.get(attrs.categoryId) ?? theme.rule;
+      graph.mergeEdgeAttributes(edgeId, {
+        color: attrs.isDraft ? dimColor(base, 0.58, theme.background) : base,
+      });
+    });
+
+    if (sigma) {
+      sigma.setSetting("labelColor", { color: theme.foreground });
+      sigma.refresh();
+    }
+  }, [categories]);
 
   const loadGraphEngine = useCallback(async (): Promise<GraphEngineModules> => {
     if (engineRef.current) return engineRef.current;
@@ -452,9 +554,7 @@ export function ProductivityGraph({
   useEffect(() => {
     const applyTheme = () => {
       themeRef.current = resolveThemePalette();
-      if (!sigmaRef.current) return;
-      sigmaRef.current.setSetting("labelColor", { color: themeRef.current.foreground });
-      sigmaRef.current.refresh();
+      applyThemeToCurrentGraph();
     };
 
     applyTheme();
@@ -465,7 +565,7 @@ export function ProductivityGraph({
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [applyThemeToCurrentGraph]);
 
   const drawPostOutlines = useCallback(() => {
     const sigma = sigmaRef.current;
@@ -493,10 +593,11 @@ export function ProductivityGraph({
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 1.6;
     ctx.setLineDash([2.4, 2.8]);
 
     const palette = themeRef.current;
+    const categoryColors = categoryColorsRef.current;
     const visibleNodes = visibilityRef.current.nodes;
 
     graph.forEachNode((nodeId, attrs) => {
@@ -507,15 +608,28 @@ export function ProductivityGraph({
 
       const point = sigma.graphToViewport({ x: display.x, y: display.y });
       const isVisible = !visibleNodes || visibleNodes.has(nodeId);
-      const outlineBaseColor = attrs.isDraft ? palette.muted : palette.rule;
+      const categoryIds = attrs.categoryIds?.filter((id) => categoryColors.has(id)) ?? [];
+      const ringColors =
+        categoryIds.length > 0
+          ? categoryIds.map((id) => categoryColors.get(id) ?? palette.rule)
+          : [attrs.isDraft ? palette.muted : palette.rule];
+      const total = ringColors.length;
+      const radius = Math.max(6, display.size + 1.8);
+      const segmentAngle = (Math.PI * 2) / total;
+      const offset = -Math.PI / 2;
 
-      ctx.globalAlpha = isVisible ? 0.96 : 0.4;
-      ctx.strokeStyle = isVisible
-        ? outlineBaseColor
-        : dimColor(outlineBaseColor, 0.55, palette.background);
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, Math.max(6, display.size + 1.8), 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.globalAlpha = isVisible ? 0.98 : 0.4;
+
+      ringColors.forEach((segmentColor, index) => {
+        const start = offset + segmentAngle * index + (total > 1 ? segmentAngle * 0.05 : 0);
+        const end = offset + segmentAngle * (index + 1) - (total > 1 ? segmentAngle * 0.05 : 0);
+        ctx.strokeStyle = isVisible
+          ? segmentColor
+          : dimColor(segmentColor, 0.55, palette.background);
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, radius, start, end);
+        ctx.stroke();
+      });
     });
 
     ctx.setLineDash([]);
@@ -655,6 +769,7 @@ export function ProductivityGraph({
           nodeReducer: (node, data) => {
             const result = { ...data };
             const palette = themeRef.current;
+            const categoryColors = categoryColorsRef.current;
             const activeNodeId = activeNodeIdRef.current;
             const pinnedNodeId = pinnedNodeIdRef.current;
             const visibleNodes = visibilityRef.current.nodes;
@@ -662,8 +777,8 @@ export function ProductivityGraph({
             const isActive = activeNodeId === node;
             const isPinned = pinnedNodeId === node;
 
-            if (data.nodeType === "category") {
-              result.color = palette.foreground;
+            if (data.nodeType === "category" && data.categoryId) {
+              result.color = categoryColors.get(data.categoryId) ?? palette.foreground;
             }
 
             if (!isVisible) {
@@ -677,7 +792,7 @@ export function ProductivityGraph({
             if (isActive || isPinned) {
               result.color =
                 data.nodeType === "category"
-                  ? brightenColor(palette.foreground, 1.25)
+                  ? brightenColor(result.color, 1.2)
                   : brightenColor(data.color, 1.4);
               result.size = (data.size || 4) * 1.3;
               result.zIndex = 2;
@@ -721,6 +836,7 @@ export function ProductivityGraph({
       const initialGraph = latestGraphRef.current;
       graphRef.current = initialGraph;
       sigma.setGraph(initialGraph);
+      applyThemeToCurrentGraph();
       sigma.getCamera().animatedReset({ duration: 280 });
       window.setTimeout(() => {
         void runLayout(initialGraph);
@@ -806,19 +922,20 @@ export function ProductivityGraph({
       sigmaRef.current = null;
       graphRef.current = null;
     };
-  }, [drawPostOutlines, loadGraphEngine, runLayout, stopLayout]);
+  }, [applyThemeToCurrentGraph, drawPostOutlines, loadGraphEngine, runLayout, stopLayout]);
 
   useEffect(() => {
     latestGraphRef.current = sigmaGraph;
     if (!sigmaRef.current) return;
     graphRef.current = sigmaGraph;
     sigmaRef.current.setGraph(sigmaGraph);
+    applyThemeToCurrentGraph();
     sigmaRef.current.getCamera().animatedReset({ duration: 280 });
     window.setTimeout(() => {
       void runLayout(sigmaGraph);
       drawPostOutlines();
     }, 0);
-  }, [drawPostOutlines, runLayout, sigmaGraph]);
+  }, [applyThemeToCurrentGraph, drawPostOutlines, runLayout, sigmaGraph]);
 
   useEffect(() => {
     activeNodeIdRef.current = nodeIdFromFocus(activeNode);
