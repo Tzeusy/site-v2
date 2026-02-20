@@ -159,6 +159,13 @@ export default function AboutPage() {
         <h2 className="font-serif text-2xl">Current Projects — February 2026</h2>
         <ul className="max-w-[65ch] list-disc space-y-2 pl-5 text-muted">
           <li>Serving reference data to the firm on Citadel&rsquo;s Enterprise Data team.</li>
+          <li>Recovering from an <a
+            href="/blog/my-open-heart-surgery"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open Heart Surgery
+          </a></li>
           <li>Messing around with the latest generation of LLMs, and experimenting with what&rsquo;s made possible with today&rsquo;s latest and greatest tools.</li>
           <li>Rebuilding this site with Next.js, Tailwind CSS v4, and MDX. Or, well, architecting and writing blogposts for this site while Claude and Codex build it.</li>
           <li>Exploring how close I am to my dream of building my own <a
