@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import Graph from "graphology";
 import { withBasePath } from "@/lib/base-path";
@@ -866,11 +867,16 @@ export function ProductivityGraph({
   const hoverCard = focusedPost ? (
     <div className="pointer-events-none absolute left-3 top-3 z-10 w-64 rounded border border-rule bg-background p-3 shadow-sm">
       {focusedPost.image ? (
-        <img
-          src={focusedPost.image}
-          alt=""
-          className="mb-2 h-32 w-full rounded object-cover"
-        />
+        <div className="relative mb-2 h-32 w-full overflow-hidden rounded">
+          <Image
+            src={withBasePath(focusedPost.image)}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="256px"
+          />
+        </div>
       ) : null}
       <p className="text-sm font-medium leading-snug text-foreground">
         {focusedPost.title}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SearchTrigger } from "@/components/ui/search-trigger";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { WeatherToggle } from "@/components/ui/weather-toggle";
 
 const navLinks = [
   { href: "/about", label: "About" },
@@ -31,6 +32,7 @@ export function Masthead() {
             </Link>
           ))}
           <SearchTrigger />
+          <WeatherToggle />
           <ThemeToggle />
         </nav>
       </div>

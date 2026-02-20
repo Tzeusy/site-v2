@@ -58,6 +58,323 @@ body {
   line-height: 1.7;
 }
 
+.weather-effects {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.weather-rain-layer,
+.weather-snow-layer,
+.weather-meteor-layer,
+.weather-aurora-layer {
+  position: absolute;
+  inset: -10% 0 0;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+:root[data-weather="rain"] .weather-rain-layer {
+  opacity: 1;
+}
+
+:root[data-weather="snow"] .weather-snow-layer {
+  opacity: 1;
+}
+
+:root[data-weather="meteor"] .weather-meteor-layer {
+  opacity: 1;
+}
+
+:root[data-weather="aurora"] .weather-aurora-layer {
+  opacity: 1;
+}
+
+.weather-rain-drop {
+  position: absolute;
+  top: -20%;
+  width: 1px;
+  height: 54px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklab, var(--foreground) 58%, transparent),
+    transparent
+  );
+  transform: rotate(-13deg);
+  animation-name: weather-rain-fall;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes weather-rain-fall {
+  0% {
+    transform: translate3d(0, -20vh, 0) rotate(-13deg);
+  }
+  100% {
+    transform: translate3d(11vw, 122vh, 0) rotate(-13deg);
+  }
+}
+
+.weather-meteor {
+  position: absolute;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--foreground) 5%, transparent),
+    color-mix(in oklab, white 90%, var(--foreground))
+  );
+  box-shadow:
+    0 0 10px color-mix(in oklab, white 85%, transparent),
+    0 0 24px color-mix(in oklab, white 70%, transparent);
+  transform: rotate(-28deg);
+  animation-name: weather-meteor-streak;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in;
+}
+
+.weather-meteor-layer {
+  inset: 0 0 auto 0;
+  height: 31vh;
+  overflow: hidden;
+}
+
+@keyframes weather-meteor-streak {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-28deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate3d(-46vw, 26vh, 0) rotate(-28deg);
+    opacity: 0;
+  }
+}
+
+.weather-aurora-layer {
+  inset: 0 -10vw auto;
+  height: 30vh;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.98) 0%,
+    rgb(255 255 255 / 0.9) 26%,
+    rgb(255 255 255 / 0.44) 62%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.98) 0%,
+    rgb(255 255 255 / 0.9) 26%,
+    rgb(255 255 255 / 0.44) 62%,
+    transparent 100%
+  );
+}
+
+.weather-aurora-field {
+  position: absolute;
+  inset: -18% -16% 22%;
+  filter: blur(30px) saturate(1.22);
+  transform-origin: center top;
+  will-change: transform, opacity;
+}
+
+.weather-aurora-field-a {
+  background:
+    radial-gradient(
+      54% 44% at 18% 12%,
+      color-mix(in oklab, #9fffe4 42%, transparent),
+      transparent 78%
+    ),
+    radial-gradient(
+      52% 45% at 78% 18%,
+      color-mix(in oklab, #6ea9ff 30%, transparent),
+      transparent 80%
+    ),
+    conic-gradient(
+      from 210deg at 50% 14%,
+      color-mix(in oklab, #93ffe2 28%, transparent),
+      color-mix(in oklab, #68ccff 24%, transparent),
+      color-mix(in oklab, #7ef0c5 26%, transparent),
+      color-mix(in oklab, #93ffe2 28%, transparent)
+    );
+  opacity: 0.64;
+  animation: weather-aurora-sweep 15s ease-in-out infinite;
+}
+
+.weather-aurora-field-b {
+  background:
+    radial-gradient(
+      52% 48% at 30% 22%,
+      color-mix(in oklab, #86d1ff 24%, transparent),
+      transparent 80%
+    ),
+    radial-gradient(
+      58% 42% at 68% 14%,
+      color-mix(in oklab, #89ffc9 30%, transparent),
+      transparent 82%
+    ),
+    conic-gradient(
+      from 160deg at 54% 20%,
+      color-mix(in oklab, #7ee8c8 20%, transparent),
+      color-mix(in oklab, #70b8ff 22%, transparent),
+      color-mix(in oklab, #8df4d8 20%, transparent),
+      color-mix(in oklab, #7ee8c8 20%, transparent)
+    );
+  opacity: 0.54;
+  animation: weather-aurora-shift 19.5s ease-in-out infinite reverse;
+}
+
+.weather-aurora-curtain {
+  position: absolute;
+  background:
+    repeating-linear-gradient(
+      102deg,
+      transparent 0 5.5%,
+      hsl(163 92% 74% / 0.11) 5.5% 7.2%,
+      transparent 7.2% 11.8%
+    ),
+    repeating-linear-gradient(
+      114deg,
+      transparent 0 6.8%,
+      hsl(201 95% 72% / 0.08) 6.8% 8.2%,
+      transparent 8.2% 13.8%
+    ),
+    repeating-linear-gradient(
+      96deg,
+      transparent 0 8.5%,
+      hsl(178 90% 74% / 0.06) 8.5% 9.4%,
+      transparent 9.4% 16.2%
+    ),
+    linear-gradient(
+      180deg,
+      hsl(157 90% 72% / 0.05),
+      hsl(164 86% 66% / 0.42) 24%,
+      hsl(198 82% 62% / 0.24) 62%,
+      transparent 100%
+    );
+  inset: -8% -10% 24%;
+  filter: blur(10px) saturate(1.22);
+  transform-origin: center top;
+  opacity: 0.62;
+  will-change: transform, opacity;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.95) 8%,
+    rgb(255 255 255 / 0.7) 40%,
+    transparent 78%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.95) 8%,
+    rgb(255 255 255 / 0.7) 40%,
+    transparent 78%
+  );
+  animation: weather-aurora-curtain-drift 22.5s linear infinite;
+}
+
+.weather-aurora-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(84% 56% at 50% 0%, rgb(0 0 0 / 0.04), rgb(0 0 0 / 0.2) 76%, rgb(0 0 0 / 0.34));
+}
+
+@keyframes weather-aurora-sweep {
+  0% {
+    transform: translate3d(-8vw, -2vh, 0) skewX(-12deg) scaleY(0.92);
+    opacity: 0.48;
+  }
+  50% {
+    transform: translate3d(6vw, 1vh, 0) skewX(-7deg) scaleY(1.09);
+    opacity: 0.62;
+  }
+  100% {
+    transform: translate3d(-8vw, -2vh, 0) skewX(-12deg) scaleY(0.92);
+    opacity: 0.48;
+  }
+}
+
+@keyframes weather-aurora-shift {
+  0% {
+    transform: translate3d(6vw, -1vh, 0) skewX(-6deg) scaleY(0.95);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate3d(-5vw, 1.4vh, 0) skewX(-10deg) scaleY(1.06);
+    opacity: 0.54;
+  }
+  100% {
+    transform: translate3d(6vw, -1vh, 0) skewX(-6deg) scaleY(0.95);
+    opacity: 0.4;
+  }
+}
+
+@keyframes weather-aurora-curtain-drift {
+  0% {
+    background-position:
+      0% 0%,
+      0% 0%,
+      0% 0%,
+      0% 0%;
+  }
+  50% {
+    background-position:
+      180% 0%,
+      140% 0%,
+      110% 0%,
+      0% 0%;
+  }
+  100% {
+    background-position:
+      360% 0%,
+      280% 0%,
+      220% 0%,
+      0% 0%;
+  }
+}
+
+.weather-snow-flake {
+  position: absolute;
+  top: -18%;
+  line-height: 1;
+  color: color-mix(in oklab, var(--foreground) 50%, white);
+  text-shadow: 0 0 8px color-mix(in oklab, white 82%, transparent);
+  user-select: none;
+  animation-name: weather-snow-drift;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes weather-snow-drift {
+  0% {
+    transform: translate3d(0, -18vh, 0);
+  }
+  18% {
+    transform: translate3d(-11px, 8vh, 0);
+  }
+  38% {
+    transform: translate3d(10px, 34vh, 0);
+  }
+  62% {
+    transform: translate3d(-9px, 64vh, 0);
+  }
+  82% {
+    transform: translate3d(8px, 90vh, 0);
+  }
+  100% {
+    transform: translate3d(-7px, 120vh, 0);
+  }
+}
+
 a {
   color: var(--link);
   text-decoration-line: underline;

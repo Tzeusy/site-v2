@@ -3,6 +3,7 @@ import { IBM_Plex_Serif, Inter } from "next/font/google";
 import { Masthead } from "@/components/layout/masthead";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { CommandPaletteProvider } from "@/components/ui/command-palette-provider";
+import { WeatherEffects } from "@/components/ui/weather-effects";
 import "./tailwind.css";
 
 const inter = Inter({
@@ -48,11 +49,16 @@ export const metadata: Metadata = {
 
 const themeScript = `
 (() => {
-  const key = "site-theme";
-  const saved = localStorage.getItem(key);
+  const themeKey = "site-theme";
+  const saved = localStorage.getItem(themeKey);
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   const theme = saved === "dark" || saved === "light" ? saved : (prefersDark ? "dark" : "light");
   document.documentElement.dataset.theme = theme;
+
+  const weatherKey = "site-weather";
+  const savedWeather = localStorage.getItem(weatherKey);
+  const weather = savedWeather === "rain" || savedWeather === "snow" || savedWeather === "aurora" || savedWeather === "meteor" || savedWeather === "sun" ? savedWeather : "sun";
+  document.documentElement.dataset.weather = weather;
 })();
 `;
 
@@ -69,6 +75,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${ibmPlexSerif.variable} bg-background text-foreground antialiased`}
       >
+        <WeatherEffects />
         <div className="min-h-screen">
           <Masthead />
           <main className="mx-auto w-full max-w-[75ch] px-6 py-16 sm:px-8 sm:py-20">
