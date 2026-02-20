@@ -84,12 +84,8 @@ type SigmaLike = {
   refresh: () => void;
   setGraph: (graph: Graph<GraphNode, GraphEdge>) => void;
   getCamera: () => SigmaCameraLike;
-  getContainer: () => HTMLElement;
-  getNodeDisplayData: (key: string) => { x: number; y: number; size: number; hidden: boolean } | undefined;
-  graphToViewport: (coordinates: { x: number; y: number }) => { x: number; y: number };
   setSetting: (key: string, value: unknown) => void;
   on: (event: string, handler: (payload?: { node?: string }) => void) => void;
-  off: (event: string, handler: (payload?: { node?: string }) => void) => void;
   kill: () => void;
 };
 
@@ -410,7 +406,6 @@ export function ProductivityGraph({
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const outlineCanvasRef = useRef<HTMLCanvasElement>(null);
   const sigmaRef = useRef<SigmaLike | null>(null);
   const graphRef = useRef<Graph<GraphNode, GraphEdge> | null>(null);
   const engineRef = useRef<GraphEngineModules | null>(null);
@@ -418,8 +413,6 @@ export function ProductivityGraph({
   const pinnedNodeIdRef = useRef<string | null>(null);
   const themeRef = useRef<ThemePalette>(THEME_FALLBACK);
   const categoryColorsRef = useRef<Map<string, string>>(new Map());
-  const afterRenderHandlerRef = useRef<(() => void) | null>(null);
-  const resizeOutlineHandlerRef = useRef<(() => void) | null>(null);
   const visibilityRef = useRef<{ nodes: Set<string> | null; edges: Set<string> | null }>({
     nodes: null,
     edges: null,
@@ -562,75 +555,6 @@ export function ProductivityGraph({
 
     return () => observer.disconnect();
   }, [applyThemeToCurrentGraph]);
-
-  const drawPostOutlines = useCallback(() => {
-    const sigma = sigmaRef.current;
-    const graph = graphRef.current;
-    const canvas = outlineCanvasRef.current;
-    if (!sigma || !graph || !canvas) return;
-
-    const container = sigma.getContainer();
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    if (width <= 0 || height <= 0) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const pixelWidth = Math.round(width * dpr);
-    const pixelHeight = Math.round(height * dpr);
-    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
-      canvas.width = pixelWidth;
-      canvas.height = pixelHeight;
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-    }
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, width, height);
-    ctx.lineWidth = 1.6;
-    ctx.setLineDash([2.4, 2.8]);
-
-    const palette = themeRef.current;
-    const categoryColors = categoryColorsRef.current;
-    const visibleNodes = visibilityRef.current.nodes;
-
-    graph.forEachNode((nodeId, attrs) => {
-      if (attrs.nodeType !== "post") return;
-
-      const display = sigma.getNodeDisplayData(nodeId);
-      if (!display || display.hidden) return;
-      const nodePosition = graph.getNodeAttributes(nodeId);
-      const point = sigma.graphToViewport({ x: nodePosition.x, y: nodePosition.y });
-      const isVisible = !visibleNodes || visibleNodes.has(nodeId);
-      const categoryIds = attrs.categoryIds?.filter((id) => categoryColors.has(id)) ?? [];
-      const ringColors =
-        categoryIds.length > 0
-          ? categoryIds.map((id) => categoryColors.get(id) ?? palette.rule)
-          : [attrs.isDraft ? palette.muted : palette.rule];
-      const total = ringColors.length;
-      const radius = Math.max(6, display.size + 1.8);
-      const segmentAngle = (Math.PI * 2) / total;
-      const offset = -Math.PI / 2;
-
-      ctx.globalAlpha = isVisible ? 0.98 : 0.4;
-
-      ringColors.forEach((segmentColor, index) => {
-        const start = offset + segmentAngle * index + (total > 1 ? segmentAngle * 0.05 : 0);
-        const end = offset + segmentAngle * (index + 1) - (total > 1 ? segmentAngle * 0.05 : 0);
-        ctx.strokeStyle = isVisible
-          ? segmentColor
-          : dimColor(segmentColor, 0.55, palette.background);
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, radius, start, end);
-        ctx.stroke();
-      });
-    });
-
-    ctx.setLineDash([]);
-    ctx.globalAlpha = 1;
-  }, []);
 
   const refreshVisibility = useCallback(() => {
     const graph = graphRef.current;
@@ -819,11 +743,6 @@ export function ProductivityGraph({
       sigma.setGraph(initialGraph);
       applyThemeToCurrentGraph();
       sigma.getCamera().animatedReset({ duration: 280 });
-      drawPostOutlines();
-
-      const handleAfterRender = () => drawPostOutlines();
-      afterRenderHandlerRef.current = handleAfterRender;
-      sigma.on("afterRender", handleAfterRender);
 
       sigma.on("enterNode", (event) => {
         const node = event?.node;
@@ -876,10 +795,6 @@ export function ProductivityGraph({
         setHoveredPostSlug(null);
       });
 
-      const handleResize = () => drawPostOutlines();
-      resizeOutlineHandlerRef.current = handleResize;
-      window.addEventListener("resize", handleResize);
-
       if (containerRef.current) {
         containerRef.current.style.cursor = "grab";
       }
@@ -888,19 +803,11 @@ export function ProductivityGraph({
     return () => {
       cancelled = true;
       setIsLayoutRunning(false);
-      if (sigmaRef.current && afterRenderHandlerRef.current) {
-        sigmaRef.current.off("afterRender", afterRenderHandlerRef.current);
-      }
-      if (resizeOutlineHandlerRef.current) {
-        window.removeEventListener("resize", resizeOutlineHandlerRef.current);
-      }
-      afterRenderHandlerRef.current = null;
-      resizeOutlineHandlerRef.current = null;
       sigmaRef.current?.kill();
       sigmaRef.current = null;
       graphRef.current = null;
     };
-  }, [applyThemeToCurrentGraph, drawPostOutlines, loadGraphEngine, runLayout]);
+  }, [applyThemeToCurrentGraph, loadGraphEngine, runLayout]);
 
   useEffect(() => {
     let cancelled = false;
@@ -914,21 +821,19 @@ export function ProductivityGraph({
       sigmaRef.current.setGraph(sigmaGraph);
       applyThemeToCurrentGraph();
       sigmaRef.current.getCamera().animatedReset({ duration: 280 });
-      drawPostOutlines();
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [applyThemeToCurrentGraph, drawPostOutlines, runLayout, sigmaGraph]);
+  }, [applyThemeToCurrentGraph, runLayout, sigmaGraph]);
 
   useEffect(() => {
     activeNodeIdRef.current = nodeIdFromFocus(activeNode);
     pinnedNodeIdRef.current = nodeIdFromFocus(pinnedNode);
     refreshVisibility();
     sigmaRef.current?.refresh();
-    drawPostOutlines();
-  }, [activeNode, drawPostOutlines, pinnedNode, refreshVisibility]);
+  }, [activeNode, pinnedNode, refreshVisibility]);
 
   const zoomIn = useCallback(() => {
     sigmaRef.current?.getCamera().animatedZoom({ duration: 200 });
@@ -1018,11 +923,6 @@ export function ProductivityGraph({
           className="h-full w-full cursor-grab active:cursor-grabbing"
           role="img"
           aria-label="Productivity graph connecting categories and active posts"
-        />
-        <canvas
-          ref={outlineCanvasRef}
-          className="pointer-events-none absolute inset-0 h-full w-full"
-          aria-hidden
         />
         {isLayoutRunning ? (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-rule bg-background/95 px-3 py-1 text-xs text-muted">
