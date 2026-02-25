@@ -1,0 +1,16 @@
+---
+title: "Tailscale Golinks"
+date: 2026-02-08
+summary: "Tailscale golinks - quick win for lots of convenience!"
+tags: ["homelab", "infra", "networking", "tailscale", "golinks", "musings"]
+---
+
+# What is a golink?
+
+I was setting up tailscale within my cluster when I stumbled upon what seemed to be a mini side project - https://github.com/tailscale/golink. After reading into it for a minute, I was sold; having seen similar examples before, I loved the idea that this was possible for my own homelab. And it is!
+
+Within an hour of exploration, I got this up and running in my Kubernetes cluster (running ghcr.io/tailscale/golink); with the magic of MagicDNS, http://go/ within my tailnet became a trivial way to shortcut any link I wanted!
+
+![Golink page](go-link-page.png)
+
+Now I can access any link with a trivial `'go/...'` setup within my tailnet :-)
