@@ -18,7 +18,7 @@ export default function HomePage() {
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
           My name&apos;s Tze How, and I&apos;m currently a Site Reliability
-          Engineer, working with Citadel&apos;s Enterprise Data team. I hope you learn
+          Engineer working in Citadel&apos;s Enterprise Data team. I hope you learn
           something new here, and if you have any questions or want to chat
           about anything, feel free to reach out!
         </p>

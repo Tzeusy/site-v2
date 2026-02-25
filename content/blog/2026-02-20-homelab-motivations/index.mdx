@@ -1,0 +1,98 @@
+---
+title: "Homelab Motivations"
+date: 2026-02-20
+summary: "Thoughts on why I spend so much time messing with my own homelab"
+tags: ["homelab", "active", "size-2", "infra"]
+---
+
+# What is a homelab?
+
+There isn't a formal definition for this, but homelabs are personal development environments set up for experimentation and exploration. In a professional environment, you may only interface with dedicated subsets of your company's technology stack, with everything else handled by dedicated teams; on the other hand, in a homelab, you own the entire end-to-end setup of the system. This can be both deeply enjoyable and frustrating, as it forces exposure to entire domains in which you may not have ever toyed with in years of professional development experience.
+
+Some fantastic online resources exist for best practices and advice; [/r/homelab](https://old.reddit.com/r/homelab/comments/15jt90s/new_rhomelab_users_start_here/), for example. Homelabs can cost anywhere from less than $1000 to tens of thousands of dollars; these are up to each person's individual requirements and ambitions for their home setups.
+
+# Why a homelab?
+
+I've always been fascinated by homelabs, as they represent an always-available opportunity for me to explore and learn about technical system infrastructure without the demands of a day job. The main goal of my homelab is to:
+
+1. Education:
+    - A personal sandbox to try any and all open source software I'm curious about
+    - An opportunity to interact with hardware, expanding my domain knowledge around spaces where my job doesn't take me
+2. Firewalled data haven for personal infrastructure (smart home setups, microservices)
+3. An environment to 'export' my personal learnings and growth over time, as I gain more experience as a Software Engineer and an SRE
+    - As my work exposes me to new systems and services (Airflow, etc.) I want to concretize and experiment with my lessons, and running my own infra is the best way to enable that in a cheap and riskless manner.
+4. Experimentation
+    - Corporate infrastructure is often months or even years behind the latest generations of industry offerings, due to bureaucracy, legacy code, and simply misaligned incentives. It takes months for me to get a Python package approved internally within the firm, and that's *pre-validation* when I can't guarantee the potential benefits; how else am I to understand new libraries and offerings?
+    - Most recently: I've been having *so much fun* at home with Claude and Codex; these relatively new products aren't always going to be available within a company.
+
+In fact, when mentoring junior engineers and interns, I've frequently mentioned homelabs as a fantastic source of learning when they ask about how best to hone their skills and well-roundedness as software engineers. Software *architecture* design is an instinct you only really pick up with thousands of hours of interaction and iteration; what better way to gain access to these hours, when you only really see these in bursts of a few hours at a time every few weeks at work?
+
+# Scope
+
+Given these goals, my homelab has to be able to:
+
+1. Trivially scale-up and scale-down open-source infrastructure (docker images, helm charts, native builds off git repositories)
+2. Provide some semblance of security:
+    - Network firewalling, to reduce risks of data exfiltration (admittedly this is a little rough for me and I haven't focused on this as much as I should've)
+    - Using internal mirrors for pypi packages, docker images, and the like, which gives me some measure of control over dependencies and what's running live
+    - Also a way for me to understand how these things are usually done on a corporate level
+3. Support infrastructure and applications with drastically varying requirements (CPU, RAM, GPU, heck, even CPU architectures)
+
+In addition, some meta-level requirements can also come into play:
+
+1. How fragile and how performant are the services I'm running? What uptime expectations do I want to set for myself?
+    - This plays into criticality of services and dependency management - core services (Kubernetes control plane, NAS storage, DNS, etc.) require much higher reliability than, say, availability of worker nodes in K3s
+2. How do I gain visibility over what I'm running in my system? How do errors propagate, if at all? What about version upgrades?
+3. What are current best practices on how these requirements are currently met for production infrastructure? Can these be emulated in my home setup?
+
+Most experienced SWEs and SREs today would be able to answer these questions for their respective corporate environments; however, these are skills and bits of knowledge picked up over years of experience, and running my own homelab is a good way to bootstrap + experiment with these instincts. 
+
+# Takeaways
+
+## Forced Learnings
+
+I come from an application-focused software engineering background and education; in fact, given that my school was relatively application and design focused, one might say I had even less exposure than the average fresh SWE going into my career. For example:
+
+- I stepped into my first job having not much clue about networking concepts (A records, CNAMEs), Kubernetes, platforms like NGINX.
+- I never really understood the motivation for the firm's usage of platforms like Consul and Nomad for the management of K/Vs and job/node scheduling.
+- An instinctive fear of Kafka: a mysterious (and some might say even hostile) CLI, impossibility of extracting useful messages, convoluted client and server code
+
+As a software engineer, it's always a daunting feeling when you're thrust into an environment where these `<Service Name Nouns>` are slung around, and we're expected to build on top of these platforms to enhance features or fix production bugs. There's so much to learn, and the inevitable hours of exploration make me feel like "what's worth an hour of work" actually consumed me a day of research. Obviously these things are personally beneficial, but it impacts my rate of output; and perhaps one might say those are reasons to keep learning on company time. However, my goal isn't to eke out as much from a company as possible; it's to *grow* - and growing only when opportunities to play with new solution spaces within a company puts a significant limiter on the number of things one can be exposed to.
+
+## Some examples of experiences
+
+This idea of 'playing with things yourself' crops up as a topic every now and then; a previous (fantastic) manager of mine was great at suggesting ideas to try for work that isn't strictly defined by the latest set of job/ticket requirements. Of note:
+
+- `socat` + `tcpdump` + `wireshark` to intercept network packets to understand the serialization mechanism of gRPC
+- Experimenting with CLI libraries for ease-of-implementation for complicated workflows
+- Reading code of other teams to understand rather than being frustrated at the opaqueness of their APIs; in a homelab context this can be abstracted out to general reading of any open source code.
+- Experimentation and ideas with LLM architecture and orchestration
+- Ideas on microservice (or even monolithic service) design - threading mechanisms, asynchronous paradigms and cooperative threads, single-threaded pools to avoid overhead from mutex contention, etc.
+
+I've found that my homelab has been equally productive in teaching me about these things; for example:
+
+- The complexity of managing distributed job systems - Kubernetes cronjobs? Airflow DAGs? etc.
+- Understanding the hardware abstraction layer that is Kubernetes, and the rough edges where these things tend to cause unintuitive gaps in functionality
+    - Local versus NFS based storage provisioning, especially when it comes to performance
+- Lessons on telemetry, the overheads of maintaining an OTel platform, the benefits
+- Networking, and the magic of Tailscale
+- Storage: Performance of HDDs, SSDs, RAID configurations, and how they work in a NAS
+
+# Some fun project ideas
+
+- Running an LLM end-to-end at home, using open source models and UXes like [OpenWebUI](https://github.com/open-webui/open-webui)/[Ollama](https://github.com/ollama/ollama)
+- Building and operating a Kubernetes cluster with optional bells and whistles added as and when you want to explore them
+- Setting up the [Loki/Grafana/Tempo/Mimir (LGTM) stack](https://github.com/daviaraujocc/lgtm-stack) for a taste of modern best practices of telemetry 
+- [Home Assistant](https://www.home-assistant.io/)! Though this deserves several blog posts by itself.
+- Setting up a full tailnet, with a panoply of services (Maybe lift some ideas of what to run from [DDIA](https://www.oreilly.com/library/view/designing-data-intensive-applications/9781098119058/)?)
+    - I'd suggest one of each of the following, along with all/some of the stuff we already mentioned above:
+        - High-performance K/V store (Redis)
+        - Relational database (Postgres)
+        - Columnar database (ClickHouse) — and why use it compared to Postgres?
+        - If your homelab runs at least 3 machines, run at least one service that runs high-availability across 3 nodes and play with taking nodes offline (or you could simply use Proxmox and virtualize these machines)
+        - Some queue system (RabbitMQ, Kafka, ...)
+        - Personal website iteration
+        - NAS as a network file store
+        - Dependency registries (e.g. docker, pip; I tried and failed to get Artifactory working, their 'free' image is sadly heavily constrained)
+
+Having had the pleasure of experimenting with all these so far, the breadth of exposure this has afforded me is far, far wider than that of my experiences at the workplace. With this *breadth*, the *depth* of exposure becomes available for exploration based on personal curiosity - or well, sometimes in my case, personal stubbornness upon refusal to accept a mysterious error message.

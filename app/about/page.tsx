@@ -35,7 +35,7 @@ export default function AboutPage() {
           Tze How (Lee)
         </h1>
         <p className="max-w-[65ch] text-pretty text-lg text-muted">
-          I&rsquo;m a Singaporean software engineer building transparent, powerful software by
+          I&rsquo;m a Singaporean software engineer building transparent and powerful software by
           standing on the shoulders of giants.
         </p>
         <p className="text-sm text-muted">
@@ -92,7 +92,7 @@ export default function AboutPage() {
         <p className="max-w-[65ch] text-muted">
           I&rsquo;m also very curious about the fields of economics and game theory, especially
           on how ideas here shape the world that we live in. There are several adjacent
-          spaces like effective altruism and rationality that I actively keep up with, and
+          spaces like effective altruism and rationality that I actively keep up with and
           learn from on a day to day basis.
         </p>
       </section>
