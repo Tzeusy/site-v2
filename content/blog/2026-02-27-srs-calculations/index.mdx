@@ -7,13 +7,13 @@ tags: ["finance", "singapore", "srs", "investing"]
 
 <Callout type="info">
 
-# What is SRS?
+### What is SRS?
 
 The Supplementary Retirement Scheme (SRS) is a voluntary, tax-deferred savings program in Singapore designed to help individuals build retirement funds alongside their CPF. Contributions allow for dollar-for-dollar tax relief (up to S$15,300/year for Singaporeans/PRs; S$35,700/year for foreigners). Funds can be invested in various instruments, with 50% of withdrawals during retirement tax-free.
 
 </Callout>
 
-Back in 2024 I had a mini debate with a family member over how valuable it is to put savings in the SRS, given different (current) tax brackets. The SRS is effectively a tax deferment program; instead of paying 100% of taxes on (up to $15.3k) of your income today, you pay it *upon withdrawal after retirement age*, with the added bonus that only 50% of the withdrawn amount is subject to income tax (which, given Singapore's progressive tax model, works out to a larger cut in effective tax paid).
+Back in 2024 I had a mini debate with a family member over how valuable it is to put savings in the SRS, given various tax brackets and its purported savings benefits. The SRS is effectively a tax deferment program; instead of paying 100% of taxes on (up to $15.3k) of your income today, you pay it *upon withdrawal after retirement age*, with the added bonus that only 50% of the withdrawn amount is subject to income tax (which, given Singapore's progressive tax model, works out to a larger cut in effective tax paid).
 
 It sounds fine and dandy; however, there are a few major caveats:
 
@@ -22,6 +22,7 @@ It sounds fine and dandy; however, there are a few major caveats:
 - SRS funds earn a baseline annual interest rate of 0.05% if left as cash in your SRS account, but certain platforms can be used where you can choose from a few SRS-vetted higher-risk portfolios (e.g. unleveraged all-equities funds with Roboadvisors like Endowus/Stashaway)
 
 ![Endowus SRS page](endowus.png)
+*Endowus SRS investment options*
 
 This leads us to a few questions:
 
@@ -49,6 +50,7 @@ Question 1 is relatively straightforward to answer; it'll equate to a rough liqu
 A long-time-horizon investment plan with a 100% equity portfolio on Endowus is projected to grow at 7.69% per year. For the sake of comparison, we shall also use this as our *external* investment strategy.
 
 ![Endowus rolling returns projections](endowus-projections.png)
+*Projected annual returns from Endowus*
 
 Externally we invest in VWRA (FTSE All-World index) and SPY (S&P 500) - per these numbers from [Curvo](https://curvo.eu/backtest/en/compare?portfolios=NoIgag6gwgoiA0xQEkYAY0CEDSBWTAigCoAcaCAjALo1A%2C%20NoIgygZACgBArABgSANMUBJAokgQgZgA1CAlKBATlQEYBdeoA), both outperform 7.69%:
 
@@ -136,29 +138,41 @@ The general idea of SRS is that your 'accumulated liquidity' improves due to the
 
 ![Liquidity Difference](liquidity-difference.png)
 
-# Confounding factors
-
-There are several factors that may change our calculations going into the future:
-
-| Factor | Impact |
-|---|---|
-| Tax Regime | If income tax is higher in future, SRS strategy *devalues* (pay more EIR tomorrow than EIR today) |
-| Lower-fee vendors | If any cheaper alternative to Endowus shows up (&lt;0.4% fees), SRS strategy improves |
-| Retirement Age | Irrelevant to me as the SRS Retirement age is fixed at time of first deposit; but for future new-adults, your accumulated sums may be different |
-| Investment Strategy | It's generally advisable to migrate to less-risky portfolios as you age; e.g. a [three fund portfolio](https://curvo.eu/backtest/en/portfolio/three-fund--NoIgKgFgTgpjAEAzArgOwCYgDTFASQFEAGIgIQBYBGAJQE0AZANgGZsiA6Z8gXRxEJKlmADWHUACkQCcbTs175iZAGLlqygBLNKs5gCYpho8eONu5oA). However, this impacts both Endowus- and external investment strategies roughly equivalently. |
-
 # Why is the system broken?
 
 There are a few frictions that cause the majority of differences between our numbers:
 
-1. The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real — you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$720k over a lifetime. But the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside rate of return to inside), SRS would win by ~$720k:
+## Brokerage fees
+
+The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real — you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime. But the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside rate of return to inside), SRS would win by ~$400k:
 
 ![Endowus fee impact on SRS returns](endowus-fees.png)
 
+| Year | Liquidity with full SRS contribution | Liquidity with zero SRS contribution | Difference |
+|------|--------------------------------------|--------------------------------------|------------|
+| 2024 | $166,304.00 | $178,850.00 | -$12,546.00 |
+| ... | | | |
+| 2065 | $57,612,143.62 | $57,723,196.49 | -$111,052.87 |
+| 2066 | $62,300,827.20 | $62,162,110.30 | +$138,716.90 |
+| 2067 | $67,350,070.54 | $66,942,376.58 | +$407,693.96 |
+
 ![If Endowus had no fees](liquidity-difference-endowus-no-fees.png)
 
-2. The 10-year cap on SRS withdrawals forces a compressed withdrawal schedule. By age 62, our SRS sum has compounded into $2,094,824.37; an even withdrawal strategy over 11 years requires -$268,388 per year (after taking into account compounding). After the 50% taxable amount haircut, this amounts to a 'taxable income' of ~$134k, or ~3.76% effective tax on the full withdrawal. This is actually quite favorable — the real issue is that a longer withdrawal period would let the remaining SRS balance compound further while keeping each withdrawal's taxable portion in lower brackets.
+## 10-Year withdrawal cap
+
+The 10-year cap on SRS withdrawals forces a compressed withdrawal schedule. By age 62, our SRS sum has compounded into $2,094,824.37; an even withdrawal strategy over 11 years requires -$268,388 per year (after taking into account compounding). After the 50% taxable amount haircut, this amounts to a 'taxable income' of ~$134k, or ~3.76% effective tax on the full withdrawal. This is actually quite favorable — the real issue is that a longer withdrawal period would let the remaining SRS balance compound further while keeping each withdrawal's taxable portion in lower brackets.
     - Note that SRS also introduces significant risk in the form of tax regimes. If Singapore tweaks the tax brackets in future (as we already have seen in [2024](https://www.iras.gov.sg/docs/default-source/budget-2022/budget-2022---overview-of-tax-changes69937d71-ba59-4b39-b1e5-7e85b2504e1c.pdf?sfvrsn=8339ba5a_5#:~:text=Effective%201%20Jan%202024&text=Enhance%20the%20progressivity%20of%20property%20tax%20for%20non%2Downer%2D%20occupied,two%20years%20as%20shown%20below.)), we would be subjecting our SRS deposits to whatever rates the government sets in future.
+
+## Possible confounding factors
+
+These calculations are all based on the present state of affairs for a Singapore citizen. There are several factors that may change our calculations:
+
+| Factor | Impact |
+|---|---|
+| Tax Regime | If income tax is higher in future, SRS strategy *devalues* (pay more EIR tomorrow than EIR today) |
+| Lower-fee vendors | If any cheaper alternative to Endowus shows up (&lt;0.4% fees), SRS strategy improves; the extreme edge case (0% fees) shows a net benefit of ~$400k by the end of the SRS withdrawal period; which is nice, but also amounts to less than 1% of our liquidity at age 72... |
+| Retirement Age | Irrelevant to me as the SRS Retirement age is fixed at time of first deposit; but for future new-adults, your accumulated sums may be different |
+| Investment Strategy | It's generally advisable to migrate to less-risky portfolios as you age; e.g. a [three fund portfolio](https://curvo.eu/backtest/en/portfolio/three-fund--NoIgKgFgTgpjAEAzArgOwCYgDTFASQFEAGIgIQBYBGAJQE0AZANgGZsiA6Z8gXRxEJKlmADWHUACkQCcbTs175iZAGLlqygBLNKs5gCYpho8eONu5oA). However, this impacts both Endowus- and external investment strategies roughly equivalently. |
 
 # Conclusion: Should I invest in SRS?
 
