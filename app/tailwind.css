@@ -414,6 +414,19 @@ a:hover {
   text-decoration-color: currentColor;
 }
 
+/* Image captions: *italic text* on the line immediately after an image */
+.blog-post-content-underlines p:has(> img) {
+  text-align: center;
+}
+
+.blog-post-content-underlines p > img + em {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
 .about-link-underlines a {
   text-decoration-color: currentColor;
 }
