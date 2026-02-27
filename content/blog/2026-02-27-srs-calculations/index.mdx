@@ -55,6 +55,7 @@ A long-time-horizon investment plan with a 100% equity portfolio on Endowus is p
 Externally we invest in VWRA (FTSE All-World index) and SPY (S&P 500) - per these numbers from [Curvo](https://curvo.eu/backtest/en/compare?portfolios=NoIgag6gwgoiA0xQEkYAY0CEDSBWTAigCoAcaCAjALo1A%2C%20NoIgygZACgBArABgSANMUBJAokgQgZgA1CAlKBATlQEYBdeoA), both outperform 7.69%:
 
 ![VWCE (also FTSE all-world) and SPY, net of fees per Curvo](vwce-spy.png)
+*VWCE (also FTSE all-world) and SPY, net of fees per Curvo*
 
 To normalize risk and returns for a fair comparison, let's say we use 7.69% for both for-SRS and ex-SRS strategies. I like to model these as *cash flows* - for each year, calculate the amount of funds invested, taxes paid, etc., and simply model the net sum at the end. Importantly, Endowus charges a **0.4% per-annum management fee** on top of underlying funds' expense ratios - this means that our effective interest rates are:
 
@@ -133,10 +134,12 @@ Given the above numbers, we can plug them all into excel formulae to generate pr
 Given my calculations, the numbers are surprisingly close. Given a starting income of $200k, we can see that *at almost no point in our life does SRS give us 'more money' than personally investing the funds* — the SRS profile only overtakes no-SRS by a razor-thin margin of **$1,485** in the very last year of withdrawal, on a ~$67M portfolio:
 
 ![Liquidity Comparison](srs-vs-no-srs-line.png)
+*Liquidity comparison: SRS vs. no-SRS profiles*
 
 The general idea of SRS is that your 'accumulated liquidity' improves due to the tax deferment - you sacrifice early-age liquidity for lower taxes on the same funds in future. You would expect the SRS profile to 'overtake' the no-SRS profile during the withdrawal period as the tax savings come home. It technically does — but the gap peaks at **-$1.7M** at age 62 and only barely crosses zero at the very end:
 
 ![Liquidity Difference](liquidity-difference.png)
+*Liquidity difference over time (SRS minus no-SRS)*
 
 # Why is the system broken?
 
@@ -147,6 +150,7 @@ There are a few frictions that cause the majority of differences between our num
 The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real — you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime. But the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside rate of return to inside), SRS would win by ~$400k:
 
 ![Endowus fee impact on SRS returns](endowus-fees.png)
+*Endowus fee impact on SRS returns*
 
 | Year | Liquidity with full SRS contribution | Liquidity with zero SRS contribution | Difference |
 |------|--------------------------------------|--------------------------------------|------------|
@@ -157,6 +161,7 @@ The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax a
 | 2067 | $67,350,070.54 | $66,942,376.58 | +$407,693.96 |
 
 ![If Endowus had no fees](liquidity-difference-endowus-no-fees.png)
+*Liquidity difference if Endowus had no fees*
 
 ## 10-Year withdrawal cap
 
