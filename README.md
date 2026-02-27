@@ -49,6 +49,11 @@ public/                 # Static assets, images, resume.pdf
 tailwind.css            # Tailwind v4 entry point
 ```
 
+## Analytics
+
+- [GA4 Dashboard](https://analytics.google.com/analytics/web/?authuser=1#/a161418729p526218667/reports/intelligenthome)
+- Measurement ID: `G-R2H8ES2JKZ`
+
 ## Deployment
 
 Static export via GitHub Pages:
