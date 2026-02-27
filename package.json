@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@next/third-parties": "^16.1.6",
     "@sigma/edge-curve": "^3.1.0",
     "@sigma/node-image": "^3.0.0",
     "graphology": "^0.26.0",

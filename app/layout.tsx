@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Serif, Inter } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Masthead } from "@/components/layout/masthead";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { CommandPaletteProvider } from "@/components/ui/command-palette-provider";
@@ -85,6 +86,7 @@ export default function RootLayout({
         </div>
         <CommandPaletteProvider />
       </body>
+      <GoogleAnalytics gaId="G-R2H8ES2JKZ" />
     </html>
   );
 }
