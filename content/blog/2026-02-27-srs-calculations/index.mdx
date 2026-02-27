@@ -147,7 +147,7 @@ There are a few frictions that cause the majority of differences between our num
 
 ## Brokerage fees
 
-The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real — you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime. But the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside rate of return to inside), SRS would win by ~$400k:
+The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real — you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime; however, the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside-SRS rate of return to inside-SRS), SRS would win by ~$400k:
 
 ![Endowus fee impact on SRS returns](endowus-fees.png)
 *Endowus fee impact on SRS returns*
@@ -161,7 +161,7 @@ The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax a
 | 2067 | $67,350,070.54 | $66,942,376.58 | +$407,693.96 |
 
 ![If Endowus had no fees](liquidity-difference-endowus-no-fees.png)
-*Liquidity difference if Endowus had no fees*
+*Liquidity difference if Endowus had no fees. I can see an argument for SRS here, though still not an outright obvious choice given the tradeoffs.*
 
 ## 10-Year withdrawal cap
 
@@ -193,7 +193,15 @@ And in return, we maybe see a *tiny* amount of net-cash-growth in the last few y
 - With a 0.4% fee platform: roughly breakeven (the tax arbitrage and the fee erosion almost exactly cancel each other out)
 - With a lower-fee platform: SRS wins
 - With a higher-fee platform (>0.66%): SRS loses
-- The liquidity lockup is the real unmodeled cost that tips the scale
+- The liquidity lockup is a significant unmodeled cost - are we willing to lock up such a significant amount of funds until retirement?
+
+There are only a few scenarios in which I'd recommend going with SRS:
+
+- You plan to use *the same investment platform* within and without SRS (i.e. you're already paying the same fees on both side)
+- You like the idea of locking liquidity up as a form of forced-retirement savings
+- You think the future income tax regime is going to be *lighter* than today's tax rates
+- You want your money going to `{platform, e.g. Endowus}` instead of the Government
+- You think SRS benefits improve in future - since there is a hard cap on rate-of-SRS-investment, we cannot retroactively decide to invest $500k into SRS if suddenly it becomes highly profitable to use SRS.
 
 ## Side Note - Why do my numbers contradict common wisdom??
 
