@@ -1,13 +1,13 @@
 ---
 title: "SRS Calculations"
 date: 2026-02-27
-summary: "Is Singapore's SRS worth it? I ran the numbers — and the answer surprised me."
+summary: "Is Singapore's SRS worth it? I ran the numbers - and the answer surprised me."
 tags: ["finance", "singapore", "srs", "investing"]
 ---
 
 <Callout type="info">
 
-### What is SRS?
+**What is SRS?**
 
 The Supplementary Retirement Scheme (SRS) is a voluntary, tax-deferred savings program in Singapore designed to help individuals build retirement funds alongside their CPF. Contributions allow for dollar-for-dollar tax relief (up to S$15,300/year for Singaporeans/PRs; S$35,700/year for foreigners). Funds can be invested in various instruments, with 50% of withdrawals during retirement tax-free.
 
@@ -29,7 +29,9 @@ This leads us to a few questions:
 1. How much do I value the liquidity of $15,300 per year?
 2. What is the effective opportunity cost of funds invested in SRS, versus funds invested in my personal savings strategies sans. SRS?
 
-Question 1 is relatively straightforward to answer; it'll equate to a rough liquidity loss of $1,275 per month, locked up until retirement age. Question 2, however, is quite multifaceted, with a large variety of factors depending on market conditions, personal risk appetite, tax regimes, so on and so forth.
+Question 1 is relatively straightforward to answer; it'll equate to a rough liquidity loss of $1,275 per month, locked up until retirement age, and the impact of this on my lifestyle is subject to how significant $1,275 is relative to my monthly disposable income. For the sake of calculation, let's say I'm willing to part with this $1,275 monthly amount with no problems.
+
+Question 2, however, is quite multifaceted, depending on a large variety of factors like market conditions, personal risk appetite, and tax regimes. We'll try to be as quantitative as possible with our analyses, but some factors are simply qualitative in nature, so some level of subjectivity will be involved in our eventual conclusions.
 
 <Callout type="info">
 *Disclaimer: I use Endowus throughout this analysis as it's the cheapest platform I could find with access to 100% global equity ETF funds for SRS. If a lower-fee alternative exists, the numbers may shift in SRS's favor.*
@@ -59,12 +61,19 @@ Externally we invest in VWRA (FTSE All-World index) and SPY (S&P 500) - per thes
 
 To normalize risk and returns for a fair comparison, let's say we use 7.69% for both for-SRS and ex-SRS strategies. I like to model these as *cash flows* - for each year, calculate the amount of funds invested, taxes paid, etc., and simply model the net sum at the end. Importantly, Endowus charges a **0.4% per-annum management fee** on top of underlying funds' expense ratios - this means that our effective interest rates are:
 
+Note that Endowus imposes additional restrictions on what assets can be invested in; this means that we inadvertently also pay significantly higher expense ratios based on Endowus's allocations.
+
+![Endowus Aggressive Goal Allocation](endowus-aggressive-allocations.png)
+*My current Endowus-decided allocations with an 'aggressive' 100% equity goal. Lumping these into [ChatGPT](https://chatgpt.com/share/69a3f0b9-82e8-800f-abd0-d2e459f56ced) generates an estimated blended expense ratio of 0.29%, which is much more than VWRA (0.19%) or S&P 500 (CSPX, 0.07%)*
+
+However, for the sake of argument (biasing in favor of SRS; you'll see why, later in this article...), let's assume expense ratios are the same for SRS vs non-SRS as well; let's say we invest in the same instruments externally, on a platform like IBKR.
+
 | Strategy | Details |
 |---|---|
 | Endowus | 1.0769 × 0.996 = 1.07256, or 7.256% |
 | External investment | 7.69% |
 
-Tax is calculated using Singapore's progressive income tax brackets (YA2025). Since the $15,300 SRS deduction comes off the top of your income, the tax savings occur at your **marginal rate** (18% at $200k, rising to 22% as income grows), not the effective rate.
+Tax is calculated using Singapore's progressive income tax brackets (YA2025). Since the $15,300 SRS deduction comes off the top of your income, the tax savings occur at your **marginal rate** (for reference: 11.5% at $120k, 18% at $200k, rising to 24% as income grows beyond $1m), not the effective rate.
 
 # Investing Profile
 
@@ -131,23 +140,25 @@ Given the above numbers, we can plug them all into excel formulae to generate pr
 | 2067 | $66,943,861.75 | $66,942,376.58 | +$1,485.17 |
 
 
-Given my calculations, the numbers are surprisingly close. Given a starting income of $200k, we can see that *at almost no point in our life does SRS give us 'more money' than personally investing the funds* — the SRS profile only overtakes no-SRS by a razor-thin margin of **$1,485** in the very last year of withdrawal, on a ~$67M portfolio:
+Given my calculations, the numbers are surprisingly close. Given a starting income of $200k, we can see that *at almost no point in our life does SRS give us 'more money' than personally investing the funds* - the SRS profile only overtakes no-SRS by a razor-thin margin of **$1,485** in the very last year of withdrawal, on a ~$67M portfolio:
 
 ![Liquidity Comparison](srs-vs-no-srs-line.png)
 *Liquidity comparison: SRS vs. no-SRS profiles*
 
-The general idea of SRS is that your 'accumulated liquidity' improves due to the tax deferment - you sacrifice early-age liquidity for lower taxes on the same funds in future. You would expect the SRS profile to 'overtake' the no-SRS profile during the withdrawal period as the tax savings come home. It technically does — but the gap peaks at **-$1.7M** at age 62 and only barely crosses zero at the very end:
+The general idea of SRS is that your 'accumulated liquidity' improves due to the tax deferment - you sacrifice early-age liquidity for lower taxes on the same funds in future. You would expect the SRS profile to 'overtake' the no-SRS profile during the withdrawal period as the tax savings come home. It technically does - but the gap peaks at **-$1.7M** at age 62 and only barely crosses zero at the very end:
 
 ![Liquidity Difference](liquidity-difference.png)
 *Liquidity difference over time (SRS minus no-SRS)*
 
-# Why is the system broken?
+This essentially means that based on the profile above, SRS involves sacrificing a large amount of liquidity over the course of your life, only to 'break-even' on the last year of withdrawals; a lot of downsides for effectively neutral upside at the end.
 
-There are a few frictions that cause the majority of differences between our numbers:
+# What!? Why?
+
+Surely the government wouldn't create a tax policy that is so negatively skewed for citizens..? There are a few frictions that cause the majority of impact on the outcome:
 
 ## Brokerage fees
 
-The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real — you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime; however, the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside-SRS rate of return to inside-SRS), SRS would win by ~$400k:
+The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real - you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime; however, the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside-SRS rate of return to inside-SRS), SRS would win by ~$400k - though notably, it *only turns a profit from the second last year of withdrawals*:
 
 ![Endowus fee impact on SRS returns](endowus-fees.png)
 *Endowus fee impact on SRS returns*
@@ -163,9 +174,11 @@ The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax a
 ![If Endowus had no fees](liquidity-difference-endowus-no-fees.png)
 *Liquidity difference if Endowus had no fees. I can see an argument for SRS here, though still not an outright obvious choice given the tradeoffs.*
 
+The fact that even with zero annual fees SRS only starts being profitable at the end is something to be noted; that means that we're losing liquidity for ~41 years, turning 'profitable' on the 42nd year, before capping off all withdrawals on the 43rd year. Whether this makes sense is entirely up to the user; this might feel perfectly fine if seen as a 'retirement savings' vehicle.
+
 ## 10-Year withdrawal cap
 
-The 10-year cap on SRS withdrawals forces a compressed withdrawal schedule. By age 62, our SRS sum has compounded into $2,094,824.37; an even withdrawal strategy over 11 years requires -$268,388 per year (after taking into account compounding). After the 50% taxable amount haircut, this amounts to a 'taxable income' of ~$134k, or ~3.76% effective tax on the full withdrawal. This is actually quite favorable — the real issue is that a longer withdrawal period would let the remaining SRS balance compound further while keeping each withdrawal's taxable portion in lower brackets.
+The 10-year cap on SRS withdrawals forces a compressed withdrawal schedule. By age 62, our SRS sum has compounded into $2,094,824.37; an even withdrawal strategy over 11 years requires -$268,388 per year (after taking into account compounding). After the 50% taxable amount haircut, this amounts to a 'taxable income' of ~$134k, or ~3.76% effective tax on the full withdrawal. This is actually quite favorable - the real issue is that a longer withdrawal period would let the remaining SRS balance compound further while keeping each withdrawal's taxable portion in lower brackets.
     - Note that SRS also introduces significant risk in the form of tax regimes. If Singapore tweaks the tax brackets in future (as we already have seen in [2024](https://www.iras.gov.sg/docs/default-source/budget-2022/budget-2022---overview-of-tax-changes69937d71-ba59-4b39-b1e5-7e85b2504e1c.pdf?sfvrsn=8339ba5a_5#:~:text=Effective%201%20Jan%202024&text=Enhance%20the%20progressivity%20of%20property%20tax%20for%20non%2Downer%2D%20occupied,two%20years%20as%20shown%20below.)), we would be subjecting our SRS deposits to whatever rates the government sets in future.
 
 ## Possible confounding factors
@@ -181,12 +194,12 @@ These calculations are all based on the present state of affairs for a Singapore
 
 ## Side Note - Why do my numbers contradict common wisdom??
 
-When I first got these results I was quite surprised, as general sentiment online has been largely in favor of investing in SRS; [a recent post last month](https://old.reddit.com/r/singaporefi/comments/1q0d2fz/debunking_the_myth_can_you_lose_money_investing/), for example, recommends 'if you are a HENRY (>$100k per year) it is always optimal to start contributing to SRS and investing it as early as possible'.
+When I first got these results I was quite surprised, as general sentiment online has been largely in favor of investing in SRS; [a recent post last month](https://old.reddit.com/r/singaporefi/comments/1q0d2fz/debunking_the_myth_can_you_lose_money_investing/), for example, recommends 'if you are a HENRY (>$100k income per year) it is always optimal to start contributing to SRS and investing it as early as possible'.
 
 However, I downloaded his spreadsheet and noted a few factors:
 
 1. In his own words, *it doesn't make sense to invest in SRS at all ages - there's a curve of an 'ideal age' to start investing in SRS*. My projections are specifically for 30 year olds. The author finds that it starts becoming profitable at age 34, for $200k income and 7.69% interest rate.
-2. No platform fee erosion (assumes the same 7% return both in and outside of SRS) - **this explains the main difference in recommendations**
+2. He assumed there was no platform fee erosion (assumes the same 7% return both in and outside of SRS) - **this explains the main difference in recommendations**
 
 # Conclusion: Should I invest in SRS?
 
@@ -200,16 +213,29 @@ If you're savvy enough to invest yourself, with the profile above it's hard to s
 And in return, we maybe see a *tiny* amount of net-cash-growth in the last few years of our SRS withdrawal period.
 
 - With a 0.4% fee platform: roughly breakeven (the tax arbitrage and the fee erosion almost exactly cancel each other out)
-- With a lower-fee platform: SRS wins
+- With a lower-fee platform: SRS wins, in the last 1-2 years of withdrawal
 - With a higher-fee platform (>0.66%): SRS loses
 - The liquidity lockup is a significant unmodeled cost - are we willing to lock up such a significant amount of funds until retirement?
+
+## Other factors
+
+Note that I haven't included a few factors; I've tried to make assumptions for these factors in favor of SRS, in an attempt to demonstrate that 'even when biased towards SRS it barely breaks even':
+
+- The automatic portfolio selection by Endowus introduces some convenience (good for SRS) but also some limitations (bad for SRS) - some strategies (e.g. 'heavy on Chinese equities via specific ETFs like `iShares Core MSCI China`') are not possible.
+- The effective expense ratio differences between *Endowus 100% Aggressive* and *IBKR ETFs* can come down to anywhere between *0.28% to 0.1%*, which introduces even more drag for the SRS portfolio
+- Optionality: SRS funds are permanently locked into SRS, which introduces vendor-risk; if Endowus went belly-up tomorrow, we'd need to find an alternative platform with possibly worse rates, and we wouldn't be able to pull SRS funds out without significant financial penalties.
+
+## When would I go for SRS?
 
 There are only a few scenarios in which I'd recommend going with SRS:
 
 - You plan to use *the same investment platform* within and without SRS (i.e. you're already paying the same fees on both sides)
 - You like the idea of locking liquidity up as a form of forced-retirement savings (you do you, man)
 - You think the future income tax regime is going to be *lighter* than today's tax rates
-- You want your money going to `{platform, e.g. Endowus}` instead of the Government
+- You want your money going to `{platform, e.g. Endowus}` in fees instead of the Government in taxes
+    - Personally, I see taxes as being more beneficial to society, so this skews my decision in favor of no-SRS a little as well
 - You think SRS benefits improve in future - since there is a hard cap on rate-of-SRS-investment, we cannot retroactively decide to invest $500k into SRS if suddenly it becomes highly profitable to use SRS.
 
-Having taken these factors into account, none of those scenarios apply to me; hence I decided I won't be leveraging SRS in own personal investment strategy, given the significant downsides and negligible upside.
+## And so...
+
+Having taken all of these factors into account, I decided I won't be leveraging SRS in own personal investment strategy, given the significant downsides and negligible upside. The policy is perhaps a little too asymmetric, and the investment landscape for SRS funds a little too restrictive, for me to think of it as a viable alternative to personal investing in ultra-low-cost ETFs like VWRA and SPX.
