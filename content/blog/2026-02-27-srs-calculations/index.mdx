@@ -17,8 +17,8 @@ Back in 2024 I had a mini debate with a family member over how valuable it is to
 
 It sounds fine and dandy; however, there are a few major caveats:
 
-- Your SRS funds become effectively illiquid; in the circumstances that you want to withdraw early, you have to pay a 5% fee, as well as 100% of the tax rate on the withdrawn sum (where, if you're still working, means you're paying the marginal tax rate of SRS *after* factoring in your income).
-- After hitting retirement age, you must withdraw all SRS savings within the ensuing 10 years (for the purposes of 'breaking it up' across assessable-income years, that means you have to spread your SRS withdrawals out over 11 years to minimize the tax burden)
+- Your SRS funds become effectively illiquid; if you withdraw early, the full withdrawn amount is subject to income tax (no 50% concession), plus a 5% penalty. If you're still working, this means you're paying tax at your marginal rate *after* factoring in your employment income.
+- After making your first penalty-free withdrawal (available from retirement age), you have 10 years to withdraw all SRS savings (for the purposes of 'breaking it up' across assessable-income years, that means you have to spread your SRS withdrawals out over 11 years to minimize the tax burden)
 - SRS funds earn a baseline annual interest rate of 0.05% if left as cash in your SRS account, but certain platforms can be used where you can choose from a few SRS-vetted higher-risk portfolios (e.g. unleveraged all-equities funds with Roboadvisors like Endowus/Stashaway)
 
 ![Endowus SRS page](endowus.png)
@@ -27,11 +27,19 @@ It sounds fine and dandy; however, there are a few major caveats:
 This leads us to a few questions:
 
 1. How much do I value the liquidity of $15,300 per year?
-2. What is the effective opportunity cost of funds invested in SRS, versus funds invested in my personal savings strategies sans. SRS?
+2. What is the effective opportunity cost of funds invested in SRS, versus funds invested in my personal savings strategies without SRS?
 
 Question 1 is relatively straightforward to answer; it'll equate to a rough liquidity loss of $1,275 per month, locked up until retirement age, and the impact of this on my lifestyle is subject to how significant $1,275 is relative to my monthly disposable income. For the sake of calculation, let's say I'm willing to part with this $1,275 monthly amount with no problems.
 
 Question 2, however, is quite multifaceted, depending on a large variety of factors like market conditions, personal risk appetite, and tax regimes. We'll try to be as quantitative as possible with our analyses, but some factors are simply qualitative in nature, so some level of subjectivity will be involved in our eventual conclusions.
+
+**What's ahead:**
+
+- The fee landscape for SRS platforms (Endowus, Syfe, StashAway)
+- Baseline return assumptions and fee-adjusted growth rates
+- A 33-year projection comparing SRS vs. direct investment
+- Why brokerage fees and withdrawal caps erode the tax arbitrage
+- My conclusion and when SRS might still make sense
 
 <Callout type="info">
 *Disclaimer: I use Endowus throughout this analysis as it's the cheapest platform I could find with access to 100% global equity ETF funds for SRS. If a lower-fee alternative exists, the numbers may shift in SRS's favor.*
@@ -59,19 +67,20 @@ Externally we invest in VWRA (FTSE All-World index) and SPY (S&P 500) - per thes
 ![VWCE (also FTSE all-world) and SPY, net of fees per Curvo](vwce-spy.png)
 *VWCE (also FTSE all-world) and SPY, net of fees per Curvo*
 
-To normalize risk and returns for a fair comparison, let's say we use 7.69% for both for-SRS and ex-SRS strategies. I like to model these as *cash flows* - for each year, calculate the amount of funds invested, taxes paid, etc., and simply model the net sum at the end. Importantly, Endowus charges a **0.4% per-annum management fee** on top of underlying funds' expense ratios - this means that our effective interest rates are:
+To normalize risk and returns for a fair comparison, let's say we use 7.69% for both SRS and non-SRS strategies. I like to model these as *cash flows* - for each year, calculate the amount of funds invested, taxes paid, etc., and simply model the net sum at the end. Importantly, Endowus charges a **0.3~0.4% per-annum management fee** on top of underlying funds' expense ratios.
 
-Note that Endowus imposes additional restrictions on what assets can be invested in; this means that we inadvertently also pay significantly higher expense ratios based on Endowus's allocations.
+Note that Endowus imposes additional restrictions on what assets can be invested in; this means that we may also inadvertently pay different expense ratios based on Endowus's allocations.
+
+*I've found that Endowus Fund-Smart allows for specific SRS investment in the [Amundi Index MSCI World Fund](https://endowus.com/investment-funds-list/amundi-index-msci-world-fund-LU2420245917), which on top of having a 0.1% expense ratio also only has a 0.3% Endowus management fee (for single-fund goals). This brings the Endowus-IBKR delta to closer to ~0.21% rather than 0.50% (0.3% + 0.1% vs VWRA's 0.19%), if you choose to pursue this strategy.*
 
 ![Endowus Aggressive Goal Allocation](endowus-aggressive-allocations.png)
 *My current Endowus-decided allocations with an 'aggressive' 100% equity goal. Lumping these into [ChatGPT](https://chatgpt.com/share/69a3f0b9-82e8-800f-abd0-d2e459f56ced) generates an estimated blended expense ratio of 0.29%, which is much more than VWRA (0.19%) or S&P 500 (CSPX, 0.07%)*
 
-However, for the sake of argument (biasing in favor of SRS; you'll see why, later in this article...), let's assume expense ratios are the same for SRS vs non-SRS as well; let's say we invest in the same instruments externally, on a platform like IBKR.
-
 | Strategy | Details |
 |---|---|
-| Endowus | 1.0769 × 0.996 = 1.07256, or 7.256% |
-| External investment | 7.69% |
+| Endowus (100% Aggressive) | 0.4% management + 0.29% expense: 1.0769 × 0.996 × 0.9971 = 1.06948, or 6.948% |
+| Endowus (Fund-Smart, Amundi MSCI World) | 0.3% management + 0.1% expense: 1.0769 × 0.997 × 0.999 = 1.07260, or 7.260% |
+| IBKR (VWRA) | 0.19% expense: 1.0769 × 0.9981 = 1.07485, or 7.485% |
 
 Tax is calculated using Singapore's progressive income tax brackets (YA2025). Since the $15,300 SRS deduction comes off the top of your income, the tax savings occur at your **marginal rate** (for reference: 11.5% at $120k, 18% at $200k, rising to 24% as income grows beyond $1m), not the effective rate.
 
@@ -84,8 +93,9 @@ Tax is calculated using Singapore's progressive income tax brackets (YA2025). Si
 | Starting Income | Varying from 120k~200k |
 | Liquidity loss | ~$15,300 per year |
 | Rate of Income growth | 2% |
-| Endowus rate of growth | 7.256% |
-| External rate of growth | 7.69% |
+| Endowus (100% Aggressive) rate of growth | 6.948% |
+| Endowus (Fund-Smart, Amundi MSCI World) rate of growth | 7.260% |
+| IBKR (VWRA) rate of growth | 7.485% |
 | Retirement Age | 63 |
 
 # The Calculations
@@ -95,62 +105,30 @@ Given the above numbers, we can plug them all into excel formulae to generate pr
 | Year | Liquidity with full SRS contribution | Liquidity with zero SRS contribution | Difference |
 |------|--------------------------------------|--------------------------------------|------------|
 | 2024 | $166,304.00 | $178,850.00 | -$12,546.00 |
-| 2025 | $348,676.78 | $374,693.57 | -$26,016.79 |
-| 2026 | $548,419.62 | $588,902.30 | -$40,482.68 |
-| 2027 | $766,935.20 | $822,954.58 | -$56,019.38 |
-| 2028 | $1,005,723.53 | $1,078,443.80 | -$72,720.27 |
-| 2029 | $1,266,381.76 | $1,357,087.22 | -$90,705.46 |
-| 2030 | $1,550,661.83 | $1,660,735.54 | -$110,073.71 |
-| 2031 | $1,860,451.80 | $1,991,383.18 | -$130,931.38 |
-| 2032 | $2,197,786.36 | $2,351,179.36 | -$153,393.00 |
-| 2033 | $2,564,858.13 | $2,742,440.05 | -$177,581.92 |
-| 2034 | $2,964,029.82 | $3,167,641.80 | -$203,611.98 |
-| 2035 | $3,397,847.35 | $3,629,466.71 | -$231,619.36 |
-| 2036 | $3,869,053.98 | $4,130,809.63 | -$261,755.65 |
-| 2037 | $4,380,588.40 | $4,674,789.56 | -$294,201.16 |
-| 2038 | $4,935,625.23 | $5,264,766.96 | -$329,141.73 |
-| 2039 | $5,537,593.11 | $5,904,362.34 | -$366,769.23 |
-| 2040 | $6,190,186.02 | $6,597,476.30 | -$407,290.28 |
-| 2041 | $6,897,383.69 | $7,348,310.86 | -$450,927.16 |
-| 2042 | $7,663,473.65 | $8,161,365.36 | -$497,891.72 |
-| 2043 | $8,493,074.87 | $9,041,514.15 | -$548,439.28 |
-| 2044 | $9,391,153.91 | $9,994,008.17 | -$602,854.26 |
-| 2045 | $10,363,050.26 | $11,024,504.01 | -$661,453.75 |
-| 2046 | $11,414,535.57 | $12,139,095.12 | -$724,559.55 |
-| 2047 | $12,551,827.24 | $13,344,345.41 | -$792,518.18 |
-| 2048 | $13,781,622.71 | $14,647,291.79 | -$865,669.07 |
-| 2049 | $15,111,136.46 | $16,055,453.06 | -$944,316.60 |
-| 2050 | $16,548,139.75 | $17,577,020.63 | -$1,028,880.88 |
-| 2051 | $18,100,881.99 | $19,220,817.80 | -$1,119,935.82 |
-| 2052 | $19,778,355.59 | $20,996,348.47 | -$1,217,992.88 |
-| 2053 | $21,590,258.91 | $22,913,849.44 | -$1,323,590.53 |
-| 2054 | $23,547,038.22 | $24,984,346.87 | -$1,437,308.64 |
-| 2055 | $25,659,945.32 | $27,219,717.00 | -$1,559,771.68 |
-| 2056 | $27,941,099.44 | $29,632,751.57 | -$1,691,652.12 |
-| 2057 | $30,323,269.72 | $31,911,510.16 | -$1,588,240.44 |
-| 2058 | $32,888,628.90 | $34,365,505.29 | -$1,476,876.39 |
-| 2059 | $35,651,264.19 | $37,008,212.65 | -$1,356,948.46 |
-| 2060 | $38,626,346.14 | $39,854,144.20 | -$1,227,798.06 |
-| 2061 | $41,830,211.89 | $42,918,927.89 | -$1,088,716.00 |
-| 2062 | $45,280,454.92 | $46,219,393.45 | -$938,938.53 |
-| 2063 | $48,996,021.63 | $49,773,664.80 | -$777,643.17 |
-| 2064 | $52,997,315.43 | $53,601,259.63 | -$603,944.20 |
-| 2065 | $57,306,308.71 | $57,723,196.49 | -$416,887.78 |
-| 2066 | $61,946,663.59 | $62,162,110.30 | -$215,446.71 |
-| 2067 | $66,943,861.75 | $66,942,376.58 | +$1,485.17 |
+| 2029 | $1,259,988.62 | $1,350,225.13 | -$90,236.51 |
+| 2034 | $2,932,938.67 | $3,134,337.36 | -$201,398.69 |
+| 2039 | $5,447,295.28 | $5,807,799.59 | -$360,504.31 |
+| 2044 | $9,180,067.85 | $9,768,604.58 | -$588,536.73 |
+| 2049 | $14,673,286.54 | $15,588,492.56 | -$915,206.01 |
+| 2054 | $22,704,703.88 | $24,086,997.11 | -$1,382,293.23 |
+| 2056 | $26,863,461.02 | $28,485,189.14 | -$1,621,728.12 |
+| 2057 | $29,091,108.47 | $30,617,305.54 | -$1,526,197.08 |
+| 2062 | $42,994,482.96 | $43,924,443.93 | -$929,960.97 |
+| 2067 | $62,940,653.35 | $63,015,237.32 | -$74,583.97 |
 
+*Showing every 5th year, plus the peak gap (2056) and start of withdrawal period (2057). [Download the full spreadsheet](SRS.xlsx) for all 44 years.*
 
-Given my calculations, the numbers are surprisingly close. Given a starting income of $200k, we can see that *at almost no point in our life does SRS give us 'more money' than personally investing the funds* - the SRS profile only overtakes no-SRS by a razor-thin margin of **$1,485** in the very last year of withdrawal, on a ~$67M portfolio:
+Given my calculations, the numbers are surprisingly close. Given a starting income of $200k, we can see that *at no point in our life does SRS give us 'more money' than personally investing the funds* - the SRS profile **never overtakes** no-SRS, still trailing by **-$74,584** even in the very last year of withdrawal, on a ~$63M portfolio:
 
 ![Liquidity Comparison](srs-vs-no-srs-line.png)
 *Liquidity comparison: SRS vs. no-SRS profiles*
 
-The general idea of SRS is that your 'accumulated liquidity' improves due to the tax deferment - you sacrifice early-age liquidity for lower taxes on the same funds in future. You would expect the SRS profile to 'overtake' the no-SRS profile during the withdrawal period as the tax savings come home. It technically does - but the gap peaks at **-$1.7M** at age 62 and only barely crosses zero at the very end:
+The general idea of SRS is that your 'accumulated liquidity' improves due to the tax deferment - you sacrifice early-age liquidity for lower taxes on the same funds in future. You would expect the SRS profile to 'overtake' the no-SRS profile during the withdrawal period as the tax savings come home. **It never does** - the gap peaks at **-$1.6M** at age 62 and narrows during withdrawals but never crosses zero:
 
 ![Liquidity Difference](liquidity-difference.png)
 *Liquidity difference over time (SRS minus no-SRS)*
 
-This essentially means that based on the profile above, SRS involves sacrificing a large amount of liquidity over the course of your life, only to 'break-even' on the last year of withdrawals; a lot of downsides for effectively neutral upside at the end.
+This essentially means that based on the profile above, SRS involves sacrificing a large amount of liquidity over the course of your life and never breaking even; a lot of downsides for no upside at the end.
 
 # What!? Why?
 
@@ -158,18 +136,34 @@ Surely the government wouldn't create a tax policy that is so negatively skewed 
 
 ## Brokerage fees
 
-The *Endowus 0.4% annual fee* adds significant compounded erosion. The SRS tax arbitrage is real - you save at your 18-22% marginal rate during accumulation and pay back at only ~3.76% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime; however, the 0.4% annual fee compounds to erode almost exactly that amount, leaving SRS essentially breakeven. If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside-SRS rate of return to inside-SRS), SRS would win by ~$400k - though notably, it *only turns a profit from the second last year of withdrawals*:
-
 ![Endowus fee impact on SRS returns](endowus-fees.png)
 *Endowus fee impact on SRS returns*
+
+The *Endowus 0.4% management fee + 0.29% expense ratio* adds significant compounded erosion. The SRS tax arbitrage is real - you save at your 18-22% marginal rate during accumulation and pay back at only ~3.2% effective during withdrawal (thanks to the 50% concession + progressive rates on a smaller base). This should be worth ~$400k over a lifetime; however, the combined 0.69% annual fee drag compounds to erode more than that amount, leaving SRS net-negative.
+
+### Using Endowus Fund-Smart with Amundi MSCI World Fund
+
+If we use Endowus Fund-Smart with the Amundi World Index instead, the fees are slightly lower, leading to a profit, in the *last year of withdrawals*:
 
 | Year | Liquidity with full SRS contribution | Liquidity with zero SRS contribution | Difference |
 |------|--------------------------------------|--------------------------------------|------------|
 | 2024 | $166,304.00 | $178,850.00 | -$12,546.00 |
 | ... | | | |
-| 2065 | $57,612,143.62 | $57,723,196.49 | -$111,052.87 |
-| 2066 | $62,300,827.20 | $62,162,110.30 | +$138,716.90 |
-| 2067 | $67,350,070.54 | $66,942,376.58 | +$407,693.96 |
+| 2065 | $54,293,411.78 | $54,544,360.54 | -$250,948.76 |
+| 2066 | $58,590,814.80 | $58,627,005.93 | -$36,191.13 |
+| 2067 | $63,209,878.44 | $63,015,237.32 | +$194,641.12 |
+
+### Assuming best case scenario with zero fees
+
+If we simply made the Endowus fee 0% (i.e. if there was some way to get equivalent outside-SRS rate of return to inside-SRS), SRS would win by ~$400k - though notably, it *only turns a profit from the second last year of withdrawals*:
+
+| Year | Liquidity with full SRS contribution | Liquidity with zero SRS contribution | Difference |
+|------|--------------------------------------|--------------------------------------|------------|
+| 2024 | $166,304.00 | $178,850.00 | -$12,546.00 |
+| ... | | | |
+| 2065 | $54,447,699.25 | $54,544,360.54 | -$96,661.29 |
+| 2066 | $58,769,274.22 | $58,627,005.93 | +$142,268.29 |
+| 2067 | $63,414,319.08 | $63,015,237.32 | +$399,081.76 |
 
 ![If Endowus had no fees](liquidity-difference-endowus-no-fees.png)
 *Liquidity difference if Endowus had no fees. I can see an argument for SRS here, though still not an outright obvious choice given the tradeoffs.*
@@ -178,7 +172,7 @@ The fact that even with zero annual fees SRS only starts being profitable at the
 
 ## 10-Year withdrawal cap
 
-The 10-year cap on SRS withdrawals forces a compressed withdrawal schedule. By age 62, our SRS sum has compounded into $2,094,824.37; an even withdrawal strategy over 11 years requires -$268,388 per year (after taking into account compounding). After the 50% taxable amount haircut, this amounts to a 'taxable income' of ~$134k, or ~3.76% effective tax on the full withdrawal. This is actually quite favorable - the real issue is that a longer withdrawal period would let the remaining SRS balance compound further while keeping each withdrawal's taxable portion in lower brackets.
+The 10-year cap on SRS withdrawals forces a compressed withdrawal schedule. By age 62, our SRS sum has compounded into $1,800,622.11; an even withdrawal strategy over 11 years requires ~-$231,000 per year (after taking into account compounding). After the 50% taxable amount haircut, this amounts to a 'taxable income' of ~$115k, or ~3.2% effective tax on the full withdrawal. This is actually quite favorable - the real issue is that a longer withdrawal period would let the remaining SRS balance compound further while keeping each withdrawal's taxable portion in lower brackets.
     - Note that SRS also introduces significant risk in the form of tax regimes. If Singapore tweaks the tax brackets in future (as we already have seen in [2024](https://www.iras.gov.sg/docs/default-source/budget-2022/budget-2022---overview-of-tax-changes69937d71-ba59-4b39-b1e5-7e85b2504e1c.pdf?sfvrsn=8339ba5a_5#:~:text=Effective%201%20Jan%202024&text=Enhance%20the%20progressivity%20of%20property%20tax%20for%20non%2Downer%2D%20occupied,two%20years%20as%20shown%20below.)), we would be subjecting our SRS deposits to whatever rates the government sets in future.
 
 ## Possible confounding factors
@@ -188,7 +182,7 @@ These calculations are all based on the present state of affairs for a Singapore
 | Factor | Impact |
 |---|---|
 | Tax Regime | If income tax is higher in future, SRS strategy *devalues* (pay more EIR tomorrow than EIR today) |
-| Lower-fee vendors | If any cheaper alternative to Endowus shows up (&lt;0.4% fees), SRS strategy improves; the extreme edge case (0% fees) shows a net benefit of ~$400k by the end of the SRS withdrawal period; which is nice, but also amounts to less than 1% of our liquidity at age 72... |
+| Lower-fee vendors | If any cheaper alternative to Endowus shows up (&lt;0.69% all-in fees), SRS strategy improves; the extreme edge case (0% fees) shows a net benefit of ~$400k by the end of the SRS withdrawal period; which is nice, but also amounts to less than 1% of our liquidity at age 72... |
 | Retirement Age | Irrelevant to me as the SRS Retirement age is fixed at time of first deposit; but for future new-adults, your accumulated sums may be different |
 | Investment Strategy | It's generally advisable to migrate to less-risky portfolios as you age; e.g. a [three fund portfolio](https://curvo.eu/backtest/en/portfolio/three-fund--NoIgKgFgTgpjAEAzArgOwCYgDTFASQFEAGIgIQBYBGAJQE0AZANgGZsiA6Z8gXRxEJKlmADWHUACkQCcbTs175iZAGLlqygBLNKs5gCYpho8eONu5oA). However, this impacts both Endowus- and external investment strategies roughly equivalently. |
 
@@ -203,26 +197,26 @@ However, I downloaded his spreadsheet and noted a few factors:
 
 # Conclusion: Should I invest in SRS?
 
-If you're savvy enough to invest yourself, with the profile above it's hard to see a compelling argument for investing in SRS. The tax arbitrage is real (save at 18-22% marginal, pay back at ~3.76% effective), but the fee erosion from SRS platforms almost exactly cancels it out, leaving you essentially breakeven against self-directed investment on platforms like IBKR. Going with SRS + Roboadvisor, we see:
+If you're savvy enough to invest yourself, with the profile above it's hard to see a compelling argument for investing in SRS. The tax arbitrage is real (save at 18-22% marginal, pay back at ~3.2% effective), but the fee erosion from SRS platforms more than cancels it out, leaving you net-negative against self-directed investment on platforms like IBKR. Going with SRS + Roboadvisor, we see:
 
 1. Significantly reduced choices for investment funds
-2. Annual percentage-based fee erosion of capital (0.3% to 0.4%)
+2. Annual percentage-based fee erosion of capital (0.40% to 0.69% all-in)
 3. Significant liquidity lockup
 4. Risk in tax regime
 
-And in return, we maybe see a *tiny* amount of net-cash-growth in the last few years of our SRS withdrawal period.
+And in return, we end up net-negative even at the very end of our SRS withdrawal period.
 
-- With a 0.4% fee platform: roughly breakeven (the tax arbitrage and the fee erosion almost exactly cancel each other out)
-- With a lower-fee platform: SRS wins, in the last 1-2 years of withdrawal
-- With a higher-fee platform (>0.66%): SRS loses
+- With a 0.69% all-in fee (Endowus 100% Aggressive): SRS loses, trailing by ~$75k even in the final year
+- With a 0.40% all-in fee (Endowus Fund-Smart): roughly breakeven
+- With a higher-fee platform (>0.69%): SRS loses more
 - The liquidity lockup is a significant unmodeled cost - are we willing to lock up such a significant amount of funds until retirement?
 
 ## Other factors
 
-Note that I haven't included a few factors; I've tried to make assumptions for these factors in favor of SRS, in an attempt to demonstrate that 'even when biased towards SRS it barely breaks even':
+Note that I haven't included a few factors; I've tried to make assumptions for these factors in favor of SRS, in an attempt to demonstrate that 'even when biased towards SRS it doesn't break even':
 
 - The automatic portfolio selection by Endowus introduces some convenience (good for SRS) but also some limitations (bad for SRS) - some strategies (e.g. 'heavy on Chinese equities via specific ETFs like `iShares Core MSCI China`') are not possible.
-- The effective expense ratio differences between *Endowus 100% Aggressive* and *IBKR ETFs* can come down to anywhere between *0.28% to 0.1%*, which introduces even more drag for the SRS portfolio
+- The effective fee difference between *Endowus 100% Aggressive* (0.69% all-in) and *IBKR VWRA* (0.19% expense) is 0.50%, which introduces significant drag for the SRS portfolio
 - Optionality: SRS funds are permanently locked into SRS, which introduces vendor-risk; if Endowus went belly-up tomorrow, we'd need to find an alternative platform with possibly worse rates, and we wouldn't be able to pull SRS funds out without significant financial penalties.
 
 ## When would I go for SRS?
@@ -239,3 +233,5 @@ There are only a few scenarios in which I'd recommend going with SRS:
 ## And so...
 
 Having taken all of these factors into account, I decided I won't be leveraging SRS in own personal investment strategy, given the significant downsides and negligible upside. The policy is perhaps a little too asymmetric, and the investment landscape for SRS funds a little too restrictive, for me to think of it as a viable alternative to personal investing in ultra-low-cost ETFs like VWRA and SPX.
+
+*This is a personal analysis, not financial advice. Your circumstances, income, risk appetite, and platform choices may differ — run the numbers for your own profile.*
