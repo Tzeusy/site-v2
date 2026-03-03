@@ -5,8 +5,15 @@
     <link>https://tze.how</link>
     <description>Long-form essays on reliability, systems, and software practice.</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 20 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 27 Feb 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
+    <item>
+      <title>SRS Calculations</title>
+      <link>https://tze.how/blog/srs-calculations</link>
+      <guid isPermaLink="true">https://tze.how/blog/srs-calculations</guid>
+      <description>Is Singapore&apos;s SRS worth it? I ran the numbers - and the answer surprised me.</description>
+      <pubDate>Fri, 27 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Homelab Motivations</title>
       <link>https://tze.how/blog/homelab-motivations</link>
@@ -26,6 +33,13 @@
       <link>https://tze.how/blog/ricing-my-bavd-research</link>
       <guid isPermaLink="true">https://tze.how/blog/ricing-my-bavd-research</guid>
       <description>Optimizing my research and documentation process when tracking my Bicuspid Aortic Valve</description>
+      <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Tailscale Golinks</title>
+      <link>https://tze.how/blog/tailscale-golinks</link>
+      <guid isPermaLink="true">https://tze.how/blog/tailscale-golinks</guid>
+      <description>Tailscale golinks - quick win for lots of convenience!</description>
       <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>

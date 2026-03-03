@@ -11,7 +11,6 @@ import path from "node:path";
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 const PUBLIC_BLOG_DIR = path.join(process.cwd(), "public/blog");
 
-const DARK_BG = "#171412";
 
 function slugFromDirName(dirName) {
   return dirName.replace(/^\d{4}-\d{2}-\d{2}-/u, "");
@@ -48,17 +47,79 @@ async function main() {
     return;
   }
 
-  // Lazy-load heavy deps only when needed
-  const { exportToSvg } = await import("@excalidraw/utils");
+  // Set up DOM shim BEFORE importing excalidraw (it accesses window/DOM at import time)
   const { JSDOM } = await import("jsdom");
-
-  // Set up DOM shim for excalidraw's SVG generation
   const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+
+  // Core DOM globals
   globalThis.document = dom.window.document;
   globalThis.window = dom.window;
-  globalThis.navigator = dom.window.navigator;
+  Object.defineProperty(globalThis, "navigator", {
+    value: dom.window.navigator,
+    writable: true,
+    configurable: true,
+  });
   globalThis.DOMParser = dom.window.DOMParser;
   globalThis.XMLSerializer = dom.window.XMLSerializer;
+
+  // Browser APIs excalidraw expects
+  globalThis.devicePixelRatio = 1;
+  globalThis.HTMLElement = dom.window.HTMLElement;
+  globalThis.Element = dom.window.Element;
+  globalThis.Node = dom.window.Node;
+  globalThis.SVGElement = dom.window.SVGElement ?? class SVGElement {};
+  globalThis.Image = dom.window.Image ?? class Image {};
+  globalThis.fetch = globalThis.fetch ?? (() => Promise.reject(new Error("no fetch")));
+
+  // FontFace stub (excalidraw uses it for font registration and CSS generation)
+  globalThis.FontFace = class FontFace {
+    constructor(family, source, descriptors = {}) {
+      this.family = family;
+      this.source = source;
+      this.style = descriptors.style ?? "normal";
+      this.weight = descriptors.weight ?? "normal";
+      this.stretch = descriptors.stretch ?? "normal";
+      this.unicodeRange = descriptors.unicodeRange ?? "U+0000-FFFF";
+      this.variant = descriptors.variant ?? "normal";
+      this.featureSettings = descriptors.featureSettings ?? "normal";
+      this.display = descriptors.display ?? "swap";
+      this.status = "loaded";
+    }
+    load() { return Promise.resolve(this); }
+  };
+
+  // Canvas stub (excalidraw may use it for text measurement)
+  if (!globalThis.HTMLCanvasElement) {
+    globalThis.HTMLCanvasElement = class HTMLCanvasElement {};
+  }
+  if (!dom.window.document.createElement.__patched) {
+    const origCreate = dom.window.document.createElement.bind(dom.window.document);
+    dom.window.document.createElement = function (tag, ...args) {
+      if (tag === "canvas") {
+        return {
+          getContext() {
+            return {
+              measureText: (text) => ({ width: text.length * 8 }),
+              fillText() {},
+              clearRect() {},
+              fillRect() {},
+              font: "",
+              textAlign: "left",
+              textBaseline: "top",
+            };
+          },
+          width: 0,
+          height: 0,
+          toDataURL: () => "",
+        };
+      }
+      return origCreate(tag, ...args);
+    };
+    dom.window.document.createElement.__patched = true;
+  }
+
+  // Now safe to import excalidraw utils
+  const { exportToSvg } = await import("@excalidraw/utils");
 
   let converted = 0;
 
@@ -69,25 +130,27 @@ async function main() {
     const elements = data.elements ?? [];
     const appState = data.appState ?? {};
 
-    // Generate light SVG
+    // Generate light SVG — match blog's light background #fafaf9
     const lightSvg = await exportToSvg({
       elements,
       appState: {
         ...appState,
         exportWithDarkMode: false,
         exportBackground: true,
+        viewBackgroundColor: "#fafaf9",
       },
       files: data.files ?? null,
     });
 
-    // Generate dark SVG
+    // Generate dark SVG — excalidraw applies filter="invert(93%) hue-rotate(180deg)"
+    // so we set the background to the pre-image of #171412 (the blog's dark bg)
     const darkSvg = await exportToSvg({
       elements,
       appState: {
         ...appState,
         exportWithDarkMode: true,
         exportBackground: true,
-        viewBackgroundColor: DARK_BG,
+        viewBackgroundColor: "#fffbf9",
       },
       files: data.files ?? null,
     });
@@ -97,7 +160,14 @@ async function main() {
 
     const serialize = (svg) => {
       const serializer = new dom.window.XMLSerializer();
-      return serializer.serializeToString(svg);
+      let str = serializer.serializeToString(svg);
+      // JSDOM's XMLSerializer emits duplicate xmlns — remove all but the first
+      let seen = false;
+      str = str.replace(/\sxmlns="http:\/\/www\.w3\.org\/2000\/svg"/g, (match) => {
+        if (!seen) { seen = true; return match; }
+        return "";
+      });
+      return str;
     };
 
     await fs.writeFile(

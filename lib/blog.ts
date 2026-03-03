@@ -6,6 +6,7 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import remarkMermaid from "@/lib/remark-mermaid";
+import remarkUnwrapImages from "remark-unwrap-images";
 import readingTime from "reading-time";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 import { withBasePath } from "@/lib/base-path";
@@ -268,7 +269,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     options: {
       parseFrontmatter: false,
       mdxOptions: {
-        remarkPlugins: [remarkGfm, remarkMermaid],
+        remarkPlugins: [remarkGfm, remarkMermaid, remarkUnwrapImages],
         rehypePlugins: [
           rehypeSlug,
           () => resolveUrls(slug),

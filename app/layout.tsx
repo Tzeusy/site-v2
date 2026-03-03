@@ -10,6 +10,7 @@ import "./tailwind.css";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 const ibmPlexSerif = IBM_Plex_Serif({

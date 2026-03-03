@@ -18,6 +18,7 @@ export const productivityCategories: ProductivityCategory[] = [
   { id: "learnings", label: "Learnings", description: "Thoughts and learnings from various blogs, books, and resources on the internet." },
   { id: "sre", label: "SRE", description: "Site reliability practices, observability, incident response, and operational tooling." },
   { id: "cicd", label: "CI/CD", description: "Continuous integration and deployment pipelines, build systems, and release workflows." },
+  { id: "networking", label: "Networking", description: "VPNs, DNS, firewalls, and the connectivity tools that tie everything together." },
   { id: "health", label: "Health", description: "Fitness routines, ergonomics, and habits that support sustained productivity." },
 ];
 

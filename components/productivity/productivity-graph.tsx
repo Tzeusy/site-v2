@@ -69,7 +69,8 @@ type GraphEdge = {
 type GraphEngineModules = {
   SigmaCtor: typeof import("sigma").default;
   EdgeCurveProgram: typeof import("@sigma/edge-curve").default;
-  NodeImageProgram: typeof import("@sigma/node-image").NodeImageProgram;
+  NodeImageProgram: import("sigma/rendering").NodeProgramType;
+  NodeBorderProgram: import("sigma/rendering").NodeProgramType;
   ForceAtlas2LayoutCtor: typeof import("graphology-layout-forceatlas2/worker").default;
   forceAtlas2: typeof import("graphology-layout-forceatlas2").default;
   noverlap: typeof import("graphology-layout-noverlap").default;
@@ -130,6 +131,13 @@ const THEME_FALLBACK: ThemePalette = {
 };
 const POST_COLOR = "#3b82f6";
 const POST_DRAFT_COLOR = "#94a3b8";
+
+/** SVG data-URL: opaque white border, transparent center (evenodd hollow rect). */
+const BORDER_MASK = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">' +
+  '<path d="M0,0H64V64H0Z M5,5V59H59V5Z" fill="white" fill-rule="evenodd"/>' +
+  "</svg>",
+)}`;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -199,7 +207,7 @@ function hslToHex(h: number, s: number, l: number) {
   else if (hp < 3) [r, g, b] = [0, c, x];
   else if (hp < 4) [r, g, b] = [0, x, c];
   else if (hp < 5) [r, g, b] = [x, 0, c];
-  else [r, g, b] = [c, 0, x];
+  else[r, g, b] = [c, 0, x];
 
   const m = light - c / 2;
   return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
@@ -238,13 +246,17 @@ function drawCrispNodeLabel(
   if (!label) return;
 
   const size = settings.labelSize;
-  context.font = `${settings.labelWeight} ${size}px ${settings.labelFont}`;
+  const isCategory = data.nodeType === "category";
+  const style = isCategory ? `${settings.labelWeight}` : "italic";
+  context.font = `${style} ${size}px ${settings.labelFont}`;
   context.fillStyle = resolveSigmaLabelColor(data, settings.labelColor);
+  context.globalAlpha = isCategory ? 1 : 0.5;
 
   // Snap text anchor points to whole pixels so labels render crisply on canvas.
   const x = Math.round(data.x + data.size + 3);
   const y = Math.round(data.y + size / 3);
   context.fillText(label, x, y);
+  context.globalAlpha = 1;
 }
 
 function buildCategoryColorMap(
@@ -397,18 +409,19 @@ function buildGraph(
     const isDraft = draftSet.has(post.slug);
     const nodeId = nodeIdForPost(post.slug);
 
+    const hasImage = !!post.image;
     graph.addNode(nodeId, {
       x: cx + Math.cos(angle) * jitter,
       y: cy + Math.sin(angle) * jitter,
       size: POST_BASE_SIZE + normalizeSize(post.size) * POST_SIZE_STEP,
       color: isDraft ? POST_DRAFT_COLOR : POST_COLOR,
       label: `[${post.title}]`,
-      type: "image",
+      type: hasImage ? "image" : "border",
       nodeType: "post",
       slug: post.slug,
       categoryIds: post.categories,
       summary: post.summary,
-      image: post.image,
+      image: hasImage ? post.image : BORDER_MASK,
       isDraft,
     });
 
@@ -468,7 +481,7 @@ export function ProductivityGraph({
 
   const handleEscape = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
       setIsFullscreen(false);
     }
   }, []);
@@ -579,7 +592,8 @@ export function ProductivityGraph({
     const engine: GraphEngineModules = {
       SigmaCtor: sigmaMod.default,
       EdgeCurveProgram: edgeCurveMod.default,
-      NodeImageProgram: nodeImageMod.NodeImageProgram,
+      NodeImageProgram: nodeImageMod.createNodeImageProgram({ keepWithinCircle: false }),
+      NodeBorderProgram: nodeImageMod.createNodeImageProgram({ keepWithinCircle: false, drawingMode: "color" }),
       ForceAtlas2LayoutCtor: fa2WorkerMod.default,
       forceAtlas2: fa2Mod.default,
       noverlap: noverlapMod.default,
@@ -704,7 +718,7 @@ export function ProductivityGraph({
           renderLabels: true,
           defaultDrawNodeLabel: drawCrispNodeLabel,
           labelFont:
-            "var(--font-inter), Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
+            `${readCssVar("--font-inter", "Inter")}, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif`,
           labelSize: 12,
           labelWeight: "600",
           labelColor: { color: themeRef.current.foreground },
@@ -712,7 +726,10 @@ export function ProductivityGraph({
           labelGridCellSize: 70,
           defaultNodeColor: POST_COLOR,
           defaultEdgeColor: THEME_FALLBACK.rule,
-          nodeProgramClasses: { image: engine.NodeImageProgram as unknown as never },
+          nodeProgramClasses: {
+            image: engine.NodeImageProgram as unknown as never,
+            border: engine.NodeBorderProgram as unknown as never,
+          },
           defaultEdgeType: "curved",
           edgeProgramClasses: { curved: engine.EdgeCurveProgram as unknown as never },
           zIndex: true,
@@ -862,7 +879,7 @@ export function ProductivityGraph({
   useEffect(() => {
     let cancelled = false;
     latestGraphRef.current = sigmaGraph;
-    if (!sigmaRef.current) return () => {};
+    if (!sigmaRef.current) return () => { };
 
     void (async () => {
       await runLayout(sigmaGraph, { showIndicator: false });
@@ -988,7 +1005,7 @@ export function ProductivityGraph({
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          Drag to pan and scroll to zoom. Click a category to pin focus; click a post to open it.
+          Drag to pan and scroll to zoom. Click a category to pin focus; click a post to open it, or hover for a blurb.
         </p>
         <div className="flex shrink-0 gap-4">
           <button

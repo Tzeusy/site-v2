@@ -55,3 +55,6 @@ next-env.d.ts
 
 # internal development prompts
 /prompts/
+
+# dev script logs
+/logs/
