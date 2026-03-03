@@ -10,6 +10,11 @@ import {
   createNodeObject,
   disposeObject3D,
 } from "@/components/productivity/productivity-graph-3d-rendering";
+import {
+  getGraphThemeFromDocument,
+  getGraphThemePalette,
+  type GraphTheme,
+} from "@/components/productivity/productivity-graph-3d-theme";
 
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
   ssr: false,
@@ -83,8 +88,6 @@ const POST_Z = -90;
 const CATEGORY_SIZE = 10;
 const POST_BASE_SIZE = 6;
 const POST_SIZE_STEP = 1.5;
-const POST_COLOR = "#3b82f6";
-const POST_DRAFT_COLOR = "#94a3b8";
 const DEFAULT_GRAPH_HEIGHT = 560;
 const GRAPH_CONTAINER_CLASS = "h-[560px]";
 const ZOOM_TO_FIT_DURATION = 550;
@@ -134,11 +137,14 @@ function hslToHex(h: number, s: number, l: number) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-function buildCategoryColorMap(categories: ProductivityGraphCategory[]) {
+function buildCategoryColorMap(
+  categories: ProductivityGraphCategory[],
+  categoryLightness: number,
+) {
   const map = new Map<string, string>();
   categories.forEach((category, index) => {
     const hue = Math.round((index * GOLDEN_ANGLE_DEGREES) % 360);
-    map.set(category.id, hslToHex(hue, 62, 47));
+    map.set(category.id, hslToHex(hue, 62, categoryLightness));
   });
   return map;
 }
@@ -156,8 +162,10 @@ function buildGraphData(
   categories: ProductivityGraphCategory[],
   posts: ProductivityGraphPost[],
   draftSet: Set<string>,
+  theme: GraphTheme,
 ): GraphData {
-  const categoryColors = buildCategoryColorMap(categories);
+  const palette = getGraphThemePalette(theme);
+  const categoryColors = buildCategoryColorMap(categories, palette.categoryLightness);
   const categoryPoints = new Map<string, { x: number; y: number }>();
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
@@ -170,7 +178,7 @@ function buildGraphData(
       id: `cat:${category.id}`,
       nodeType: "category",
       label: category.label,
-      color: categoryColors.get(category.id) ?? "#1c1917",
+      color: categoryColors.get(category.id) ?? palette.categoryFallbackColor,
       size: CATEGORY_SIZE,
       x: point.x,
       y: point.y,
@@ -203,7 +211,7 @@ function buildGraphData(
       id: postNodeId,
       nodeType: "post",
       label: post.title,
-      color: isDraft ? POST_DRAFT_COLOR : POST_COLOR,
+      color: isDraft ? palette.postDraftColor : palette.postColor,
       size: POST_BASE_SIZE + normalizeSize(post.size) * POST_SIZE_STEP,
       slug: post.slug,
       summary: post.summary,
@@ -222,7 +230,9 @@ function buildGraphData(
         links.push({
           source: postNodeId,
           target: `cat:${categoryId}`,
-          color: categoryColors.get(categoryId) ?? "#d6d3d1",
+          color: isDraft
+            ? palette.linkDraftColor
+            : (categoryColors.get(categoryId) ?? palette.linkFallbackColor),
           isDraft,
         });
       });
@@ -242,13 +252,14 @@ export function ProductivityGraph3D({
   const showDrafts = searchParams.get("drafts") === "true";
   const activePosts = showDrafts ? allPosts : posts;
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
+  const [theme, setTheme] = useState<GraphTheme>(() => getGraphThemeFromDocument());
   const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
   const textureCacheRef = useRef(new Map<string, THREE.Texture>());
   const nodeObjectCacheRef = useRef(new Map<string, THREE.Object3D>());
 
   const graphData = useMemo(
-    () => buildGraphData(categories, activePosts, draftSet),
-    [categories, activePosts, draftSet],
+    () => buildGraphData(categories, activePosts, draftSet, theme),
+    [categories, activePosts, draftSet, theme],
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -265,6 +276,31 @@ export function ProductivityGraph3D({
     },
     [],
   );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (
+          mutation.type === "attributes" &&
+          mutation.attributeName === "data-theme"
+        ) {
+          setTheme((currentTheme) => {
+            const nextTheme = getGraphThemeFromDocument();
+            return currentTheme === nextTheme ? currentTheme : nextTheme;
+          });
+          break;
+        }
+      }
+    });
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
@@ -350,10 +386,7 @@ export function ProductivityGraph3D({
             graphData={graphData}
             backgroundColor="rgba(0,0,0,0)"
             numDimensions={3}
-            linkColor={(link: object) => {
-              const graphLink = link as GraphLink;
-              return graphLink.isDraft ? "#a8a29e" : graphLink.color;
-            }}
+            linkColor={(link: object) => (link as GraphLink).color}
             linkOpacity={0.5}
             linkWidth={1}
             nodeThreeObject={(node: object) => {
