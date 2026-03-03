@@ -69,3 +69,17 @@ test("resolveLinkVisualState dims unrelated links and brightens active-adjacent 
   assert.equal(highlighted.width, 1.8);
   assert.notEqual(highlighted.color, links[0].color);
 });
+
+test("resolveLinkVisualState preserves category hue while dimming draft links", () => {
+  const draftLink: InteractionGraphLink = {
+    id: "edge:draft-one-a",
+    source: "post:one",
+    target: "cat:a",
+    color: "#ef4444",
+    isDraft: true,
+  };
+
+  const draftVisual = resolveLinkVisualState(draftLink, null, null);
+  assert.notEqual(draftVisual.color, draftLink.color);
+  assert.notEqual(draftVisual.color, "#78716c");
+});

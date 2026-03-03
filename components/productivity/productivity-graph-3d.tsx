@@ -35,6 +35,12 @@ import {
   getGraphThemePalette,
   type GraphTheme,
 } from "@/components/productivity/productivity-graph-3d-theme";
+import {
+  orbitPolarAngleFromElevation,
+  resolveLinkCurveRotation,
+  resolveLinkCurvature,
+  resolveTiltedCameraPosition,
+} from "@/components/productivity/productivity-graph-3d-layout";
 
 type ForceGraph3DComponent = (
   props: ForceGraphProps & { ref?: RefObject<ForceGraphMethods | undefined> },
@@ -103,9 +109,9 @@ const CATEGORY_SIZE = 10;
 const POST_BASE_SIZE = 6;
 const POST_SIZE_STEP = 1.5;
 const DEFAULT_GRAPH_HEIGHT = 560;
+const GRAPH_BREAKOUT_CLASS =
+  "relative left-1/2 right-1/2 -ml-[50vw] w-[100vw] sm:-ml-[40vw] sm:w-[80vw]";
 const GRAPH_CONTAINER_CLASS = "h-[360px] sm:h-[560px]";
-const ZOOM_TO_FIT_DURATION = 550;
-const ZOOM_TO_FIT_PADDING = 70;
 const GOLDEN_ANGLE_DEGREES = 137.508;
 const POST_LABEL_ZOOM_THRESHOLD = 1.35;
 const LABEL_OVERLAP_PADDING = 6;
@@ -113,9 +119,31 @@ const LABELS_PER_MEGAPIXEL = 36;
 const MIN_VISIBLE_LABELS = 12;
 const MIN_CAMERA_DISTANCE = 120;
 const MAX_CAMERA_DISTANCE = 2400;
+const CAMERA_MIN_ELEVATION_DEGREES = 8;
+const CAMERA_MAX_ELEVATION_DEGREES = 58;
+const INITIAL_CAMERA_DISTANCE = 520;
+const INITIAL_CAMERA_ELEVATION_DEGREES = 35;
+const INITIAL_CAMERA_AZIMUTH_DEGREES = -28;
+const CAMERA_RESET_DURATION = 650;
+const INITIAL_LAYOUT_CAMERA_DURATION = 620;
+const FORCE_WARMUP_TICKS = 85;
+const FORCE_COOLDOWN_TICKS = 90;
+const FORCE_COOLDOWN_TIME_MS = 1600;
+const CAMERA_TARGET = { x: 0, y: 0, z: 0 } as const;
 
 type GraphRefWithCamera = ForceGraphMethods & {
   camera?: () => THREE.Camera | undefined;
+  controls?: () => OrbitLikeControls | undefined;
+};
+
+type OrbitLikeControls = {
+  autoRotate?: boolean;
+  enablePan?: boolean;
+  minDistance?: number;
+  maxDistance?: number;
+  minPolarAngle?: number;
+  maxPolarAngle?: number;
+  update?: () => void;
 };
 
 type LabelScreenRect = {
@@ -269,9 +297,7 @@ function buildGraphData(
           id: `edge:${postNodeId}->cat:${categoryId}`,
           source: postNodeId,
           target: `cat:${categoryId}`,
-          color: isDraft
-            ? palette.linkDraftColor
-            : (categoryColors.get(categoryId) ?? palette.linkFallbackColor),
+          color: categoryColors.get(categoryId) ?? palette.linkFallbackColor,
           isDraft,
         });
       });
@@ -307,6 +333,7 @@ export function ProductivityGraph3D({
   const [hoveredPostSlug, setHoveredPostSlug] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isNodeHovered, setIsNodeHovered] = useState(false);
+  const [isLayoutRunning, setIsLayoutRunning] = useState(true);
   const activeNodeId = pinnedNodeId ?? focusedNodeId;
 
   const semanticVisibility = useMemo(
@@ -341,6 +368,7 @@ export function ProductivityGraph3D({
   const baseCameraDistanceRef = useRef<number | null>(null);
 
   const [dimensions, setDimensions] = useState({ width: 0, height: DEFAULT_GRAPH_HEIGHT });
+  const rendererConfig = useMemo(() => ({ antialias: true, alpha: true }), []);
 
   const clearInteractiveState = useCallback(() => {
     setPinnedNodeId(null);
@@ -490,11 +518,11 @@ export function ProductivityGraph3D({
     if (!graph) return;
 
     const chargeForce = graph.d3Force("charge") as ChargeForce | undefined;
-    chargeForce?.strength?.(-180);
+    chargeForce?.strength?.(-175);
 
     const linkForce = graph.d3Force("link") as LinkForce | undefined;
-    linkForce?.distance?.(80);
-    linkForce?.strength?.(0.28);
+    linkForce?.distance?.(78);
+    linkForce?.strength?.(0.3);
 
     didAutoFitRef.current = false;
   }, [graphData]);
@@ -674,6 +702,62 @@ export function ProductivityGraph3D({
     await wrapperRef.current.requestFullscreen().catch(() => { });
   }, []);
 
+  const applyInitialCameraPosition = useCallback((duration: number) => {
+    const graph = graphRef.current as GraphRefWithCamera | undefined;
+    if (!graph) return;
+
+    const camera = graph.camera?.();
+    if (camera) {
+      camera.up.set(0, 0, 1);
+      camera.lookAt(CAMERA_TARGET.x, CAMERA_TARGET.y, CAMERA_TARGET.z);
+    }
+
+    const nextPosition = resolveTiltedCameraPosition(
+      INITIAL_CAMERA_DISTANCE,
+      INITIAL_CAMERA_ELEVATION_DEGREES,
+      INITIAL_CAMERA_AZIMUTH_DEGREES,
+    );
+
+    graph.cameraPosition(nextPosition, CAMERA_TARGET, duration);
+    baseCameraDistanceRef.current = INITIAL_CAMERA_DISTANCE;
+  }, []);
+
+  const configureOrbitControls = useCallback(() => {
+    const graph = graphRef.current as GraphRefWithCamera | undefined;
+    const controls = graph?.controls?.() as OrbitLikeControls | undefined;
+    if (!controls) return;
+
+    controls.autoRotate = false;
+    controls.enablePan = false;
+    controls.minDistance = MIN_CAMERA_DISTANCE;
+    controls.maxDistance = MAX_CAMERA_DISTANCE;
+    controls.minPolarAngle = orbitPolarAngleFromElevation(CAMERA_MAX_ELEVATION_DEGREES);
+    controls.maxPolarAngle = orbitPolarAngleFromElevation(CAMERA_MIN_ELEVATION_DEGREES);
+    controls.update?.();
+  }, []);
+
+  useEffect(() => {
+    if (dimensions.width <= 0 || dimensions.height <= 0) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      configureOrbitControls();
+      if (!didAutoFitRef.current) {
+        applyInitialCameraPosition(0);
+      }
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [
+    applyInitialCameraPosition,
+    configureOrbitControls,
+    dimensions.height,
+    dimensions.width,
+    graphData,
+    isFullscreen,
+  ]);
+
   const zoomByFactor = useCallback((factor: number) => {
     const graph = graphRef.current;
     if (!graph) return;
@@ -707,10 +791,11 @@ export function ProductivityGraph3D({
 
   const resetView = useCallback(() => {
     clearInteractiveState();
-    graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
-  }, [clearInteractiveState]);
+    applyInitialCameraPosition(CAMERA_RESET_DURATION);
+  }, [clearInteractiveState, applyInitialCameraPosition]);
 
   const rebalanceLayout = useCallback(() => {
+    setIsLayoutRunning(true);
     graphRef.current?.d3ReheatSimulation();
   }, []);
 
@@ -723,6 +808,8 @@ export function ProductivityGraph3D({
         cachedMaterial ??
         new THREE.LineBasicMaterial({
           transparent: true,
+          depthWrite: false,
+          depthTest: true,
         });
 
       material.color.set(linkVisual.color);
@@ -777,7 +864,7 @@ export function ProductivityGraph3D({
   ) : null;
 
   return (
-    <section className="space-y-4">
+    <section className={`${GRAPH_BREAKOUT_CLASS} space-y-4`}>
       {showDrafts ? (
         <p className="border border-rule px-4 py-2 text-sm text-muted">
           Draft preview mode enabled: draft posts render in muted gray.
@@ -806,8 +893,15 @@ export function ProductivityGraph3D({
               height={dimensions.height}
               graphData={graphData}
               backgroundColor="rgba(0,0,0,0)"
+              rendererConfig={rendererConfig}
               numDimensions={3}
+              controlType="orbit"
+              warmupTicks={FORCE_WARMUP_TICKS}
+              cooldownTicks={FORCE_COOLDOWN_TICKS}
+              cooldownTime={FORCE_COOLDOWN_TIME_MS}
               linkOpacity={1}
+              linkCurvature={(link: object) => resolveLinkCurvature((link as GraphLink).id)}
+              linkCurveRotation={(link: object) => resolveLinkCurveRotation((link as GraphLink).id)}
               linkWidth={(link: object) =>
                 resolveLinkVisualState(
                   link as GraphLink,
@@ -844,8 +938,10 @@ export function ProductivityGraph3D({
               onNodeClick={handleNodeClick}
               onBackgroundClick={clearInteractiveState}
               onEngineStop={() => {
+                setIsLayoutRunning(false);
                 if (didAutoFitRef.current) return;
-                graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
+                configureOrbitControls();
+                applyInitialCameraPosition(INITIAL_LAYOUT_CAMERA_DURATION);
                 didAutoFitRef.current = true;
                 if (autoFitTimerRef.current !== null) {
                   window.clearTimeout(autoFitTimerRef.current);
@@ -858,11 +954,16 @@ export function ProductivityGraph3D({
                   }
                   updateLabelVisibility();
                   autoFitTimerRef.current = null;
-                }, ZOOM_TO_FIT_DURATION + 30);
+                }, INITIAL_LAYOUT_CAMERA_DURATION + 30);
               }}
             />
           ) : null}
         </div>
+        {isLayoutRunning ? (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-rule bg-background/95 px-3 py-1 text-xs text-muted">
+            Optimizing layout...
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center justify-between gap-4">
