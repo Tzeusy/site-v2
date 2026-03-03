@@ -22,7 +22,7 @@ export const projects: ProjectEntry[] = [
   {
     title: "Butlers",
     description:
-      "A home-rolled personal assistant system — my own Jarvis — built during recovery, integrating health, finance, home automation, and more via agentic LLM workflows.",
+      "A home-rolled personal assistant system — my own Jarvis — integrating health, finance, home automation, and more via agentic LLM workflows.",
     blogSlug: "butlers-introduction",
     thumbnail: {
       src: "/blog/butlers-introduction/thumbnail.png",
