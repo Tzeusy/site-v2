@@ -323,6 +323,14 @@ function nodeIdFromFocus(node: FocusedNode) {
   return node.type === "category" ? nodeIdForCategory(node.id) : nodeIdForPost(node.id);
 }
 
+/** Shift categories upward and posts downward to create vertical layering. */
+function separateByDepth(graph: Graph<GraphNode, GraphEdge>, offset: number) {
+  graph.forEachNode((nodeId, attrs) => {
+    const shift = attrs.nodeType === "category" ? -offset : offset;
+    graph.mergeNodeAttributes(nodeId, { y: attrs.y + shift });
+  });
+}
+
 function compactGraphSpread(
   graph: Graph<GraphNode, GraphEdge>,
   options: { maxSpan: number },
@@ -693,6 +701,7 @@ export function ProductivityGraph({
         settings: { ratio: 1.02, margin: 2, expansion: 1.02 },
       });
       compactGraphSpread(graph, { maxSpan: MAX_LAYOUT_SPAN });
+      separateByDepth(graph, 1.8);
       engine.noverlap.assign(graph, {
         maxIterations: 10,
         settings: { ratio: 1.01, margin: 1.2, expansion: 1.01 },
@@ -750,6 +759,7 @@ export function ProductivityGraph({
 
             if (data.nodeType === "category" && data.categoryId) {
               result.color = categoryColors.get(data.categoryId) ?? palette.foreground;
+              result.zIndex = 1;
             }
 
             if (!isVisible) {
