@@ -43,7 +43,7 @@ test("renders posts with thumbnails as square planes plus borders", () => {
   assert.ok(group.children[1] instanceof THREE.LineLoop);
 });
 
-test("renders posts without thumbnails as wireframe-only squares", () => {
+test("renders posts without thumbnails as fallback glyphs with borders", () => {
   const nodeObject = createNodeObject(
     {
       nodeType: "post",
@@ -53,7 +53,12 @@ test("renders posts without thumbnails as wireframe-only squares", () => {
     () => undefined,
   );
 
-  assert.ok(nodeObject instanceof THREE.LineLoop);
+  assert.ok(nodeObject instanceof THREE.Group);
+  const group = nodeObject as THREE.Group;
+  assert.equal(group.children.length, 3);
+  assert.ok(group.children[0] instanceof THREE.Mesh);
+  assert.ok(group.children[1] instanceof THREE.Mesh);
+  assert.ok(group.children[2] instanceof THREE.LineLoop);
 });
 
 test("dims draft post borders", () => {
@@ -67,16 +72,17 @@ test("dims draft post borders", () => {
     () => undefined,
   );
 
-  assert.ok(nodeObject instanceof THREE.LineLoop);
-  const border = nodeObject as THREE.LineLoop;
+  assert.ok(nodeObject instanceof THREE.Group);
+  const group = nodeObject as THREE.Group;
+  const border = group.children[2] as THREE.LineLoop;
   const borderMaterial = border.material as THREE.LineBasicMaterial;
   assert.ok(borderMaterial.opacity < 0.9);
   assert.equal(borderMaterial.color.getHexString(), "94a3b8");
 });
 
-test("formats post labels with brackets", () => {
+test("formats post labels without brackets", () => {
   assert.equal(formatNodeLabelText("category", "Engineering"), "Engineering");
-  assert.equal(formatNodeLabelText("post", "Ship It"), "[Ship It]");
+  assert.equal(formatNodeLabelText("post", "Ship It"), "Ship It");
 });
 
 test("applies category and post label typography styles", () => {
@@ -89,7 +95,8 @@ test("applies category and post label typography styles", () => {
 
   assert.equal(postStyle.fontWeight, "400");
   assert.equal(postStyle.fontStyle, "italic");
-  assert.equal(postStyle.opacity, 0.5);
+  assert.equal(postStyle.opacity, 1);
+  assert.equal(postStyle.fontSize, 84);
 });
 
 test("supports theme-driven label color overrides", () => {

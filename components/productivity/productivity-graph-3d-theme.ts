@@ -22,7 +22,7 @@ const GRAPH_THEME_PALETTES: Record<GraphTheme, GraphThemePalette> = {
     linkFallbackColor: "#d6d3d1",
     linkDraftColor: "#a8a29e",
     labelCategoryColor: "#1c1917",
-    labelPostColor: "#1c1917",
+    labelPostColor: "#ffffff",
   },
   dark: {
     categoryLightness: 60,
@@ -33,7 +33,7 @@ const GRAPH_THEME_PALETTES: Record<GraphTheme, GraphThemePalette> = {
     linkFallbackColor: "#44403c",
     linkDraftColor: "#78716c",
     labelCategoryColor: "#e7e5e4",
-    labelPostColor: "#e7e5e4",
+    labelPostColor: "#ffffff",
   },
 };
 
@@ -113,7 +113,11 @@ export function getGraphThemePalette(theme: GraphTheme) {
       "--graph-label-category-color",
       labelFallback,
     ),
-    labelPostColor: resolveStringCssVariable(style, "--graph-label-post-color", labelFallback),
+    labelPostColor: resolveStringCssVariable(
+      style,
+      "--graph-label-post-color",
+      fallback.labelPostColor,
+    ),
   };
 }
 

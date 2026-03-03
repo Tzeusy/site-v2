@@ -96,6 +96,7 @@ test("falls back to theme defaults when css variables are missing", () => {
     assert.equal(palette.backgroundColor, "#fafaf9");
     assert.equal(palette.postColor, "#2563eb");
     assert.equal(palette.labelCategoryColor, "#1c1917");
+    assert.equal(palette.labelPostColor, "#ffffff");
   });
 });
 

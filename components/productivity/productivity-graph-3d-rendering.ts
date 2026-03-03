@@ -30,11 +30,11 @@ export type RenderableNodeVisualState = {
 const CATEGORY_SEGMENTS = 36;
 const DRAFT_EDGE_OPACITY = 0.55;
 const PUBLISHED_EDGE_OPACITY = 0.9;
-const LABEL_CANVAS_SCALE = 2;
+const LABEL_CANVAS_SCALE = 4;
 const CATEGORY_LABEL_FONT_SIZE = 88;
-const POST_LABEL_FONT_SIZE = 78;
-const CATEGORY_LABEL_WORLD_SCALE = 0.052;
-const POST_LABEL_WORLD_SCALE = 0.047;
+const POST_LABEL_FONT_SIZE = 84;
+const CATEGORY_LABEL_WORLD_SCALE = 0.06;
+const POST_LABEL_WORLD_SCALE = 0.055;
 const LABEL_FONT_FAMILY =
   "\"Inter\", \"IBM Plex Sans\", \"Helvetica Neue\", Arial, sans-serif";
 const LABEL_TEXTURE_BASE_COLOR = "#ffffff";
@@ -58,10 +58,45 @@ function buildSquareBorder(size: number, color: string, opacity: number) {
     color,
     transparent: true,
     opacity,
+    depthWrite: false,
+    depthTest: true,
   });
   const border = new THREE.LineLoop(geometry, material);
   border.userData.visualRole = "color";
   return border;
+}
+
+function createFallbackPostFill(size: number, color: string, isDraft: boolean) {
+  const fill = new THREE.Mesh(
+    new THREE.PlaneGeometry(size * 0.78, size * 0.78),
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: isDraft ? 0.3 : 0.22,
+      side: THREE.DoubleSide,
+      depthWrite: true,
+      depthTest: true,
+    }),
+  );
+  fill.userData.visualRole = "color";
+  return fill;
+}
+
+function createFallbackPostCenterMark(size: number, isDraft: boolean) {
+  const marker = new THREE.Mesh(
+    new THREE.CircleGeometry(Math.max(size * 0.14, 0.9), 18),
+    new THREE.MeshBasicMaterial({
+      color: "#ffffff",
+      transparent: true,
+      opacity: isDraft ? 0.5 : 0.8,
+      side: THREE.DoubleSide,
+      depthWrite: true,
+      depthTest: true,
+    }),
+  );
+  marker.userData.visualRole = "accent";
+  marker.position.z = 0.01;
+  return marker;
 }
 
 function getMaterialArray(material: THREE.Material | THREE.Material[] | undefined) {
@@ -123,7 +158,7 @@ export function applyNodeObjectVisualState(object: THREE.Object3D, visual: Rende
 
 export function formatNodeLabelText(nodeType: RenderableNodeLabelType, label: string) {
   if (nodeType === "category") return label;
-  return `[${label}]`;
+  return label;
 }
 
 export function getNodeLabelStyle(
@@ -145,7 +180,7 @@ export function getNodeLabelStyle(
     fontSize: POST_LABEL_FONT_SIZE,
     fontStyle: "italic" as const,
     fontWeight: "400" as const,
-    opacity: 0.5,
+    opacity: 1,
     color: colors?.postColor ?? POST_LABEL_COLOR,
     worldScale: POST_LABEL_WORLD_SCALE,
   };
@@ -216,17 +251,18 @@ export function createNodeLabelSprite(
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearFilter;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
+  texture.generateMipmaps = true;
 
   const material = new THREE.SpriteMaterial({
     map: texture,
     color: style.color,
     opacity: style.opacity,
     transparent: true,
-    depthWrite: false,
-    depthTest: false,
+    alphaTest: 0,
+    depthWrite: true,
+    depthTest: true,
   });
   const sprite = new THREE.Sprite(material);
   const worldWidth = logicalWidth * style.worldScale;
@@ -274,6 +310,8 @@ export function createNodeObject(
         color: node.color,
         transparent: true,
         side: THREE.DoubleSide,
+        depthWrite: true,
+        depthTest: true,
       }),
     );
     category.userData.visualRole = "color";
@@ -284,7 +322,14 @@ export function createNodeObject(
   const edge = buildSquareBorder(node.size, node.color, edgeOpacity);
 
   if (!node.image) {
-    return edge;
+    const group = new THREE.Group();
+    const fill = createFallbackPostFill(node.size, node.color, Boolean(node.isDraft));
+    const marker = createFallbackPostCenterMark(node.size, Boolean(node.isDraft));
+    edge.position.z = 0.02;
+    group.add(fill);
+    group.add(marker);
+    group.add(edge);
+    return group;
   }
 
   const texture = resolveTexture(node.image);
@@ -301,6 +346,8 @@ export function createNodeObject(
       transparent: true,
       opacity: node.isDraft ? 0.82 : 1,
       side: THREE.DoubleSide,
+      depthWrite: true,
+      depthTest: true,
     }),
   );
   plane.userData.visualRole = "texture";
