@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as THREE from "three";
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import { withBasePath } from "@/lib/base-path";
@@ -80,6 +80,10 @@ const POST_BASE_SIZE = 6;
 const POST_SIZE_STEP = 1.5;
 const POST_COLOR = "#3b82f6";
 const POST_DRAFT_COLOR = "#94a3b8";
+const DEFAULT_GRAPH_HEIGHT = 560;
+const GRAPH_CONTAINER_CLASS = "h-[560px]";
+const ZOOM_TO_FIT_DURATION = 550;
+const ZOOM_TO_FIT_PADDING = 70;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -227,10 +231,12 @@ export function ProductivityGraph3D({
   allPosts,
   draftSlugs,
 }: ProductivityGraphProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const showDrafts = searchParams.get("drafts") === "true";
   const activePosts = showDrafts ? allPosts : posts;
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
+  const materialCacheRef = useRef(new Map<string, THREE.MeshStandardMaterial>());
 
   const graphData = useMemo(
     () => buildGraphData(categories, activePosts, draftSet),
@@ -240,7 +246,15 @@ export function ProductivityGraph3D({
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const didAutoFitRef = useRef(false);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 560 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: DEFAULT_GRAPH_HEIGHT });
+
+  useEffect(() => {
+    const materialCache = materialCacheRef.current;
+    return () => {
+      materialCache.forEach((material) => material.dispose());
+      materialCache.clear();
+    };
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -249,7 +263,7 @@ export function ProductivityGraph3D({
     const updateDimensions = () => {
       setDimensions({
         width: Math.max(container.clientWidth, 0),
-        height: Math.max(container.clientHeight, 560),
+        height: Math.max(container.clientHeight, DEFAULT_GRAPH_HEIGHT),
       });
     };
 
@@ -275,17 +289,34 @@ export function ProductivityGraph3D({
     didAutoFitRef.current = false;
   }, [graphData]);
 
-  const handleNodeClick = useCallback((node: object) => {
-    const graphNode = node as GraphNode;
-    if (graphNode.nodeType !== "post" || !graphNode.slug) return;
-    window.location.assign(withBasePath(`/blog/${graphNode.slug}`));
+  const getNodeMaterial = useCallback((node: GraphNode) => {
+    const cacheKey = `${node.nodeType}:${node.color}`;
+    const cached = materialCacheRef.current.get(cacheKey);
+    if (cached) return cached;
+
+    const material = new THREE.MeshStandardMaterial({
+      color: node.color,
+      roughness: node.nodeType === "category" ? 0.22 : 0.45,
+      metalness: node.nodeType === "category" ? 0.15 : 0.08,
+    });
+    materialCacheRef.current.set(cacheKey, material);
+    return material;
   }, []);
+
+  const handleNodeClick = useCallback(
+    (node: object) => {
+      const graphNode = node as GraphNode;
+      if (graphNode.nodeType !== "post" || !graphNode.slug) return;
+      router.push(withBasePath(`/blog/${graphNode.slug}`));
+    },
+    [router],
+  );
 
   return (
     <section className="space-y-3">
       <div
         ref={containerRef}
-        className="h-[560px] w-full overflow-hidden rounded-lg border border-rule bg-gradient-to-b from-background to-stone-100/40 dark:to-stone-900/30"
+        className={`${GRAPH_CONTAINER_CLASS} w-full overflow-hidden rounded-lg border border-rule bg-gradient-to-b from-background to-stone-100/40 dark:to-stone-900/30`}
       >
         {dimensions.width > 0 ? (
           <ForceGraph3D
@@ -303,11 +334,7 @@ export function ProductivityGraph3D({
             linkWidth={1}
             nodeThreeObject={(node: object) => {
               const graphNode = node as GraphNode;
-              const material = new THREE.MeshStandardMaterial({
-                color: graphNode.color,
-                roughness: graphNode.nodeType === "category" ? 0.22 : 0.45,
-                metalness: graphNode.nodeType === "category" ? 0.15 : 0.08,
-              });
+              const material = getNodeMaterial(graphNode);
 
               if (graphNode.nodeType === "category") {
                 return new THREE.Mesh(new THREE.SphereGeometry(graphNode.size, 18, 18), material);
@@ -327,7 +354,7 @@ export function ProductivityGraph3D({
             onNodeClick={handleNodeClick}
             onEngineStop={() => {
               if (didAutoFitRef.current) return;
-              graphRef.current?.zoomToFit(550, 70);
+              graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
               didAutoFitRef.current = true;
             }}
           />
