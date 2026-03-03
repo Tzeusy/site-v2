@@ -6,6 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import * as THREE from "three";
 import type { ForceGraphMethods } from "react-force-graph-3d";
 import { withBasePath } from "@/lib/base-path";
+import {
+  createNodeObject,
+  disposeObject3D,
+} from "@/components/productivity/productivity-graph-3d-rendering";
 
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
   ssr: false,
@@ -41,6 +45,7 @@ type GraphNode = {
   label: string;
   color: string;
   size: number;
+  image?: string;
   slug?: string;
   summary?: string;
   categoryIds?: string[];
@@ -84,6 +89,7 @@ const DEFAULT_GRAPH_HEIGHT = 560;
 const GRAPH_CONTAINER_CLASS = "h-[560px]";
 const ZOOM_TO_FIT_DURATION = 550;
 const ZOOM_TO_FIT_PADDING = 70;
+const GOLDEN_ANGLE_DEGREES = 137.508;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -130,9 +136,8 @@ function hslToHex(h: number, s: number, l: number) {
 
 function buildCategoryColorMap(categories: ProductivityGraphCategory[]) {
   const map = new Map<string, string>();
-  const total = Math.max(categories.length, 1);
   categories.forEach((category, index) => {
-    const hue = Math.round((index / total) * 360);
+    const hue = Math.round((index * GOLDEN_ANGLE_DEGREES) % 360);
     map.set(category.id, hslToHex(hue, 62, 47));
   });
   return map;
@@ -204,6 +209,7 @@ function buildGraphData(
       summary: post.summary,
       categoryIds: post.categories,
       isDraft,
+      image: post.image,
       x: centerX + Math.cos(angle) * jitter,
       y: centerY + Math.sin(angle) * jitter,
       z: POST_Z,
@@ -236,7 +242,9 @@ export function ProductivityGraph3D({
   const showDrafts = searchParams.get("drafts") === "true";
   const activePosts = showDrafts ? allPosts : posts;
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
-  const materialCacheRef = useRef(new Map<string, THREE.MeshStandardMaterial>());
+  const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
+  const textureCacheRef = useRef(new Map<string, THREE.Texture>());
+  const nodeObjectCacheRef = useRef(new Map<string, THREE.Object3D>());
 
   const graphData = useMemo(
     () => buildGraphData(categories, activePosts, draftSet),
@@ -248,13 +256,20 @@ export function ProductivityGraph3D({
   const didAutoFitRef = useRef(false);
   const [dimensions, setDimensions] = useState({ width: 0, height: DEFAULT_GRAPH_HEIGHT });
 
+  useEffect(
+    () => () => {
+      nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
+      nodeObjectCacheRef.current.clear();
+      textureCacheRef.current.forEach((texture) => texture.dispose());
+      textureCacheRef.current.clear();
+    },
+    [],
+  );
+
   useEffect(() => {
-    const materialCache = materialCacheRef.current;
-    return () => {
-      materialCache.forEach((material) => material.dispose());
-      materialCache.clear();
-    };
-  }, []);
+    nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
+    nodeObjectCacheRef.current.clear();
+  }, [graphData]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -289,18 +304,25 @@ export function ProductivityGraph3D({
     didAutoFitRef.current = false;
   }, [graphData]);
 
-  const getNodeMaterial = useCallback((node: GraphNode) => {
-    const cacheKey = `${node.nodeType}:${node.color}`;
-    const cached = materialCacheRef.current.get(cacheKey);
+  const getThumbnailTexture = useCallback((imagePath: string) => {
+    const cached = textureCacheRef.current.get(imagePath);
     if (cached) return cached;
 
-    const material = new THREE.MeshStandardMaterial({
-      color: node.color,
-      roughness: node.nodeType === "category" ? 0.22 : 0.45,
-      metalness: node.nodeType === "category" ? 0.15 : 0.08,
-    });
-    materialCacheRef.current.set(cacheKey, material);
-    return material;
+    if (!textureLoaderRef.current) {
+      textureLoaderRef.current = new THREE.TextureLoader();
+    }
+
+    const texture = textureLoaderRef.current.load(
+      imagePath,
+      undefined,
+      undefined,
+      () => {
+        textureCacheRef.current.delete(imagePath);
+      },
+    );
+    texture.colorSpace = THREE.SRGBColorSpace;
+    textureCacheRef.current.set(imagePath, texture);
+    return texture;
   }, []);
 
   const handleNodeClick = useCallback(
@@ -334,16 +356,12 @@ export function ProductivityGraph3D({
             linkWidth={1}
             nodeThreeObject={(node: object) => {
               const graphNode = node as GraphNode;
-              const material = getNodeMaterial(graphNode);
+              const cachedNodeObject = nodeObjectCacheRef.current.get(graphNode.id);
+              if (cachedNodeObject) return cachedNodeObject;
 
-              if (graphNode.nodeType === "category") {
-                return new THREE.Mesh(new THREE.SphereGeometry(graphNode.size, 18, 18), material);
-              }
-
-              return new THREE.Mesh(
-                new THREE.BoxGeometry(graphNode.size, graphNode.size, graphNode.size),
-                material,
-              );
+              const nodeObject = createNodeObject(graphNode, getThumbnailTexture);
+              nodeObjectCacheRef.current.set(graphNode.id, nodeObject);
+              return nodeObject;
             }}
             nodeLabel={(node: object) => {
               const graphNode = node as GraphNode;
