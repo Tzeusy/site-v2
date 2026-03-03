@@ -43,7 +43,8 @@ const DEFAULT_LINK_OPACITY = 0.5;
 const DEFAULT_LINK_WIDTH = 1;
 const DIMMED_LINK_WIDTH = 0.25;
 const ACTIVE_LINK_WIDTH = 1.8;
-const DRAFT_LINK_COLOR = "#a8a29e";
+const DRAFT_LINK_DIM_TARGET = "#78716c";
+const DRAFT_LINK_DIM_RATIO = 0.58;
 
 function endpointToId(endpoint: string | EndpointNode) {
   return typeof endpoint === "string" ? endpoint : endpoint.id;
@@ -78,6 +79,19 @@ function brightenColor(hex: string, factor: number) {
   );
 }
 
+function mixColor(sourceHex: string, targetHex: string, targetRatio: number) {
+  const source = hexToRgb(sourceHex);
+  const target = hexToRgb(targetHex);
+  const clampedTargetRatio = Math.max(0, Math.min(1, targetRatio));
+  const sourceRatio = 1 - clampedTargetRatio;
+
+  return rgbToHex(
+    source.r * sourceRatio + target.r * clampedTargetRatio,
+    source.g * sourceRatio + target.g * clampedTargetRatio,
+    source.b * sourceRatio + target.b * clampedTargetRatio,
+  );
+}
+
 function isEdgeConnectedToNode(link: InteractionGraphLink, nodeId: string) {
   const sourceId = endpointToId(link.source);
   const targetId = endpointToId(link.target);
@@ -85,7 +99,8 @@ function isEdgeConnectedToNode(link: InteractionGraphLink, nodeId: string) {
 }
 
 function baseLinkColor(link: InteractionGraphLink) {
-  return link.isDraft ? DRAFT_LINK_COLOR : link.color;
+  if (!link.isDraft) return link.color;
+  return mixColor(link.color, DRAFT_LINK_DIM_TARGET, DRAFT_LINK_DIM_RATIO);
 }
 
 export function buildSemanticVisibility(
