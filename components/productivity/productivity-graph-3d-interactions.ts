@@ -16,6 +16,7 @@ export type InteractionGraphLink = {
   target: string | EndpointNode;
   color: string;
   isDraft: boolean;
+  draftDimColor?: string;
 };
 
 export type SemanticVisibility = {
@@ -104,7 +105,7 @@ function isEdgeConnectedToNode(link: InteractionGraphLink, nodeId: string) {
 
 function baseLinkColor(link: InteractionGraphLink) {
   if (!link.isDraft) return link.color;
-  return mixColor(link.color, DRAFT_LINK_DIM_TARGET, DRAFT_LINK_DIM_RATIO);
+  return mixColor(link.color, link.draftDimColor ?? DRAFT_LINK_DIM_TARGET, DRAFT_LINK_DIM_RATIO);
 }
 
 export function buildSemanticVisibility(

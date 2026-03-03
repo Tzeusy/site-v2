@@ -95,3 +95,23 @@ test("resolveLinkVisualState preserves category hue while dimming draft links", 
   assert.notEqual(draftVisual.color, draftLink.color);
   assert.notEqual(draftVisual.color, "#78716c");
 });
+
+test("resolveLinkVisualState supports theme-specific draft dim colors", () => {
+  const draftLink: InteractionGraphLink = {
+    id: "edge:draft-two-a",
+    source: "post:two",
+    target: "cat:a",
+    color: "#22c55e",
+    isDraft: true,
+    draftDimColor: "#fef08a",
+  };
+
+  const withThemeTarget = resolveLinkVisualState(draftLink, null, null);
+  const withDefaultTarget = resolveLinkVisualState(
+    { ...draftLink, draftDimColor: undefined },
+    null,
+    null,
+  );
+
+  assert.notEqual(withThemeTarget.color, withDefaultTarget.color);
+});

@@ -23,6 +23,7 @@ import {
   type InteractionGraphNode,
 } from "@/components/productivity/productivity-graph-3d-interactions";
 import {
+  applyNodeLabelSpriteColor,
   applyNodeObjectVisualState,
   createNodeLabelSprite,
   createNodeObject,
@@ -33,6 +34,8 @@ import {
 import {
   getGraphThemeFromDocument,
   getGraphThemePalette,
+  isGraphThemeMutation,
+  type GraphThemePalette,
   type GraphTheme,
 } from "@/components/productivity/productivity-graph-3d-theme";
 import {
@@ -228,9 +231,8 @@ function buildGraphData(
   categories: ProductivityGraphCategory[],
   posts: ProductivityGraphPost[],
   draftSet: Set<string>,
-  theme: GraphTheme,
+  palette: GraphThemePalette,
 ): GraphData {
-  const palette = getGraphThemePalette(theme);
   const categoryColors = buildCategoryColorMap(categories, palette.categoryLightness);
   const categoryPoints = new Map<string, { x: number; y: number }>();
   const nodes: GraphNode[] = [];
@@ -299,6 +301,7 @@ function buildGraphData(
           target: `cat:${categoryId}`,
           color: categoryColors.get(categoryId) ?? palette.linkFallbackColor,
           isDraft,
+          draftDimColor: palette.linkDraftColor,
         });
       });
   });
@@ -318,12 +321,30 @@ export function ProductivityGraph3D({
   const activePosts = showDrafts ? allPosts : posts;
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
   const [theme, setTheme] = useState<GraphTheme>(() => getGraphThemeFromDocument());
+  const [themeVersion, setThemeVersion] = useState(0);
   const [fontGeneration, setFontGeneration] = useState(0);
+  const graphPalette = useMemo(() => {
+    void themeVersion;
+    return getGraphThemePalette(theme);
+  }, [theme, themeVersion]);
 
   const graphData = useMemo(
-    () => buildGraphData(categories, activePosts, draftSet, theme),
-    [categories, activePosts, draftSet, theme],
+    () => buildGraphData(categories, activePosts, draftSet, graphPalette),
+    [categories, activePosts, draftSet, graphPalette],
   );
+  const graphStructureKey = useMemo(() => {
+    const categoryKey = categories
+      .map((category) => `${category.id}:${category.label}`)
+      .join("|");
+    const postKey = activePosts
+      .map(
+        (post) =>
+          `${post.slug}:${post.title}:${post.size}:${post.image ?? ""}:${post.categories.join(",")}`,
+      )
+      .join("|");
+    const draftsKey = [...draftSet].sort().join("|");
+    return `${categoryKey}::${postKey}::${draftsKey}`;
+  }, [categories, activePosts, draftSet]);
 
   const postsBySlug = useMemo(() => new Map(activePosts.map((post) => [post.slug, post])), [activePosts]);
   const categoryLabelMap = useMemo(() => new Map(categories.map((c) => [c.id, c.label])), [categories]);
@@ -338,7 +359,7 @@ export function ProductivityGraph3D({
 
   const semanticVisibility = useMemo(
     () => buildSemanticVisibility(activeNodeId, graphData.nodes, graphData.links),
-    [activeNodeId, graphData],
+    [activeNodeId, graphData.links, graphData.nodes],
   );
 
   const nodeVisualStates = useMemo(() => {
@@ -438,22 +459,19 @@ export function ProductivityGraph3D({
     const root = document.documentElement;
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
-        if (
-          mutation.type === "attributes" &&
-          mutation.attributeName === "data-theme"
-        ) {
-          setTheme((currentTheme) => {
-            const nextTheme = getGraphThemeFromDocument();
-            return currentTheme === nextTheme ? currentTheme : nextTheme;
-          });
-          break;
-        }
+        if (!isGraphThemeMutation(mutation)) continue;
+        setTheme((currentTheme) => {
+          const nextTheme = getGraphThemeFromDocument();
+          return currentTheme === nextTheme ? currentTheme : nextTheme;
+        });
+        setThemeVersion((currentVersion) => currentVersion + 1);
+        break;
       }
     });
 
     observer.observe(root, {
       attributes: true,
-      attributeFilter: ["data-theme"],
+      attributeFilter: ["data-theme", "style"],
     });
 
     return () => observer.disconnect();
@@ -467,7 +485,7 @@ export function ProductivityGraph3D({
       window.clearTimeout(autoFitTimerRef.current);
       autoFitTimerRef.current = null;
     }
-  }, [fontGeneration, graphData, clearRenderCaches]);
+  }, [fontGeneration, graphStructureKey, clearRenderCaches]);
 
   useEffect(() => {
     if (typeof document === "undefined" || !("fonts" in document)) return;
@@ -493,6 +511,35 @@ export function ProductivityGraph3D({
 
     graphRef.current?.refresh();
   }, [graphData.nodes, nodeVisualStates]);
+
+  useEffect(() => {
+    graphData.links.forEach((link) => {
+      const material = linkMaterialCacheRef.current.get(link.id);
+      if (!material) return;
+      const linkVisual = resolveLinkVisualState(link, activeNodeId, semanticVisibility.visibleLinkIds);
+      material.color.set(linkVisual.color);
+      material.opacity = linkVisual.opacity;
+      material.transparent = linkVisual.opacity < 1;
+      material.needsUpdate = true;
+    });
+
+    graphRef.current?.refresh();
+  }, [graphData.links, activeNodeId, semanticVisibility.visibleLinkIds]);
+
+  useEffect(() => {
+    labelSpriteCacheRef.current.forEach((sprite) => {
+      const labelData = sprite.userData as NodeLabelUserData | undefined;
+      if (!labelData) return;
+
+      const color =
+        labelData.nodeType === "category"
+          ? graphPalette.labelCategoryColor
+          : graphPalette.labelPostColor;
+      applyNodeLabelSpriteColor(sprite, color, labelData.opacity);
+    });
+
+    graphRef.current?.refresh();
+  }, [graphPalette.labelCategoryColor, graphPalette.labelPostColor]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -525,7 +572,7 @@ export function ProductivityGraph3D({
     linkForce?.strength?.(0.3);
 
     didAutoFitRef.current = false;
-  }, [graphData]);
+  }, [graphStructureKey]);
 
   const getThumbnailTexture = useCallback((imagePath: string) => {
     const cached = textureCacheRef.current.get(imagePath);
@@ -689,7 +736,7 @@ export function ProductivityGraph3D({
         labelAnimationFrameRef.current = null;
       }
     };
-  }, [graphData, dimensions.height, dimensions.width, updateLabelVisibility]);
+  }, [graphStructureKey, dimensions.height, dimensions.width, updateLabelVisibility]);
 
   const toggleFullscreen = useCallback(async () => {
     if (!wrapperRef.current) return;
@@ -754,7 +801,7 @@ export function ProductivityGraph3D({
     configureOrbitControls,
     dimensions.height,
     dimensions.width,
-    graphData,
+    graphStructureKey,
     isFullscreen,
   ]);
 
@@ -892,7 +939,7 @@ export function ProductivityGraph3D({
               width={dimensions.width}
               height={dimensions.height}
               graphData={graphData}
-              backgroundColor="rgba(0,0,0,0)"
+              backgroundColor={graphPalette.backgroundColor}
               rendererConfig={rendererConfig}
               numDimensions={3}
               controlType="orbit"
@@ -920,7 +967,10 @@ export function ProductivityGraph3D({
                 const nodeObject = createNodeObject(graphNode, getThumbnailTexture);
                 const visual = nodeVisualStates.get(graphNode.id);
                 if (visual) applyNodeObjectVisualState(nodeObject, visual);
-                const labelSprite = createNodeLabelSprite(graphNode);
+                const labelSprite = createNodeLabelSprite(graphNode, {
+                  categoryColor: graphPalette.labelCategoryColor,
+                  postColor: graphPalette.labelPostColor,
+                });
                 if (labelSprite) {
                   nodeObject.add(labelSprite);
                   labelSpriteCacheRef.current.set(graphNode.id, labelSprite);
