@@ -269,6 +269,8 @@ export function ProductivityGraph3D({
   useEffect(() => {
     nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
     nodeObjectCacheRef.current.clear();
+    textureCacheRef.current.forEach((texture) => texture.dispose());
+    textureCacheRef.current.clear();
   }, [graphData]);
 
   useEffect(() => {
