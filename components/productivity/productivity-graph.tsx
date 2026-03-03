@@ -969,11 +969,20 @@ export function ProductivityGraph({
       };
 
       let labelHoverNodeId: string | null = null;
-      const handleLabelHoverMove = (event: MouseEvent) => {
-        if (!containerRef.current) return;
+      const getPointerInContainer = (event: MouseEvent) => {
+        if (!containerRef.current) return null;
         const rect = containerRef.current.getBoundingClientRect();
-        const pointerX = event.clientX - rect.left;
-        const pointerY = event.clientY - rect.top;
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        };
+      };
+
+      const handleLabelHoverMove = (event: MouseEvent) => {
+        const pointer = getPointerInContainer(event);
+        if (!pointer) return;
+        const pointerX = pointer.x;
+        const pointerY = pointer.y;
         const hitNodeId = findPostNodeByLabelHit(pointerX, pointerY);
 
         if (hitNodeId) {
@@ -1000,12 +1009,30 @@ export function ProductivityGraph({
         if (containerRef.current) containerRef.current.style.cursor = "grab";
       };
 
+      const handleLabelClick = (event: MouseEvent) => {
+        const pointer = getPointerInContainer(event);
+        if (!pointer) return;
+        const hitNodeId = findPostNodeByLabelHit(pointer.x, pointer.y);
+        if (!hitNodeId) return;
+
+        const graph = graphRef.current;
+        if (!graph || !graph.hasNode(hitNodeId)) return;
+        const attrs = graph.getNodeAttributes(hitNodeId);
+        if (attrs.nodeType !== "post" || !attrs.slug) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.href = withBasePath(`/blog/${attrs.slug}`);
+      };
+
       const currentContainer = containerRef.current;
       currentContainer.addEventListener("mousemove", handleLabelHoverMove);
       currentContainer.addEventListener("mouseleave", handleLabelHoverLeave);
+      currentContainer.addEventListener("click", handleLabelClick, true);
       detachLabelHoverListeners = () => {
         currentContainer.removeEventListener("mousemove", handleLabelHoverMove);
         currentContainer.removeEventListener("mouseleave", handleLabelHoverLeave);
+        currentContainer.removeEventListener("click", handleLabelClick, true);
       };
 
       sigma.on("enterNode", (event) => {
