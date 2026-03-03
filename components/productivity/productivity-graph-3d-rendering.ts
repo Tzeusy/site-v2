@@ -80,7 +80,7 @@ function rememberBaseMaterialStyle(material: THREE.Material) {
 
 export function applyNodeObjectVisualState(object: THREE.Object3D, visual: RenderableNodeVisualState) {
   object.scale.setScalar(visual.scale);
-  object.traverse((child) => {
+  object.traverse((child: THREE.Object3D) => {
     const renderable = child as THREE.Object3D & {
       material?: THREE.Material | THREE.Material[];
       userData: { visualRole?: string };
