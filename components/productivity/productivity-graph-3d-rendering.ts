@@ -1,16 +1,38 @@
 import * as THREE from "three";
 
 export type RenderableGraphNode = {
+  id?: string;
   nodeType: "category" | "post";
+  label?: string;
   size: number;
   color: string;
   isDraft?: boolean;
   image?: string;
 };
 
+export type RenderableNodeLabelType = "category" | "post";
+
+export type NodeLabelUserData = {
+  nodeId: string;
+  nodeType: RenderableNodeLabelType;
+  text: string;
+  opacity: number;
+  fontStyle: "normal" | "italic";
+  fontWeight: "400" | "700";
+};
+
 const CATEGORY_SEGMENTS = 36;
 const DRAFT_EDGE_OPACITY = 0.55;
 const PUBLISHED_EDGE_OPACITY = 0.9;
+const LABEL_CANVAS_SCALE = 2;
+const CATEGORY_LABEL_FONT_SIZE = 88;
+const POST_LABEL_FONT_SIZE = 78;
+const CATEGORY_LABEL_WORLD_SCALE = 0.052;
+const POST_LABEL_WORLD_SCALE = 0.047;
+const LABEL_FONT_FAMILY =
+  "\"Inter\", \"IBM Plex Sans\", \"Helvetica Neue\", Arial, sans-serif";
+const CATEGORY_LABEL_COLOR = "rgba(28, 25, 23, 1)";
+const POST_LABEL_COLOR = "rgba(28, 25, 23, 0.5)";
 
 function buildSquareBorder(size: number, color: string, opacity: number) {
   const half = size / 2;
@@ -26,6 +48,125 @@ function buildSquareBorder(size: number, color: string, opacity: number) {
     opacity,
   });
   return new THREE.LineLoop(geometry, material);
+}
+
+export function formatNodeLabelText(nodeType: RenderableNodeLabelType, label: string) {
+  if (nodeType === "category") return label;
+  return `[${label}]`;
+}
+
+export function getNodeLabelStyle(nodeType: RenderableNodeLabelType) {
+  if (nodeType === "category") {
+    return {
+      fontSize: CATEGORY_LABEL_FONT_SIZE,
+      fontStyle: "normal" as const,
+      fontWeight: "700" as const,
+      opacity: 1,
+      color: CATEGORY_LABEL_COLOR,
+      worldScale: CATEGORY_LABEL_WORLD_SCALE,
+    };
+  }
+
+  return {
+    fontSize: POST_LABEL_FONT_SIZE,
+    fontStyle: "italic" as const,
+    fontWeight: "400" as const,
+    opacity: 0.5,
+    color: POST_LABEL_COLOR,
+    worldScale: POST_LABEL_WORLD_SCALE,
+  };
+}
+
+export function getNodeLabelOffset(
+  nodeType: RenderableNodeLabelType,
+  nodeSize: number,
+  labelWidth: number,
+  labelHeight: number,
+) {
+  if (nodeType === "category") {
+    return {
+      x: nodeSize * 0.95 + labelWidth * 0.52,
+      y: nodeSize * 0.12,
+      z: 0.02,
+    };
+  }
+
+  return {
+    x: 0,
+    y: -(nodeSize * 1.02 + labelHeight * 0.56),
+    z: 0.02,
+  };
+}
+
+function createCanvas(width: number, height: number) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+export function createNodeLabelSprite(node: RenderableGraphNode) {
+  if (!node.id || !node.label) return null;
+
+  const text = formatNodeLabelText(node.nodeType, node.label);
+  const style = getNodeLabelStyle(node.nodeType);
+  const probeCanvas = createCanvas(1, 1);
+  const probeContext = probeCanvas.getContext("2d");
+  if (!probeContext) return null;
+
+  probeContext.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${LABEL_FONT_FAMILY}`;
+  const metrics = probeContext.measureText(text);
+  const textWidth = Math.max(1, Math.ceil(metrics.width));
+  const textHeight = Math.max(1, Math.ceil(style.fontSize * 1.15));
+  const horizontalPadding = Math.ceil(style.fontSize * 0.2);
+  const verticalPadding = Math.ceil(style.fontSize * 0.18);
+  const logicalWidth = textWidth + horizontalPadding * 2;
+  const logicalHeight = textHeight + verticalPadding * 2;
+
+  const canvas = createCanvas(
+    Math.max(1, Math.ceil(logicalWidth * LABEL_CANVAS_SCALE)),
+    Math.max(1, Math.ceil(logicalHeight * LABEL_CANVAS_SCALE)),
+  );
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+
+  context.scale(LABEL_CANVAS_SCALE, LABEL_CANVAS_SCALE);
+  context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${LABEL_FONT_FAMILY}`;
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.fillStyle = style.color;
+  context.fillText(text, horizontalPadding, logicalHeight / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+  });
+  const sprite = new THREE.Sprite(material);
+  const worldWidth = logicalWidth * style.worldScale;
+  const worldHeight = logicalHeight * style.worldScale;
+  sprite.scale.set(worldWidth, worldHeight, 1);
+
+  const offset = getNodeLabelOffset(node.nodeType, node.size, worldWidth, worldHeight);
+  sprite.position.set(offset.x, offset.y, offset.z);
+  sprite.renderOrder = 10;
+  sprite.userData = {
+    nodeId: node.id,
+    nodeType: node.nodeType,
+    text,
+    opacity: style.opacity,
+    fontStyle: style.fontStyle,
+    fontWeight: style.fontWeight,
+  } satisfies NodeLabelUserData;
+
+  return sprite;
 }
 
 export function createNodeObject(
@@ -81,8 +222,28 @@ export function disposeObject3D(object: THREE.Object3D) {
     maybeDisposable.geometry?.dispose();
 
     if (Array.isArray(maybeDisposable.material)) {
-      maybeDisposable.material.forEach((material) => material.dispose());
+      maybeDisposable.material.forEach((material) => {
+        const materialWithMaps = material as THREE.Material & {
+          map?: THREE.Texture;
+          alphaMap?: THREE.Texture;
+          emissiveMap?: THREE.Texture;
+        };
+        materialWithMaps.map?.dispose();
+        materialWithMaps.alphaMap?.dispose();
+        materialWithMaps.emissiveMap?.dispose();
+        material.dispose();
+      });
     } else {
+      const materialWithMaps = maybeDisposable.material as
+        | (THREE.Material & {
+            map?: THREE.Texture;
+            alphaMap?: THREE.Texture;
+            emissiveMap?: THREE.Texture;
+          })
+        | undefined;
+      materialWithMaps?.map?.dispose();
+      materialWithMaps?.alphaMap?.dispose();
+      materialWithMaps?.emissiveMap?.dispose();
       maybeDisposable.material?.dispose();
     }
   });
