@@ -4,6 +4,7 @@ import {
   type ProductivityGraphCategory,
   type ProductivityGraphPost,
 } from "@/components/productivity/productivity-graph";
+import { ProductivityGraph3D } from "@/components/productivity/productivity-graph-3d";
 import { Suspense } from "react";
 import {
   getAllPostSummaries,
@@ -72,6 +73,8 @@ async function toGraphPost(post: {
 }
 
 export default async function ProductivityPage() {
+  const isProductivityGraph3DEnabled =
+    process.env.NEXT_PUBLIC_PRODUCTIVITY_GRAPH_3D !== "false";
   const graphCategories = buildProductivityGraphCategories();
   const allPosts = await getAllPostSummaries();
 
@@ -99,12 +102,21 @@ export default async function ProductivityPage() {
       </header>
 
       <Suspense>
-        <ProductivityGraph
-          categories={graphCategories}
-          posts={publishedGraphPosts}
-          allPosts={allGraphPosts}
-          draftSlugs={draftSlugs}
-        />
+        {isProductivityGraph3DEnabled ? (
+          <ProductivityGraph3D
+            categories={graphCategories}
+            posts={publishedGraphPosts}
+            allPosts={allGraphPosts}
+            draftSlugs={draftSlugs}
+          />
+        ) : (
+          <ProductivityGraph
+            categories={graphCategories}
+            posts={publishedGraphPosts}
+            allPosts={allGraphPosts}
+            draftSlugs={draftSlugs}
+          />
+        )}
       </Suspense>
 
       {allGraphPosts.length === 0 ? (
