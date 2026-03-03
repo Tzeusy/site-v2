@@ -61,7 +61,15 @@ next-env.d.ts
 # dev script logs
 /logs/
 .worktrees/parallel-agents/site-v2-5l1/
-# bd worktree
 .worktrees/parallel-agents/site-v2-huj/
-# bd worktree
 .worktrees/parallel-agents/site-v2-fql/
+.worktrees/parallel-agents/site-v2-xrq/
+.worktrees/parallel-agents/site-v2-ltz/
+.worktrees/parallel-agents/site-v2-qk8/
+.worktrees/parallel-agents/site-v2-4gb/
+.worktrees/parallel-agents/site-v2-tev/
+.worktrees/parallel-agents/site-v2-jq9/
+.worktrees/parallel-agents/site-v2-9se/
+.worktrees/parallel-agents/site-v2-8xh/
+.worktrees/parallel-agents/site-v2-znn/
+.worktrees/parallel-agents/site-v2-rwk/
