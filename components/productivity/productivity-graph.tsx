@@ -331,6 +331,18 @@ function separateByDepth(graph: Graph<GraphNode, GraphEdge>, offset: number) {
   });
 }
 
+/** Compress Y axis around center to simulate a slightly-tilted top-down view. */
+function tiltView(graph: Graph<GraphNode, GraphEdge>, yCompression: number) {
+  let sumY = 0;
+  let count = 0;
+  graph.forEachNode((_id, attrs) => { sumY += attrs.y; count++; });
+  if (count === 0) return;
+  const cy = sumY / count;
+  graph.forEachNode((nodeId, attrs) => {
+    graph.mergeNodeAttributes(nodeId, { y: cy + (attrs.y - cy) * yCompression });
+  });
+}
+
 function compactGraphSpread(
   graph: Graph<GraphNode, GraphEdge>,
   options: { maxSpan: number },
@@ -701,7 +713,8 @@ export function ProductivityGraph({
         settings: { ratio: 1.02, margin: 2, expansion: 1.02 },
       });
       compactGraphSpread(graph, { maxSpan: MAX_LAYOUT_SPAN });
-      separateByDepth(graph, 1.8);
+      separateByDepth(graph, 2.5);
+      tiltView(graph, 0.4);
       engine.noverlap.assign(graph, {
         maxIterations: 10,
         settings: { ratio: 1.01, margin: 1.2, expansion: 1.01 },

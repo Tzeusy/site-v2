@@ -20,6 +20,19 @@ export type ProjectEntry = {
 
 export const projects: ProjectEntry[] = [
   {
+    title: "Butlers",
+    description:
+      "A home-rolled personal assistant system — my own Jarvis — built during recovery, integrating health, finance, home automation, and more via agentic LLM workflows.",
+    blogSlug: "butlers-introduction",
+    thumbnail: {
+      src: "/blog/butlers-introduction/thumbnail.png",
+      alt: "Butlers personal assistant dashboard",
+    },
+    links: [
+      { label: "GitHub", href: "https://github.com/Tzeusy/butlers" },
+    ],
+  },
+  {
     title: "OpenAI Car Racing",
     description:
       "Imitation learning for the OpenAI Gym car racing environment, with Layerwise Relevance Propagation to visualize model behavior.",
