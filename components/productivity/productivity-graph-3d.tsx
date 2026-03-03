@@ -535,7 +535,7 @@ export function ProductivityGraph3D({
         labelData.nodeType === "category"
           ? graphPalette.labelCategoryColor
           : graphPalette.labelPostColor;
-      applyNodeLabelSpriteColor(sprite, color, labelData.opacity);
+      applyNodeLabelSpriteColor(sprite, color);
     });
 
     graphRef.current?.refresh();
