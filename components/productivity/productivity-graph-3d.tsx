@@ -1,14 +1,24 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactElement,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as THREE from "three";
-import type { ForceGraphMethods } from "react-force-graph-3d";
+import type { ForceGraphMethods, ForceGraphProps } from "react-force-graph-3d";
 import { withBasePath } from "@/lib/base-path";
 import {
+  createNodeLabelSprite,
   createNodeObject,
   disposeObject3D,
+  type NodeLabelUserData,
 } from "@/components/productivity/productivity-graph-3d-rendering";
 import {
   getGraphThemeFromDocument,
@@ -16,9 +26,13 @@ import {
   type GraphTheme,
 } from "@/components/productivity/productivity-graph-3d-theme";
 
+type ForceGraph3DComponent = (
+  props: ForceGraphProps & { ref?: RefObject<ForceGraphMethods | undefined> },
+) => ReactElement;
+
 const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
   ssr: false,
-});
+}) as ForceGraph3DComponent;
 
 export type ProductivityGraphCategory = {
   id: string;
@@ -93,6 +107,28 @@ const GRAPH_CONTAINER_CLASS = "h-[560px]";
 const ZOOM_TO_FIT_DURATION = 550;
 const ZOOM_TO_FIT_PADDING = 70;
 const GOLDEN_ANGLE_DEGREES = 137.508;
+const POST_LABEL_ZOOM_THRESHOLD = 1.35;
+const LABEL_OVERLAP_PADDING = 6;
+const LABELS_PER_MEGAPIXEL = 36;
+const MIN_VISIBLE_LABELS = 12;
+
+type GraphRefWithCamera = ForceGraphMethods & {
+  camera?: () => THREE.Camera | undefined;
+};
+
+type LabelScreenRect = {
+  id: string;
+  sprite: THREE.Sprite;
+  priority: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
+function overlaps(a: LabelScreenRect, b: LabelScreenRect) {
+  return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -256,6 +292,11 @@ export function ProductivityGraph3D({
   const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
   const textureCacheRef = useRef(new Map<string, THREE.Texture>());
   const nodeObjectCacheRef = useRef(new Map<string, THREE.Object3D>());
+  const labelSpriteCacheRef = useRef(new Map<string, THREE.Sprite>());
+  const labelAnimationFrameRef = useRef<number | null>(null);
+  const autoFitTimerRef = useRef<number | null>(null);
+  const baseCameraDistanceRef = useRef<number | null>(null);
+  const [fontGeneration, setFontGeneration] = useState(0);
 
   const graphData = useMemo(
     () => buildGraphData(categories, activePosts, draftSet, theme),
@@ -269,8 +310,17 @@ export function ProductivityGraph3D({
 
   useEffect(
     () => () => {
+      if (labelAnimationFrameRef.current !== null) {
+        window.cancelAnimationFrame(labelAnimationFrameRef.current);
+        labelAnimationFrameRef.current = null;
+      }
+      if (autoFitTimerRef.current !== null) {
+        window.clearTimeout(autoFitTimerRef.current);
+        autoFitTimerRef.current = null;
+      }
       nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
       nodeObjectCacheRef.current.clear();
+      labelSpriteCacheRef.current.clear();
       textureCacheRef.current.forEach((texture) => texture.dispose());
       textureCacheRef.current.clear();
     },
@@ -305,9 +355,28 @@ export function ProductivityGraph3D({
   useEffect(() => {
     nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
     nodeObjectCacheRef.current.clear();
+    labelSpriteCacheRef.current.clear();
     textureCacheRef.current.forEach((texture) => texture.dispose());
     textureCacheRef.current.clear();
-  }, [graphData]);
+    baseCameraDistanceRef.current = null;
+    if (autoFitTimerRef.current !== null) {
+      window.clearTimeout(autoFitTimerRef.current);
+      autoFitTimerRef.current = null;
+    }
+  }, [fontGeneration, graphData]);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || !("fonts" in document)) return;
+    let cancelled = false;
+
+    void document.fonts.load('700 16px "Inter"').then(() => {
+      if (!cancelled) setFontGeneration((value) => value + 1);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -372,6 +441,114 @@ export function ProductivityGraph3D({
     [router],
   );
 
+  const updateLabelVisibility = useCallback(() => {
+    const graph = graphRef.current as GraphRefWithCamera | undefined;
+    const camera = graph?.camera?.();
+
+    if (!(camera instanceof THREE.PerspectiveCamera)) return;
+    if (dimensions.width <= 0 || dimensions.height <= 0) return;
+
+    const cameraDistance = camera.position.length();
+    if (!Number.isFinite(cameraDistance) || cameraDistance <= 0) return;
+
+    if (baseCameraDistanceRef.current === null) {
+      baseCameraDistanceRef.current = cameraDistance;
+    }
+
+    const baseCameraDistance = baseCameraDistanceRef.current ?? cameraDistance;
+    const zoomRatio = baseCameraDistance / cameraDistance;
+    const shouldShowLabels = zoomRatio >= POST_LABEL_ZOOM_THRESHOLD;
+    labelSpriteCacheRef.current.forEach((sprite) => {
+      sprite.visible = false;
+    });
+    if (!shouldShowLabels) return;
+
+    const viewDirection = new THREE.Vector3();
+    camera.getWorldDirection(viewDirection);
+
+    const worldPosition = new THREE.Vector3();
+    const projected = new THREE.Vector3();
+    const candidates: LabelScreenRect[] = [];
+
+    labelSpriteCacheRef.current.forEach((sprite, nodeId) => {
+      const labelData = sprite.userData as NodeLabelUserData | undefined;
+      if (!labelData) return;
+
+      sprite.getWorldPosition(worldPosition);
+      projected.copy(worldPosition).project(camera);
+
+      if (projected.z < -1 || projected.z > 1) return;
+
+      const depth = worldPosition.sub(camera.position).dot(viewDirection);
+      if (!Number.isFinite(depth) || depth <= 0) return;
+
+      const viewportHeight =
+        2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * depth;
+      if (viewportHeight <= 0) return;
+
+      const pixelsPerWorldUnit = dimensions.height / viewportHeight;
+      if (!Number.isFinite(pixelsPerWorldUnit) || pixelsPerWorldUnit <= 0) return;
+
+      const screenWidth = sprite.scale.x * pixelsPerWorldUnit + LABEL_OVERLAP_PADDING * 2;
+      const screenHeight = sprite.scale.y * pixelsPerWorldUnit + LABEL_OVERLAP_PADDING * 2;
+      const centerX = (projected.x * 0.5 + 0.5) * dimensions.width;
+      const centerY = (-projected.y * 0.5 + 0.5) * dimensions.height;
+
+      const rect: LabelScreenRect = {
+        id: nodeId,
+        sprite,
+        priority: labelData.nodeType === "category" ? 0 : 1,
+        left: centerX - screenWidth / 2,
+        right: centerX + screenWidth / 2,
+        top: centerY - screenHeight / 2,
+        bottom: centerY + screenHeight / 2,
+      };
+
+      if (
+        rect.right < 0 ||
+        rect.left > dimensions.width ||
+        rect.bottom < 0 ||
+        rect.top > dimensions.height
+      ) {
+        return;
+      }
+
+      candidates.push(rect);
+    });
+
+    const maxVisibleLabels = Math.max(
+      MIN_VISIBLE_LABELS,
+      Math.floor((dimensions.width * dimensions.height * LABELS_PER_MEGAPIXEL) / 1_000_000),
+    );
+    candidates.sort((left, right) => left.priority - right.priority);
+    const accepted: LabelScreenRect[] = [];
+
+    candidates.forEach((candidate) => {
+      if (accepted.length >= maxVisibleLabels) return;
+      const isOverlapping = accepted.some((rect) => overlaps(candidate, rect));
+      if (isOverlapping) return;
+      candidate.sprite.visible = true;
+      accepted.push(candidate);
+    });
+  }, [dimensions.height, dimensions.width]);
+
+  useEffect(() => {
+    if (dimensions.width <= 0 || dimensions.height <= 0) return;
+
+    const tick = () => {
+      updateLabelVisibility();
+      labelAnimationFrameRef.current = window.requestAnimationFrame(tick);
+    };
+
+    labelAnimationFrameRef.current = window.requestAnimationFrame(tick);
+    return () => {
+      if (labelAnimationFrameRef.current !== null) {
+        window.cancelAnimationFrame(labelAnimationFrameRef.current);
+        labelAnimationFrameRef.current = null;
+      }
+    };
+  }, [graphData, dimensions.height, dimensions.width, updateLabelVisibility]);
+
   return (
     <section className="space-y-3">
       <div
@@ -395,20 +572,36 @@ export function ProductivityGraph3D({
               if (cachedNodeObject) return cachedNodeObject;
 
               const nodeObject = createNodeObject(graphNode, getThumbnailTexture);
+              const labelSprite = createNodeLabelSprite(graphNode);
+              if (labelSprite) {
+                nodeObject.add(labelSprite);
+                labelSpriteCacheRef.current.set(graphNode.id, labelSprite);
+              }
               nodeObjectCacheRef.current.set(graphNode.id, nodeObject);
               return nodeObject;
             }}
             nodeLabel={(node: object) => {
               const graphNode = node as GraphNode;
               if (graphNode.nodeType === "category") return graphNode.label;
-              const draftSuffix = graphNode.isDraft ? " (draft)" : "";
-              return `${graphNode.label}${draftSuffix}`;
+              return `[${graphNode.label}]`;
             }}
             onNodeClick={handleNodeClick}
             onEngineStop={() => {
               if (didAutoFitRef.current) return;
               graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
               didAutoFitRef.current = true;
+              if (autoFitTimerRef.current !== null) {
+                window.clearTimeout(autoFitTimerRef.current);
+              }
+              autoFitTimerRef.current = window.setTimeout(() => {
+                const graph = graphRef.current as GraphRefWithCamera | undefined;
+                const camera = graph?.camera?.();
+                if (camera) {
+                  baseCameraDistanceRef.current = camera.position.length();
+                }
+                updateLabelVisibility();
+                autoFitTimerRef.current = null;
+              }, ZOOM_TO_FIT_DURATION + 30);
             }}
           />
         ) : null}

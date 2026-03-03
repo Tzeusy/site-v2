@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as THREE from "three";
-import { createNodeObject } from "@/components/productivity/productivity-graph-3d-rendering";
+import {
+  createNodeObject,
+  formatNodeLabelText,
+  getNodeLabelOffset,
+  getNodeLabelStyle,
+} from "@/components/productivity/productivity-graph-3d-rendering";
 
 test("renders category nodes as circle meshes", () => {
   const nodeObject = createNodeObject(
@@ -68,3 +73,30 @@ test("dims draft post borders", () => {
   assert.equal(borderMaterial.color.getHexString(), "94a3b8");
 });
 
+test("formats post labels with brackets", () => {
+  assert.equal(formatNodeLabelText("category", "Engineering"), "Engineering");
+  assert.equal(formatNodeLabelText("post", "Ship It"), "[Ship It]");
+});
+
+test("applies category and post label typography styles", () => {
+  const categoryStyle = getNodeLabelStyle("category");
+  const postStyle = getNodeLabelStyle("post");
+
+  assert.equal(categoryStyle.fontWeight, "700");
+  assert.equal(categoryStyle.fontStyle, "normal");
+  assert.equal(categoryStyle.opacity, 1);
+
+  assert.equal(postStyle.fontWeight, "400");
+  assert.equal(postStyle.fontStyle, "italic");
+  assert.equal(postStyle.opacity, 0.5);
+});
+
+test("positions category labels to the right and post labels below nodes", () => {
+  const categoryOffset = getNodeLabelOffset("category", 10, 20, 5);
+  const postOffset = getNodeLabelOffset("post", 8, 16, 4);
+
+  assert.ok(categoryOffset.x > 0);
+  assert.ok(categoryOffset.y >= 0);
+  assert.ok(postOffset.y < 0);
+  assert.equal(postOffset.x, 0);
+});
