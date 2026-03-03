@@ -349,6 +349,16 @@ export function ProductivityGraph3D({
     setIsNodeHovered(false);
   }, []);
 
+  const clearRenderCaches = useCallback(() => {
+    nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
+    nodeObjectCacheRef.current.clear();
+    labelSpriteCacheRef.current.clear();
+    linkMaterialCacheRef.current.forEach((material) => material.dispose());
+    linkMaterialCacheRef.current.clear();
+    textureCacheRef.current.forEach((texture) => texture.dispose());
+    textureCacheRef.current.clear();
+  }, []);
+
   const handleEscape = useCallback((event: KeyboardEvent) => {
     if (event.key !== "Escape") return;
     if (document.fullscreenElement !== wrapperRef.current) return;
@@ -391,15 +401,9 @@ export function ProductivityGraph3D({
         window.clearTimeout(autoFitTimerRef.current);
         autoFitTimerRef.current = null;
       }
-      nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
-      nodeObjectCacheRef.current.clear();
-      labelSpriteCacheRef.current.clear();
-      linkMaterialCacheRef.current.forEach((material) => material.dispose());
-      linkMaterialCacheRef.current.clear();
-      textureCacheRef.current.forEach((texture) => texture.dispose());
-      textureCacheRef.current.clear();
+      clearRenderCaches();
     },
-    [],
+    [clearRenderCaches],
   );
 
   useEffect(() => {
@@ -428,20 +432,14 @@ export function ProductivityGraph3D({
   }, []);
 
   useEffect(() => {
-    nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
-    nodeObjectCacheRef.current.clear();
-    labelSpriteCacheRef.current.clear();
-    linkMaterialCacheRef.current.forEach((material) => material.dispose());
-    linkMaterialCacheRef.current.clear();
-    textureCacheRef.current.forEach((texture) => texture.dispose());
-    textureCacheRef.current.clear();
+    clearRenderCaches();
     baseCameraDistanceRef.current = null;
     didAutoFitRef.current = false;
     if (autoFitTimerRef.current !== null) {
       window.clearTimeout(autoFitTimerRef.current);
       autoFitTimerRef.current = null;
     }
-  }, [fontGeneration, graphData]);
+  }, [fontGeneration, graphData, clearRenderCaches]);
 
   useEffect(() => {
     if (typeof document === "undefined" || !("fonts" in document)) return;
@@ -822,8 +820,6 @@ export function ProductivityGraph3D({
                 const graphNode = node as GraphNode;
                 const cachedNodeObject = nodeObjectCacheRef.current.get(graphNode.id);
                 if (cachedNodeObject) {
-                  const visual = nodeVisualStates.get(graphNode.id);
-                  if (visual) applyNodeObjectVisualState(cachedNodeObject, visual);
                   return cachedNodeObject;
                 }
 
