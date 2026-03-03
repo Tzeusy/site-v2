@@ -4,6 +4,8 @@ import { withBasePath } from "@/lib/base-path";
 import { Callout } from "@/components/mdx/callout";
 import { Collapsible } from "@/components/mdx/collapsible";
 import { YouTube } from "@/components/mdx/youtube";
+import { MermaidDiagram } from "@/components/mdx/mermaid-diagram";
+import { ExcalidrawDiagram } from "@/components/mdx/excalidraw-diagram";
 
 const DEFAULT_MDX_IMAGE_WIDTH = 1200;
 const DEFAULT_MDX_IMAGE_HEIGHT = 630;
@@ -88,4 +90,6 @@ export const mdxComponents: MDXComponents = {
   Callout,
   Collapsible,
   YouTube,
+  MermaidDiagram,
+  ExcalidrawDiagram,
 };

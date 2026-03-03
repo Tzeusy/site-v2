@@ -5,6 +5,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import remarkMermaid from "@/lib/remark-mermaid";
 import readingTime from "reading-time";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 import { withBasePath } from "@/lib/base-path";
@@ -57,7 +58,7 @@ const prettyCodeOptions = {
 };
 
 function resolveUrls(slug: string) {
-  const urlAttributes = ["src", "href", "poster", "srcSet"] as const;
+  const urlAttributes = ["src", "href", "poster", "srcSet", "light", "dark"] as const;
 
   function isRelative(value: string) {
     return !value.startsWith("/") && !value.startsWith("http") && !value.startsWith("#");
@@ -267,7 +268,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     options: {
       parseFrontmatter: false,
       mdxOptions: {
-        remarkPlugins: [remarkGfm],
+        remarkPlugins: [remarkGfm, remarkMermaid],
         rehypePlugins: [
           rehypeSlug,
           () => resolveUrls(slug),
