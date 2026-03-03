@@ -37,8 +37,14 @@ const CATEGORY_LABEL_WORLD_SCALE = 0.052;
 const POST_LABEL_WORLD_SCALE = 0.047;
 const LABEL_FONT_FAMILY =
   "\"Inter\", \"IBM Plex Sans\", \"Helvetica Neue\", Arial, sans-serif";
-const CATEGORY_LABEL_COLOR = "rgba(28, 25, 23, 1)";
-const POST_LABEL_COLOR = "rgba(28, 25, 23, 0.5)";
+const LABEL_TEXTURE_BASE_COLOR = "#ffffff";
+const CATEGORY_LABEL_COLOR = "#1c1917";
+const POST_LABEL_COLOR = "#1c1917";
+
+type NodeLabelColorOverrides = {
+  categoryColor?: string;
+  postColor?: string;
+};
 
 function buildSquareBorder(size: number, color: string, opacity: number) {
   const half = size / 2;
@@ -120,14 +126,17 @@ export function formatNodeLabelText(nodeType: RenderableNodeLabelType, label: st
   return `[${label}]`;
 }
 
-export function getNodeLabelStyle(nodeType: RenderableNodeLabelType) {
+export function getNodeLabelStyle(
+  nodeType: RenderableNodeLabelType,
+  colors?: NodeLabelColorOverrides,
+) {
   if (nodeType === "category") {
     return {
       fontSize: CATEGORY_LABEL_FONT_SIZE,
       fontStyle: "normal" as const,
       fontWeight: "700" as const,
       opacity: 1,
-      color: CATEGORY_LABEL_COLOR,
+      color: colors?.categoryColor ?? CATEGORY_LABEL_COLOR,
       worldScale: CATEGORY_LABEL_WORLD_SCALE,
     };
   }
@@ -137,7 +146,7 @@ export function getNodeLabelStyle(nodeType: RenderableNodeLabelType) {
     fontStyle: "italic" as const,
     fontWeight: "400" as const,
     opacity: 0.5,
-    color: POST_LABEL_COLOR,
+    color: colors?.postColor ?? POST_LABEL_COLOR,
     worldScale: POST_LABEL_WORLD_SCALE,
   };
 }
@@ -170,11 +179,14 @@ function createCanvas(width: number, height: number) {
   return canvas;
 }
 
-export function createNodeLabelSprite(node: RenderableGraphNode) {
+export function createNodeLabelSprite(
+  node: RenderableGraphNode,
+  colors?: NodeLabelColorOverrides,
+) {
   if (!node.id || !node.label) return null;
 
   const text = formatNodeLabelText(node.nodeType, node.label);
-  const style = getNodeLabelStyle(node.nodeType);
+  const style = getNodeLabelStyle(node.nodeType, colors);
   const probeCanvas = createCanvas(1, 1);
   const probeContext = probeCanvas.getContext("2d");
   if (!probeContext) return null;
@@ -199,7 +211,7 @@ export function createNodeLabelSprite(node: RenderableGraphNode) {
   context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${LABEL_FONT_FAMILY}`;
   context.textAlign = "left";
   context.textBaseline = "middle";
-  context.fillStyle = style.color;
+  context.fillStyle = LABEL_TEXTURE_BASE_COLOR;
   context.fillText(text, horizontalPadding, logicalHeight / 2);
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -210,6 +222,8 @@ export function createNodeLabelSprite(node: RenderableGraphNode) {
 
   const material = new THREE.SpriteMaterial({
     map: texture,
+    color: style.color,
+    opacity: style.opacity,
     transparent: true,
     depthWrite: false,
     depthTest: false,
@@ -232,6 +246,21 @@ export function createNodeLabelSprite(node: RenderableGraphNode) {
   } satisfies NodeLabelUserData;
 
   return sprite;
+}
+
+export function applyNodeLabelSpriteColor(
+  sprite: THREE.Sprite,
+  color: string,
+  opacity?: number,
+) {
+  const material = sprite.material;
+  if (!(material instanceof THREE.SpriteMaterial)) return;
+
+  material.color.set(color);
+  if (typeof opacity === "number") {
+    material.opacity = opacity;
+  }
+  material.needsUpdate = true;
 }
 
 export function createNodeObject(

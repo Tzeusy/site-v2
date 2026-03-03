@@ -7,6 +7,14 @@
   --accent: #44403c;
   --link: #57534e;
   --rule: #e7e5e4;
+  --graph-category-lightness: 47;
+  --graph-category-fallback-color: #1c1917;
+  --graph-post-color: #2563eb;
+  --graph-post-draft-color: #94a3b8;
+  --graph-link-fallback-color: #d6d3d1;
+  --graph-link-draft-color: #a8a29e;
+  --graph-label-category-color: #1c1917;
+  --graph-label-post-color: #1c1917;
 
   --callout-info-bg: #eff6ff;
   --callout-info-border: #bfdbfe;
@@ -38,6 +46,14 @@
   --accent: #d6d3d1;
   --link: #a8a29e;
   --rule: #292524;
+  --graph-category-lightness: 60;
+  --graph-category-fallback-color: #e7e5e4;
+  --graph-post-color: #60a5fa;
+  --graph-post-draft-color: #64748b;
+  --graph-link-fallback-color: #44403c;
+  --graph-link-draft-color: #78716c;
+  --graph-label-category-color: #e7e5e4;
+  --graph-label-post-color: #e7e5e4;
 
   --callout-info-bg: #1e2a3a;
   --callout-info-border: #2a3f5f;

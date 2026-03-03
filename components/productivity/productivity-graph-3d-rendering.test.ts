@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import * as THREE from "three";
 import {
+  applyNodeLabelSpriteColor,
   createNodeObject,
   formatNodeLabelText,
   getNodeLabelOffset,
@@ -89,6 +90,29 @@ test("applies category and post label typography styles", () => {
   assert.equal(postStyle.fontWeight, "400");
   assert.equal(postStyle.fontStyle, "italic");
   assert.equal(postStyle.opacity, 0.5);
+});
+
+test("supports theme-driven label color overrides", () => {
+  const categoryStyle = getNodeLabelStyle("category", { categoryColor: "#e7e5e4" });
+  const postStyle = getNodeLabelStyle("post", { postColor: "#a8a29e" });
+
+  assert.equal(categoryStyle.color, "#e7e5e4");
+  assert.equal(postStyle.color, "#a8a29e");
+});
+
+test("updates sprite material tint for theme changes", () => {
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      color: "#ffffff",
+      opacity: 0.5,
+      transparent: true,
+    }),
+  );
+
+  applyNodeLabelSpriteColor(sprite, "#111111", 0.8);
+  const material = sprite.material as THREE.SpriteMaterial;
+  assert.equal(material.color.getHexString(), "111111");
+  assert.equal(material.opacity, 0.8);
 });
 
 test("positions category labels to the right and post labels below nodes", () => {
