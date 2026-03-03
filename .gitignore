@@ -43,6 +43,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+.beads
+.beads/issues.jsonl
 # bv (beads viewer) local config and caches
 .bv/
 
