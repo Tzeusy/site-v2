@@ -46,6 +46,10 @@ const ACTIVE_LINK_WIDTH = 1.8;
 const DRAFT_LINK_DIM_TARGET = "#78716c";
 const DRAFT_LINK_DIM_RATIO = 0.58;
 
+function nodeBrightenFactor(nodeType: InteractionGraphNodeType) {
+  return nodeType === "category" ? 1.2 : 1.4;
+}
+
 function endpointToId(endpoint: string | EndpointNode) {
   return typeof endpoint === "string" ? endpoint : endpoint.id;
 }
@@ -172,11 +176,22 @@ export function resolveNodeVisualState(
     };
   }
 
+  const isSemanticHighlightingActive = activeNodeId !== null && visibleNodeIds !== null;
+  const highlightedColor = brightenColor(node.color, nodeBrightenFactor(node.nodeType));
+
   if (activeNodeId === node.id) {
     return {
-      color: brightenColor(node.color, node.nodeType === "category" ? 1.2 : 1.4),
+      color: highlightedColor,
       opacity: 1,
       scale: ACTIVE_NODE_SCALE,
+    };
+  }
+
+  if (isSemanticHighlightingActive) {
+    return {
+      color: highlightedColor,
+      opacity: 1,
+      scale: 1,
     };
   }
 

@@ -46,16 +46,28 @@ test("buildSemanticVisibility for active category includes linked posts and thei
   );
 });
 
-test("resolveNodeVisualState dims unrelated nodes and enlarges active node", () => {
+test("resolveNodeVisualState dims unrelated nodes, brightens connected nodes, and enlarges active node", () => {
   const visibleNodeIds = new Set(["cat:a", "post:one"]);
   const dimmed = resolveNodeVisualState(nodes[1], "cat:a", visibleNodeIds);
   assert.equal(dimmed.opacity, 0.18);
   assert.equal(dimmed.scale, 0.7);
 
+  const connected = resolveNodeVisualState(nodes[3], "cat:a", visibleNodeIds);
+  assert.equal(connected.opacity, 1);
+  assert.equal(connected.scale, 1);
+  assert.notEqual(connected.color, nodes[3].color);
+
   const active = resolveNodeVisualState(nodes[0], "cat:a", visibleNodeIds);
   assert.equal(active.opacity, 1);
   assert.equal(active.scale, 1.3);
   assert.notEqual(active.color, nodes[0].color);
+});
+
+test("resolveNodeVisualState preserves base color when semantic filtering is inactive", () => {
+  const normal = resolveNodeVisualState(nodes[0], null, null);
+  assert.equal(normal.opacity, 1);
+  assert.equal(normal.scale, 1);
+  assert.equal(normal.color, nodes[0].color);
 });
 
 test("resolveLinkVisualState dims unrelated links and brightens active-adjacent links", () => {
