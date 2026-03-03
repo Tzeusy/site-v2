@@ -15,6 +15,10 @@ function hashString(input: string) {
   return Math.abs(hash);
 }
 
+const MIN_LINK_CURVATURE = 0.13;
+const LINK_CURVATURE_VARIATIONS = 6;
+const LINK_CURVATURE_STEP = 0.025;
+
 export function resolveTiltedCameraPosition(
   distance: number,
   elevationDegrees: number,
@@ -40,7 +44,7 @@ export function orbitPolarAngleFromElevation(elevationDegrees: number) {
 
 export function resolveLinkCurvature(linkId: string) {
   const hash = hashString(`${linkId}:curve`);
-  return 0.13 + (hash % 6) * 0.025;
+  return MIN_LINK_CURVATURE + (hash % LINK_CURVATURE_VARIATIONS) * LINK_CURVATURE_STEP;
 }
 
 export function resolveLinkCurveRotation(linkId: string) {
