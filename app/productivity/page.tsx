@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import {
-  ProductivityGraph,
   type ProductivityGraphCategory,
   type ProductivityGraphPost,
 } from "@/components/productivity/productivity-graph";
+import { ProductivityGraph3D } from "@/components/productivity/productivity-graph-3d";
 import { Suspense } from "react";
 import {
   getAllPostSummaries,
@@ -99,7 +99,7 @@ export default async function ProductivityPage() {
       </header>
 
       <Suspense>
-        <ProductivityGraph
+        <ProductivityGraph3D
           categories={graphCategories}
           posts={publishedGraphPosts}
           allPosts={allGraphPosts}
