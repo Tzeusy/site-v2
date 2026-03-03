@@ -51,6 +51,10 @@ if ! command -v bun &>/dev/null; then
   exit 1
 fi
 
+# Keep node_modules aligned with bun.lock before booting Next.js.
+echo "Syncing dependencies with bun.lock..."
+bun install --frozen-lockfile
+
 # --- Session handling --------------------------------------------------------
 if [ -n "${TMUX:-}" ]; then
   SESSION="$(tmux display-message -p '#S')"
