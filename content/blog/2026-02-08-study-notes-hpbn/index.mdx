@@ -24,7 +24,7 @@ Some general ideas to keep in mind regarding latency:
     - Routers having to process packets' headers means that *queuing and processing delay* can add up to nontrivial amounts of time if there are large queues of packets passing through a router
     - *Transmission delays* can cause impact when significant volumes of data gets pushed through low-bandwidth links
 
-<!-- TODO: Generate a table of NYC/London/Singapore/Sydney with their optimized fiber latencies to each other -->
+{/* TODO: Generate a table of NYC/London/Singapore/Sydney with their optimized fiber latencies to each other */}
 
 ## Chapter 2 - Building Blocks of TCP
 
@@ -39,7 +39,8 @@ TCP is optimized for *accuracy* instead of timeliness; there are many tradeoffs 
 
 ### The Three Way Handshake
 
-<Callout type="tip"> Factoids
+<Callout type="tip">
+**Factoids**
 - Accuracy over timeliness
 - *Cost of establishing a TCP connection: one round-trip-time*
 </Callout>

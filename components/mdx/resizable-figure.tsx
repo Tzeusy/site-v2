@@ -58,7 +58,7 @@ export function ResizableFigure({
 
   return (
     <Tag
-      ref={figureRef as React.Ref<HTMLElement>}
+      ref={figureRef as unknown as React.Ref<HTMLDivElement>}
       className={[
         "select-none [@media(pointer:fine)]:cursor-ew-resize",
         !jsMode &&

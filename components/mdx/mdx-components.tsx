@@ -25,9 +25,8 @@ const parseDimension = (value: number | string | undefined) => {
 function MdxImg({ className = "", alt, width, height, src, ...props }: React.ComponentPropsWithoutRef<"img">) {
   const resolvedWidth = parseDimension(width) ?? DEFAULT_MDX_IMAGE_WIDTH;
   const resolvedHeight = parseDimension(height) ?? DEFAULT_MDX_IMAGE_HEIGHT;
-  const resolvedSrc = typeof src === "string" ? withBasePath(src) : src;
-
-  if (!resolvedSrc) return null;
+  if (typeof src !== "string" || !src) return null;
+  const resolvedSrc = withBasePath(src);
 
   return (
     <ResizableFigure className="my-6">
