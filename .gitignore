@@ -63,3 +63,5 @@ next-env.d.ts
 .worktrees/parallel-agents/site-v2-5l1/
 # bd worktree
 .worktrees/parallel-agents/site-v2-huj/
+# bd worktree
+.worktrees/parallel-agents/site-v2-fql/
