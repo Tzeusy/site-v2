@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import {
   type ReactElement,
   type RefObject,
@@ -15,10 +16,19 @@ import * as THREE from "three";
 import type { ForceGraphMethods, ForceGraphProps } from "react-force-graph-3d";
 import { withBasePath } from "@/lib/base-path";
 import {
+  buildSemanticVisibility,
+  resolveLinkVisualState,
+  resolveNodeVisualState,
+  type InteractionGraphLink,
+  type InteractionGraphNode,
+} from "@/components/productivity/productivity-graph-3d-interactions";
+import {
+  applyNodeObjectVisualState,
   createNodeLabelSprite,
   createNodeObject,
   disposeObject3D,
   type NodeLabelUserData,
+  type RenderableNodeVisualState,
 } from "@/components/productivity/productivity-graph-3d-rendering";
 import {
   getGraphThemeFromDocument,
@@ -56,13 +66,8 @@ type ProductivityGraphProps = {
   draftSlugs: string[];
 };
 
-type GraphNodeType = "category" | "post";
-
-type GraphNode = {
-  id: string;
-  nodeType: GraphNodeType;
+type GraphNode = InteractionGraphNode & {
   label: string;
-  color: string;
   size: number;
   image?: string;
   slug?: string;
@@ -75,12 +80,7 @@ type GraphNode = {
   fz: number;
 };
 
-type GraphLink = {
-  source: string;
-  target: string;
-  color: string;
-  isDraft: boolean;
-};
+type GraphLink = InteractionGraphLink;
 
 type GraphData = {
   nodes: GraphNode[];
@@ -103,7 +103,7 @@ const CATEGORY_SIZE = 10;
 const POST_BASE_SIZE = 6;
 const POST_SIZE_STEP = 1.5;
 const DEFAULT_GRAPH_HEIGHT = 560;
-const GRAPH_CONTAINER_CLASS = "h-[560px]";
+const GRAPH_CONTAINER_CLASS = "h-[360px] sm:h-[560px]";
 const ZOOM_TO_FIT_DURATION = 550;
 const ZOOM_TO_FIT_PADDING = 70;
 const GOLDEN_ANGLE_DEGREES = 137.508;
@@ -111,6 +111,8 @@ const POST_LABEL_ZOOM_THRESHOLD = 1.35;
 const LABEL_OVERLAP_PADDING = 6;
 const LABELS_PER_MEGAPIXEL = 36;
 const MIN_VISIBLE_LABELS = 12;
+const MIN_CAMERA_DISTANCE = 120;
+const MAX_CAMERA_DISTANCE = 2400;
 
 type GraphRefWithCamera = ForceGraphMethods & {
   camera?: () => THREE.Camera | undefined;
@@ -264,6 +266,7 @@ function buildGraphData(
       .filter((categoryId) => categoryPoints.has(categoryId))
       .forEach((categoryId) => {
         links.push({
+          id: `edge:${postNodeId}->cat:${categoryId}`,
           source: postNodeId,
           target: `cat:${categoryId}`,
           color: isDraft
@@ -289,13 +292,6 @@ export function ProductivityGraph3D({
   const activePosts = showDrafts ? allPosts : posts;
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
   const [theme, setTheme] = useState<GraphTheme>(() => getGraphThemeFromDocument());
-  const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
-  const textureCacheRef = useRef(new Map<string, THREE.Texture>());
-  const nodeObjectCacheRef = useRef(new Map<string, THREE.Object3D>());
-  const labelSpriteCacheRef = useRef(new Map<string, THREE.Sprite>());
-  const labelAnimationFrameRef = useRef<number | null>(null);
-  const autoFitTimerRef = useRef<number | null>(null);
-  const baseCameraDistanceRef = useRef<number | null>(null);
   const [fontGeneration, setFontGeneration] = useState(0);
 
   const graphData = useMemo(
@@ -303,10 +299,87 @@ export function ProductivityGraph3D({
     [categories, activePosts, draftSet, theme],
   );
 
+  const postsBySlug = useMemo(() => new Map(activePosts.map((post) => [post.slug, post])), [activePosts]);
+  const categoryLabelMap = useMemo(() => new Map(categories.map((c) => [c.id, c.label])), [categories]);
+
+  const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  const [pinnedNodeId, setPinnedNodeId] = useState<string | null>(null);
+  const [hoveredPostSlug, setHoveredPostSlug] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isNodeHovered, setIsNodeHovered] = useState(false);
+  const activeNodeId = pinnedNodeId ?? focusedNodeId;
+
+  const semanticVisibility = useMemo(
+    () => buildSemanticVisibility(activeNodeId, graphData.nodes, graphData.links),
+    [activeNodeId, graphData],
+  );
+
+  const nodeVisualStates = useMemo(() => {
+    const map = new Map<string, RenderableNodeVisualState>();
+    graphData.nodes.forEach((node) => {
+      map.set(node.id, resolveNodeVisualState(node, activeNodeId, semanticVisibility.visibleNodeIds));
+    });
+    return map;
+  }, [graphData.nodes, activeNodeId, semanticVisibility.visibleNodeIds]);
+
+  const focusedPost = useMemo(() => {
+    if (!hoveredPostSlug) return null;
+    return postsBySlug.get(hoveredPostSlug) ?? null;
+  }, [hoveredPostSlug, postsBySlug]);
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const didAutoFitRef = useRef(false);
+  const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
+  const textureCacheRef = useRef(new Map<string, THREE.Texture>());
+  const nodeObjectCacheRef = useRef(new Map<string, THREE.Object3D>());
+  const linkMaterialCacheRef = useRef(new Map<string, THREE.LineBasicMaterial>());
+  const labelSpriteCacheRef = useRef(new Map<string, THREE.Sprite>());
+  const labelAnimationFrameRef = useRef<number | null>(null);
+  const autoFitTimerRef = useRef<number | null>(null);
+  const baseCameraDistanceRef = useRef<number | null>(null);
+
   const [dimensions, setDimensions] = useState({ width: 0, height: DEFAULT_GRAPH_HEIGHT });
+
+  const clearInteractiveState = useCallback(() => {
+    setPinnedNodeId(null);
+    setFocusedNodeId(null);
+    setHoveredPostSlug(null);
+    setIsNodeHovered(false);
+  }, []);
+
+  const handleEscape = useCallback((event: KeyboardEvent) => {
+    if (event.key !== "Escape") return;
+    if (document.fullscreenElement !== wrapperRef.current) return;
+    document.exitFullscreen().catch(() => { });
+  }, []);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen, handleEscape]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === wrapperRef.current);
+      graphRef.current?.refresh();
+    };
+
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, []);
 
   useEffect(
     () => () => {
@@ -321,6 +394,8 @@ export function ProductivityGraph3D({
       nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
       nodeObjectCacheRef.current.clear();
       labelSpriteCacheRef.current.clear();
+      linkMaterialCacheRef.current.forEach((material) => material.dispose());
+      linkMaterialCacheRef.current.clear();
       textureCacheRef.current.forEach((texture) => texture.dispose());
       textureCacheRef.current.clear();
     },
@@ -356,9 +431,12 @@ export function ProductivityGraph3D({
     nodeObjectCacheRef.current.forEach((nodeObject) => disposeObject3D(nodeObject));
     nodeObjectCacheRef.current.clear();
     labelSpriteCacheRef.current.clear();
+    linkMaterialCacheRef.current.forEach((material) => material.dispose());
+    linkMaterialCacheRef.current.clear();
     textureCacheRef.current.forEach((texture) => texture.dispose());
     textureCacheRef.current.clear();
     baseCameraDistanceRef.current = null;
+    didAutoFitRef.current = false;
     if (autoFitTimerRef.current !== null) {
       window.clearTimeout(autoFitTimerRef.current);
       autoFitTimerRef.current = null;
@@ -379,6 +457,18 @@ export function ProductivityGraph3D({
   }, []);
 
   useEffect(() => {
+    graphData.nodes.forEach((node) => {
+      const nodeObject = nodeObjectCacheRef.current.get(node.id);
+      if (!nodeObject) return;
+      const visual = nodeVisualStates.get(node.id);
+      if (!visual) return;
+      applyNodeObjectVisualState(nodeObject, visual);
+    });
+
+    graphRef.current?.refresh();
+  }, [graphData.nodes, nodeVisualStates]);
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -395,7 +485,7 @@ export function ProductivityGraph3D({
     observer.observe(container);
 
     return () => observer.disconnect();
-  }, []);
+  }, [isFullscreen]);
 
   useEffect(() => {
     const graph = graphRef.current;
@@ -432,11 +522,37 @@ export function ProductivityGraph3D({
     return texture;
   }, []);
 
+  const handleNodeHover = useCallback((node: object | null) => {
+    if (!node) {
+      setFocusedNodeId(null);
+      setHoveredPostSlug(null);
+      setIsNodeHovered(false);
+      return;
+    }
+
+    const graphNode = node as GraphNode;
+    setFocusedNodeId(graphNode.id);
+    if (graphNode.nodeType === "post" && graphNode.slug) {
+      setHoveredPostSlug(graphNode.slug);
+    } else {
+      setHoveredPostSlug(null);
+    }
+    setIsNodeHovered(true);
+  }, []);
+
   const handleNodeClick = useCallback(
     (node: object) => {
       const graphNode = node as GraphNode;
-      if (graphNode.nodeType !== "post" || !graphNode.slug) return;
-      router.push(withBasePath(`/blog/${graphNode.slug}`));
+      if (graphNode.nodeType === "post" && graphNode.slug) {
+        router.push(withBasePath(`/blog/${graphNode.slug}`));
+        return;
+      }
+
+      if (graphNode.nodeType === "category") {
+        setPinnedNodeId((previousPinnedNodeId) =>
+          previousPinnedNodeId === graphNode.id ? null : graphNode.id,
+        );
+      }
     },
     [router],
   );
@@ -549,70 +665,252 @@ export function ProductivityGraph3D({
     };
   }, [graphData, dimensions.height, dimensions.width, updateLabelVisibility]);
 
-  return (
-    <section className="space-y-3">
-      <div
-        ref={containerRef}
-        className={`${GRAPH_CONTAINER_CLASS} w-full overflow-hidden rounded-lg border border-rule bg-gradient-to-b from-background to-stone-100/40 dark:to-stone-900/30`}
-      >
-        {dimensions.width > 0 ? (
-          <ForceGraph3D
-            ref={graphRef}
-            width={dimensions.width}
-            height={dimensions.height}
-            graphData={graphData}
-            backgroundColor="rgba(0,0,0,0)"
-            numDimensions={3}
-            linkColor={(link: object) => (link as GraphLink).color}
-            linkOpacity={0.5}
-            linkWidth={1}
-            nodeThreeObject={(node: object) => {
-              const graphNode = node as GraphNode;
-              const cachedNodeObject = nodeObjectCacheRef.current.get(graphNode.id);
-              if (cachedNodeObject) return cachedNodeObject;
+  const toggleFullscreen = useCallback(async () => {
+    if (!wrapperRef.current) return;
 
-              const nodeObject = createNodeObject(graphNode, getThumbnailTexture);
-              const labelSprite = createNodeLabelSprite(graphNode);
-              if (labelSprite) {
-                nodeObject.add(labelSprite);
-                labelSpriteCacheRef.current.set(graphNode.id, labelSprite);
-              }
-              nodeObjectCacheRef.current.set(graphNode.id, nodeObject);
-              return nodeObject;
-            }}
-            nodeLabel={(node: object) => {
-              const graphNode = node as GraphNode;
-              if (graphNode.nodeType === "category") return graphNode.label;
-              return `[${graphNode.label}]`;
-            }}
-            onNodeClick={handleNodeClick}
-            onEngineStop={() => {
-              if (didAutoFitRef.current) return;
-              graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
-              didAutoFitRef.current = true;
-              if (autoFitTimerRef.current !== null) {
-                window.clearTimeout(autoFitTimerRef.current);
-              }
-              autoFitTimerRef.current = window.setTimeout(() => {
-                const graph = graphRef.current as GraphRefWithCamera | undefined;
-                const camera = graph?.camera?.();
-                if (camera) {
-                  baseCameraDistanceRef.current = camera.position.length();
-                }
-                updateLabelVisibility();
-                autoFitTimerRef.current = null;
-              }, ZOOM_TO_FIT_DURATION + 30);
-            }}
+    if (document.fullscreenElement === wrapperRef.current) {
+      await document.exitFullscreen().catch(() => { });
+      return;
+    }
+
+    await wrapperRef.current.requestFullscreen().catch(() => { });
+  }, []);
+
+  const zoomByFactor = useCallback((factor: number) => {
+    const graph = graphRef.current;
+    if (!graph) return;
+
+    const camera = graph.camera();
+    const position = camera.position;
+    const distance = Math.hypot(position.x, position.y, position.z);
+    if (!Number.isFinite(distance) || distance <= 0) return;
+
+    const targetDistance = clamp(distance * factor, MIN_CAMERA_DISTANCE, MAX_CAMERA_DISTANCE);
+    const ratio = targetDistance / distance;
+
+    graph.cameraPosition(
+      {
+        x: position.x * ratio,
+        y: position.y * ratio,
+        z: position.z * ratio,
+      },
+      undefined,
+      220,
+    );
+  }, []);
+
+  const zoomIn = useCallback(() => {
+    zoomByFactor(0.82);
+  }, [zoomByFactor]);
+
+  const zoomOut = useCallback(() => {
+    zoomByFactor(1.22);
+  }, [zoomByFactor]);
+
+  const resetView = useCallback(() => {
+    clearInteractiveState();
+    graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
+  }, [clearInteractiveState]);
+
+  const rebalanceLayout = useCallback(() => {
+    graphRef.current?.d3ReheatSimulation();
+  }, []);
+
+  const getLinkMaterial = useCallback(
+    (link: object) => {
+      const graphLink = link as GraphLink;
+      const linkVisual = resolveLinkVisualState(graphLink, activeNodeId, semanticVisibility.visibleLinkIds);
+      const cachedMaterial = linkMaterialCacheRef.current.get(graphLink.id);
+      const material =
+        cachedMaterial ??
+        new THREE.LineBasicMaterial({
+          transparent: true,
+        });
+
+      material.color.set(linkVisual.color);
+      material.opacity = linkVisual.opacity;
+      material.transparent = linkVisual.opacity < 1;
+      material.needsUpdate = true;
+
+      if (!cachedMaterial) {
+        linkMaterialCacheRef.current.set(graphLink.id, material);
+      }
+
+      return material;
+    },
+    [activeNodeId, semanticVisibility.visibleLinkIds],
+  );
+
+  const hoverCard = focusedPost ? (
+    <div className="pointer-events-none absolute left-3 top-3 z-10 w-64 rounded border border-rule bg-background p-3 shadow-sm">
+      {focusedPost.image ? (
+        <div className="relative mb-2 h-32 w-full overflow-hidden rounded">
+          <Image
+            src={focusedPost.image}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="256px"
           />
-        ) : null}
-      </div>
-      <p className="text-sm text-muted">
-        Drag to orbit, scroll to zoom, right-drag to pan. Categories stay on the upper Z-plane and
-        posts settle on the lower Z-plane.
-      </p>
-      {showDrafts ? (
-        <p className="text-sm text-muted">Draft preview mode enabled: draft posts render in muted gray.</p>
+        </div>
       ) : null}
+      <p className="text-sm font-medium leading-snug text-foreground">
+        {focusedPost.title}
+        {draftSet.has(focusedPost.slug) ? (
+          <span className="ml-1.5 inline-block rounded bg-rule px-1.5 py-0.5 text-[10px] uppercase text-muted">
+            draft
+          </span>
+        ) : null}
+      </p>
+      {focusedPost.summary ? (
+        <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted">{focusedPost.summary}</p>
+      ) : null}
+      {focusedPost.categories.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {focusedPost.categories.map((categoryId) => (
+            <span key={categoryId} className="rounded bg-rule px-1.5 py-0.5 text-[10px] text-muted">
+              {categoryLabelMap.get(categoryId) ?? categoryId}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  ) : null;
+
+  return (
+    <section className="space-y-4">
+      {showDrafts ? (
+        <p className="border border-rule px-4 py-2 text-sm text-muted">
+          Draft preview mode enabled: draft posts render in muted gray.
+        </p>
+      ) : null}
+
+      <div
+        ref={wrapperRef}
+        className={[
+          "relative overflow-hidden rounded-lg border border-rule bg-gradient-to-b from-background to-stone-100/40 dark:to-stone-900/30",
+          isFullscreen ? "h-screen w-screen rounded-none border-none" : GRAPH_CONTAINER_CLASS,
+        ].join(" ")}
+      >
+        {hoverCard}
+        <div
+          ref={containerRef}
+          className="h-full w-full active:cursor-grabbing"
+          style={{ cursor: isNodeHovered ? "pointer" : "grab" }}
+          role="img"
+          aria-label="Productivity graph connecting categories and active posts"
+        >
+          {dimensions.width > 0 ? (
+            <ForceGraph3D
+              ref={graphRef}
+              width={dimensions.width}
+              height={dimensions.height}
+              graphData={graphData}
+              backgroundColor="rgba(0,0,0,0)"
+              numDimensions={3}
+              linkOpacity={1}
+              linkWidth={(link: object) =>
+                resolveLinkVisualState(
+                  link as GraphLink,
+                  activeNodeId,
+                  semanticVisibility.visibleLinkIds,
+                ).width
+              }
+              linkMaterial={getLinkMaterial}
+              nodeThreeObject={(node: object) => {
+                const graphNode = node as GraphNode;
+                const cachedNodeObject = nodeObjectCacheRef.current.get(graphNode.id);
+                if (cachedNodeObject) {
+                  const visual = nodeVisualStates.get(graphNode.id);
+                  if (visual) applyNodeObjectVisualState(cachedNodeObject, visual);
+                  return cachedNodeObject;
+                }
+
+                const nodeObject = createNodeObject(graphNode, getThumbnailTexture);
+                const visual = nodeVisualStates.get(graphNode.id);
+                if (visual) applyNodeObjectVisualState(nodeObject, visual);
+                const labelSprite = createNodeLabelSprite(graphNode);
+                if (labelSprite) {
+                  nodeObject.add(labelSprite);
+                  labelSpriteCacheRef.current.set(graphNode.id, labelSprite);
+                }
+                nodeObjectCacheRef.current.set(graphNode.id, nodeObject);
+                return nodeObject;
+              }}
+              nodeLabel={(node: object) => {
+                const graphNode = node as GraphNode;
+                if (graphNode.nodeType === "category") return graphNode.label;
+                const draftSuffix = graphNode.isDraft ? " (draft)" : "";
+                return `${graphNode.label}${draftSuffix}`;
+              }}
+              onNodeHover={handleNodeHover}
+              onNodeClick={handleNodeClick}
+              onBackgroundClick={clearInteractiveState}
+              onEngineStop={() => {
+                if (didAutoFitRef.current) return;
+                graphRef.current?.zoomToFit(ZOOM_TO_FIT_DURATION, ZOOM_TO_FIT_PADDING);
+                didAutoFitRef.current = true;
+                if (autoFitTimerRef.current !== null) {
+                  window.clearTimeout(autoFitTimerRef.current);
+                }
+                autoFitTimerRef.current = window.setTimeout(() => {
+                  const graph = graphRef.current as GraphRefWithCamera | undefined;
+                  const camera = graph?.camera?.();
+                  if (camera) {
+                    baseCameraDistanceRef.current = camera.position.length();
+                  }
+                  updateLabelVisibility();
+                  autoFitTimerRef.current = null;
+                }, ZOOM_TO_FIT_DURATION + 30);
+              }}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted">
+          Drag to orbit, scroll to zoom. Click a category to pin focus; click a post to open it.
+        </p>
+        <div className="flex shrink-0 gap-4">
+          <button
+            type="button"
+            onClick={zoomOut}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Zoom out
+          </button>
+          <button
+            type="button"
+            onClick={zoomIn}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Zoom in
+          </button>
+          <button
+            type="button"
+            onClick={resetView}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Reset view
+          </button>
+          <button
+            type="button"
+            onClick={rebalanceLayout}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Rebalance layout
+          </button>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            className="text-sm text-muted hover:text-foreground"
+          >
+            {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

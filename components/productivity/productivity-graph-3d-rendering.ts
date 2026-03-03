@@ -21,6 +21,12 @@ export type NodeLabelUserData = {
   fontWeight: "400" | "700";
 };
 
+export type RenderableNodeVisualState = {
+  color: string;
+  opacity: number;
+  scale: number;
+};
+
 const CATEGORY_SEGMENTS = 36;
 const DRAFT_EDGE_OPACITY = 0.55;
 const PUBLISHED_EDGE_OPACITY = 0.9;
@@ -44,10 +50,69 @@ function buildSquareBorder(size: number, color: string, opacity: number) {
   ]);
   const material = new THREE.LineBasicMaterial({
     color,
-    transparent: opacity < 1,
+    transparent: true,
     opacity,
   });
-  return new THREE.LineLoop(geometry, material);
+  const border = new THREE.LineLoop(geometry, material);
+  border.userData.visualRole = "color";
+  return border;
+}
+
+function getMaterialArray(material: THREE.Material | THREE.Material[] | undefined) {
+  if (!material) return [];
+  return Array.isArray(material) ? material : [material];
+}
+
+function rememberBaseMaterialStyle(material: THREE.Material) {
+  const anyMaterial = material as THREE.Material & {
+    color?: THREE.Color;
+    opacity: number;
+    userData: { baseOpacity?: number; baseColorHex?: number };
+  };
+
+  if (typeof anyMaterial.userData.baseOpacity !== "number") {
+    anyMaterial.userData.baseOpacity = anyMaterial.opacity;
+  }
+  if (anyMaterial.color && typeof anyMaterial.userData.baseColorHex !== "number") {
+    anyMaterial.userData.baseColorHex = anyMaterial.color.getHex();
+  }
+}
+
+export function applyNodeObjectVisualState(object: THREE.Object3D, visual: RenderableNodeVisualState) {
+  object.scale.setScalar(visual.scale);
+  object.traverse((child) => {
+    const renderable = child as THREE.Object3D & {
+      material?: THREE.Material | THREE.Material[];
+      userData: { visualRole?: string };
+    };
+
+    const materials = getMaterialArray(renderable.material);
+    if (materials.length === 0) return;
+
+    materials.forEach((material) => {
+      rememberBaseMaterialStyle(material);
+      const anyMaterial = material as THREE.Material & {
+        color?: THREE.Color;
+        opacity: number;
+        transparent: boolean;
+        needsUpdate: boolean;
+        userData: { baseOpacity?: number; baseColorHex?: number };
+      };
+
+      anyMaterial.transparent = true;
+      const baseOpacity =
+        typeof anyMaterial.userData.baseOpacity === "number" ? anyMaterial.userData.baseOpacity : 1;
+      anyMaterial.opacity = baseOpacity * visual.opacity;
+
+      if (renderable.userData.visualRole === "color" && anyMaterial.color) {
+        anyMaterial.color.set(visual.color);
+      } else if (anyMaterial.color && typeof anyMaterial.userData.baseColorHex === "number") {
+        anyMaterial.color.setHex(anyMaterial.userData.baseColorHex);
+      }
+
+      anyMaterial.needsUpdate = true;
+    });
+  });
 }
 
 export function formatNodeLabelText(nodeType: RenderableNodeLabelType, label: string) {
@@ -174,13 +239,16 @@ export function createNodeObject(
   resolveTexture: (imagePath: string) => THREE.Texture | undefined,
 ) {
   if (node.nodeType === "category") {
-    return new THREE.Mesh(
+    const category = new THREE.Mesh(
       new THREE.CircleGeometry(node.size, CATEGORY_SEGMENTS),
       new THREE.MeshBasicMaterial({
         color: node.color,
+        transparent: true,
         side: THREE.DoubleSide,
       }),
     );
+    category.userData.visualRole = "color";
+    return category;
   }
 
   const edgeOpacity = node.isDraft ? DRAFT_EDGE_OPACITY : PUBLISHED_EDGE_OPACITY;
@@ -201,11 +269,12 @@ export function createNodeObject(
     new THREE.MeshBasicMaterial({
       map: texture,
       color: node.isDraft ? node.color : "#ffffff",
-      transparent: Boolean(node.isDraft),
+      transparent: true,
       opacity: node.isDraft ? 0.82 : 1,
       side: THREE.DoubleSide,
     }),
   );
+  plane.userData.visualRole = "texture";
   edge.position.z = 0.01;
   group.add(plane);
   group.add(edge);
