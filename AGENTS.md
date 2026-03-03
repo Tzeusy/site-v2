@@ -196,3 +196,4 @@ git push                # Push to remote
 - Sigma canvas node labels can look soft with fractional placement; use a custom `defaultDrawNodeLabel` that snaps text coordinates to whole pixels for crisper titles.
 - Keep `/blog` index links subtle (hover underline), and force visible underlines only for inline links inside individual post bodies using the `blog-post-content-underlines` class on the content section.
 - New files added under `content/blog/<date-slug>/` are not auto-synced in `npm run dev`; run `node scripts/copy-blog-assets.mjs` (or `npm run build`) to refresh `public/blog/<slug>/` assets.
+- In `react-force-graph-3d`, `linkOpacity` is graph-wide only; use cached per-link `linkMaterial` objects (and dispose them on graph-data changes/unmount) to implement per-edge dimming/highlight behavior.
