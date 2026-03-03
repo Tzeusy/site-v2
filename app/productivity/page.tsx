@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import {
+  ProductivityGraph,
   type ProductivityGraphCategory,
   type ProductivityGraphPost,
 } from "@/components/productivity/productivity-graph";
-import { ProductivityGraph3D } from "@/components/productivity/productivity-graph-3d";
 import { Suspense } from "react";
 import {
   getAllPostSummaries,
@@ -88,9 +88,9 @@ export default async function ProductivityPage() {
     <article className="space-y-8">
       <header className="space-y-4">
         <p className="text-sm uppercase tracking-[0.08em] text-accent">Productivity</p>
-        <h1 className="text-balance text-4xl sm:text-5xl">My Home Infrastructure Setup</h1>
+        <h1 className="text-balance text-4xl sm:text-5xl">How the pieces connect.</h1>
         <p className="max-w-[65ch] text-muted">
-          This graph shows various elements in my personal setup for my development workflows - rendered as a graph as an experiment :-)
+          This graph shows various elements in my personal setup for my development workflows
           {/* Mark a post with{" "}
           <code className="text-foreground">active</code> to include it, and{" "}
           <code className="text-foreground">size-1</code> to{" "}
@@ -99,7 +99,7 @@ export default async function ProductivityPage() {
       </header>
 
       <Suspense>
-        <ProductivityGraph3D
+        <ProductivityGraph
           categories={graphCategories}
           posts={publishedGraphPosts}
           allPosts={allGraphPosts}
