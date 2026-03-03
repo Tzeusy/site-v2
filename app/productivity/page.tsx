@@ -88,9 +88,9 @@ export default async function ProductivityPage() {
     <article className="space-y-8">
       <header className="space-y-4">
         <p className="text-sm uppercase tracking-[0.08em] text-accent">Productivity</p>
-        <h1 className="text-balance text-4xl sm:text-5xl">How the pieces connect.</h1>
+        <h1 className="text-balance text-4xl sm:text-5xl">My Productivity Setup</h1>
         <p className="max-w-[65ch] text-muted">
-          This graph shows various elements in my personal setup for my development workflows
+          Categories are on the left and blog posts are on the right, showing how pieces of my setup connect.
           {/* Mark a post with{" "}
           <code className="text-foreground">active</code> to include it, and{" "}
           <code className="text-foreground">size-1</code> to{" "}
