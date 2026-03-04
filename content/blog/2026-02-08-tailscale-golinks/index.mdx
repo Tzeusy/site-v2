@@ -24,4 +24,6 @@ Within an hour of exploration, I got this up and running in my Kubernetes cluste
 
 ![Golink page](tailscale-golinks.png)
 
+Importantly - golinks at `go/` only work with *HTTP*, because any tailscale (LetsEncrypt)-provisioned SSL certificate will be for my tailnet (`go.*.ts.net`) - this will cause MagicDNS via `https://go/` to fail hostname validation. This isn't much of an issue within tailnet as intra-Tailnet traffic is encrypted.
+
 Now I can access any link with a trivial `'go/...'` on any machine within my tailnet :-)

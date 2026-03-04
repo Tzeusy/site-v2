@@ -1,0 +1,48 @@
+---
+title: "Study Notes: Google Kubernetes Engine"
+date: 2026-02-08
+summary: "Notes and takeaways from Google Kubernetes Engine."
+tags: ["learnings", "draft"]
+---
+
+## Services
+
+Services are control-plane objects that sit on top of nodes.
+
+### ClusterIP
+
+A service exposed via ClusterIPs are not meant to be reachable from outside the cluster. This is because cluster IPs are virtual IPs implemented by kube-proxy; we need an LoadBalancer/Ingress/Gateway to expose this services externally.
+
+### NodePort
+
+A NodePort service allocates a port and opens it on every node. Traffic to `node-ip:nodePort` is then forwarded to one of the service's backend pods, regardless of which node it is on. These are reachable by anywhere that can reach the node IPs, which is typically the VPC; public internet can only access them if nodes have public IPs and firewall rules allow connectivity.
+
+### Headless Services
+
+A service is specified as `headless` by specify `None` for its clusterIP. When this is done, CoreDNS returns the pod IPs from the service's EndpointSlices, often as multiple A records. Clients do their own load-balancing and selection here; there is no Service VIP forwarding.
+
+### LoadBalancer
+
+With `Service type: LoadBalancer` configured, typically a TCP/UDP load balancer is provisioned on top of both a ClusterIP and an auto-created NodePort. 
+
+### Overview
+
+Headless: CoreDNS returns pod IPs -> Client selects -> queries pod
+ClusterIP: DNS -> Service VIP -> kube-proxy/eBPF -> backend pod
+ExternalName Service: DNS -> CNAME to an external DNS name
+NodePort: Port 5432
+
+## Glossary
+
+- `CIDR`: Classless Inter-Domain Routing. Describes an 'IP Block' by saying how many leading beats are the network prefix. For example, `10.0.0.0/24` means the first 24 bits are fixed; we have (32 - 24) bits of freedom to allocate IP addresses. `2^8` is 256 IPv4 addresses.
+    - `10.0.0.0/24` -> 256 addresses -> Range is `10.0.0.0` to `10.0.0.255`
+    - `10.0.0.0/23` -> 512 addresses -> Range is `10.0.0.0` to `10.0.1.255`
+- `VPC`: Virtual Private Cloud. This is the private network inside a cloud project; think of it like a LAN within the cloud. Here we define address space + subnets, routing between subnets and outside, and firewall rules.
+    - GKE nodes are VMs with NICs in a VPC subnet
+    - In VPC-native clusters, pods get IPs from secondary IP ranges, so pod traffic is first-class.
+    - Load Balances and Ingresses allocate ddresses and deliver traffic into the VPC into nodes and pods.
+- `DNAT`: Destination Network Address Translation
+    - When a packet comes in, the kernel of a node `DNAT`s the destination from `VIP:port` or `nodeIP:nodePort` to its chosen `podIP:targetPort`.
+    - The kernel tracks NAT mapping in `conntrack`, so return packets can be reverse-NATed back to the original tuple.
+- `SNAT`: Source Network Address Translation.
+    - This can cause true-source IPs to go 'missing', as in SNAT the kernel rewrites the *source* ip to become the IP from which a packet comes from to become the IP of the *kubernetes node* that received traffic for a service.
