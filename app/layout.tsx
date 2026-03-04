@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   description: "Personal publication site of Tze How.",
   alternates: {
     types: {
-      "application/rss+xml": "https://tze.how/feed.xml",
+      "application/rss+xml": "https://tze.how/feed",
     },
   },
   openGraph: {
@@ -72,6 +72,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Tze How RSS Feed"
+          href="https://tze.how/feed"
+        />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body

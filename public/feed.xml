@@ -1,17 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
-    <title>Tze How</title>
+    <title>Tze How&apos;s Blog</title>
     <link>https://tze.how</link>
     <description>Long-form essays on reliability, systems, and software practice.</description>
+    <atom:link href="https://tze.how/feed" rel="self" type="application/rss+xml" />
+    <image>
+      <url>https://tze.how/images/projects/project-placeholder.svg</url>
+      <title>Tze How&apos;s Blog</title>
+      <link>https://tze.how</link>
+    </image>
     <language>en-us</language>
-    <lastBuildDate>Fri, 27 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 03 Mar 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
+    <item>
+      <title>Windows Tooling</title>
+      <link>https://tze.how/blog/windows-tools</link>
+      <guid isPermaLink="true">https://tze.how/blog/windows-tools</guid>
+      <description>Software I use on Windows that, after having used them, I can never go back from.</description>
+      <media:thumbnail url="https://tze.how/blog/windows-tools/thumbnail.png" />
+      <pubDate>Tue, 03 Mar 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Butlers - My Personal Jarvis</title>
+      <link>https://tze.how/blog/butlers-introduction</link>
+      <guid isPermaLink="true">https://tze.how/blog/butlers-introduction</guid>
+      <description>Feature exploration, project scope, and architectural design of my project to create my personal long-lived digital butler</description>
+      <media:thumbnail url="https://tze.how/blog/butlers-introduction/thumbnail.png" />
+      <pubDate>Mon, 02 Mar 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>SRS Calculations</title>
       <link>https://tze.how/blog/srs-calculations</link>
       <guid isPermaLink="true">https://tze.how/blog/srs-calculations</guid>
       <description>Is Singapore&apos;s SRS worth it? I ran the numbers - and the answer surprised me.</description>
+      <media:thumbnail url="https://tze.how/blog/srs-calculations/thumbnail.png" />
       <pubDate>Fri, 27 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -19,6 +42,7 @@
       <link>https://tze.how/blog/homelab-motivations</link>
       <guid isPermaLink="true">https://tze.how/blog/homelab-motivations</guid>
       <description>Thoughts on why I spend so much time messing with my own homelab</description>
+      <media:thumbnail url="https://tze.how/blog/homelab-motivations/thumbnail.png" />
       <pubDate>Fri, 20 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -33,6 +57,7 @@
       <link>https://tze.how/blog/ricing-my-bavd-research</link>
       <guid isPermaLink="true">https://tze.how/blog/ricing-my-bavd-research</guid>
       <description>Optimizing my research and documentation process when tracking my Bicuspid Aortic Valve</description>
+      <media:thumbnail url="https://tze.how/blog/ricing-my-bavd-research/thumbnail.png" />
       <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -40,13 +65,7 @@
       <link>https://tze.how/blog/tailscale-golinks</link>
       <guid isPermaLink="true">https://tze.how/blog/tailscale-golinks</guid>
       <description>Tailscale golinks - quick win for lots of convenience!</description>
-      <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
-    <item>
-      <title>Windows Tooling</title>
-      <link>https://tze.how/blog/windows-tools</link>
-      <guid isPermaLink="true">https://tze.how/blog/windows-tools</guid>
-      <description>Software I use on Windows that makes my life so much better</description>
+      <media:thumbnail url="https://tze.how/blog/tailscale-golinks/thumbnail.png" />
       <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -54,6 +73,7 @@
       <link>https://tze.how/blog/sutd-mit-global-leadership-programme</link>
       <guid isPermaLink="true">https://tze.how/blog/sutd-mit-global-leadership-programme</guid>
       <description>Designing and building a hydrofoil electric boat from scratch in ten weeks during the SUTD-MIT exchange at MIT.</description>
+      <media:thumbnail url="https://tze.how/blog/sutd-mit-global-leadership-programme/thumbnail.jpg" />
       <pubDate>Sat, 07 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -61,6 +81,7 @@
       <link>https://tze.how/blog/gems-on-the-internet</link>
       <guid isPermaLink="true">https://tze.how/blog/gems-on-the-internet</guid>
       <description>Documenting some of my finds across the internet, with various overlaps with my interests. Not including many of the more mainstream ones: Slate Star Codex (Now Astral Codex Ten on Substack). The blog of an essayist/psychiatrist, who talks about almost any topic under the sun. I often cite his articles ...</description>
+      <media:thumbnail url="https://tze.how/blog/gems-on-the-internet/thumbnail.jpg" />
       <pubDate>Mon, 13 Sep 2021 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -68,6 +89,7 @@
       <link>https://tze.how/blog/market-databases</link>
       <guid isPermaLink="true">https://tze.how/blog/market-databases</guid>
       <description>Some analysis of the chaos in the markets over the past two months - watching interplay between asset classes along with relevant snippets from Reddit submissions.</description>
+      <media:thumbnail url="https://tze.how/blog/market-databases/thumbnail.png" />
       <pubDate>Sun, 12 Apr 2020 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -75,6 +97,7 @@
       <link>https://tze.how/blog/openai-car-racing-adventures</link>
       <guid isPermaLink="true">https://tze.how/blog/openai-car-racing-adventures</guid>
       <description>An overview of our Imitation Learning approach towards creating a model to play the OpenAI-CarRacingv0 environment.</description>
+      <media:thumbnail url="https://tze.how/blog/openai-car-racing-adventures/thumbnail.jpg" />
       <pubDate>Mon, 23 Mar 2020 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -82,6 +105,7 @@
       <link>https://tze.how/blog/setting-up-of-i3wm-ricing</link>
       <guid isPermaLink="true">https://tze.how/blog/setting-up-of-i3wm-ricing</guid>
       <description>Setup process for i3wm, shortcuts, useful tools, and the like</description>
+      <media:thumbnail url="https://tze.how/blog/setting-up-of-i3wm-ricing/thumbnail.jpg" />
       <pubDate>Fri, 16 Aug 2019 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -89,6 +113,7 @@
       <link>https://tze.how/blog/project-jessica</link>
       <guid isPermaLink="true">https://tze.how/blog/project-jessica</guid>
       <description>Overview of Project Jessica</description>
+      <media:thumbnail url="https://tze.how/blog/project-jessica/thumbnail.jpg" />
       <pubDate>Fri, 03 May 2019 00:00:00 GMT</pubDate>
     </item>
     <item>
@@ -96,6 +121,7 @@
       <link>https://tze.how/blog/ethereum-address-analyzer</link>
       <guid isPermaLink="true">https://tze.how/blog/ethereum-address-analyzer</guid>
       <description>What I was up to in the summer of 2018</description>
+      <media:thumbnail url="https://tze.how/blog/ethereum-address-analyzer/thumbnail.jpg" />
       <pubDate>Wed, 01 Aug 2018 00:00:00 GMT</pubDate>
     </item>
   </channel>

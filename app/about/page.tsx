@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { projects } from "@/lib/projects";
+import { SocialLinks, type SocialLink } from "@/components/ui/social-links";
 
-const contacts = [
-  { label: "GitHub", href: "https://github.com/Tzeusy" },
-  { label: "LinkedIn", href: "https://linkedin.com/in/tzehow" },
-  { label: "Email", href: "mailto:tzeuse@gmail.com" },
+const contacts: SocialLink[] = [
+  { label: "GitHub", href: "https://github.com/Tzeusy", icon: "github", newTab: true },
+  { label: "LinkedIn", href: "https://linkedin.com/in/tzehow", icon: "linkedin", newTab: true },
+  { label: "Email", href: "mailto:tzeuse@gmail.com", icon: "email" },
 ];
 
 const highlightSlugs = [
@@ -38,16 +39,7 @@ export default function AboutPage() {
           I&rsquo;m a Singaporean software engineer building transparent and powerful software by
           standing on the shoulders of giants.
         </p>
-        <p className="text-sm text-muted">
-          {contacts.map((contact, index) => (
-            <span key={contact.label}>
-              {index > 0 ? " · " : ""}
-              <a href={contact.href} target="_blank" rel="noreferrer">
-                {contact.label}
-              </a>
-            </span>
-          ))}
-        </p>
+        <SocialLinks links={contacts} className="flex items-center gap-2" />
       </header>
 
       {/* Bio */}

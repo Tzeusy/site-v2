@@ -3,12 +3,15 @@ import path from "node:path";
 import matter from "gray-matter";
 
 const SITE_URL = "https://tze.how";
-const SITE_TITLE = "Tze How";
+const FEED_URL = `${SITE_URL}/feed`;
+const SITE_TITLE = "Tze How's Blog";
 const SITE_DESCRIPTION =
   "Long-form essays on reliability, systems, and software practice.";
+const FEED_IMAGE_URL = `${SITE_URL}/images/projects/project-placeholder.svg`;
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 const FEED_PATH = path.join(process.cwd(), "public/feed.xml");
+const THUMBNAIL_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
 
 function escapeXml(value) {
   return value
@@ -48,6 +51,19 @@ function slugFromDirName(dirName) {
   return dirName.replace(/^\d{4}-\d{2}-\d{2}-/u, "");
 }
 
+async function getPostThumbnailUrl(dirPath, slug) {
+  for (const ext of THUMBNAIL_EXTENSIONS) {
+    const filePath = path.join(dirPath, `thumbnail.${ext}`);
+    try {
+      await fs.access(filePath);
+      return `${SITE_URL}/blog/${slug}/thumbnail.${ext}`;
+    } catch {
+      // file doesn't exist, try next extension
+    }
+  }
+  return null;
+}
+
 async function getFeedPosts() {
   const entries = await fs.readdir(BLOG_DIR, { withFileTypes: true });
   const postDirs = entries.filter((entry) => entry.isDirectory());
@@ -56,10 +72,15 @@ async function getFeedPosts() {
     postDirs.map(async (entry) => {
       const slug = slugFromDirName(entry.name);
       const filePath = path.join(BLOG_DIR, entry.name, "index.mdx");
+      const dirPath = path.join(BLOG_DIR, entry.name);
       try {
         const source = await fs.readFile(filePath, "utf8");
         const { data } = matter(source);
-        return normalizeFrontmatter(data, slug);
+        const thumbnailUrl = await getPostThumbnailUrl(dirPath, slug);
+        return {
+          ...normalizeFrontmatter(data, slug),
+          thumbnailUrl,
+        };
       } catch {
         return null;
       }
@@ -86,6 +107,9 @@ function renderFeedXml(posts) {
         `      <link>${escapeXml(url)}</link>`,
         `      <guid isPermaLink="true">${escapeXml(url)}</guid>`,
         `      <description>${escapeXml(post.summary)}</description>`,
+        ...(post.thumbnailUrl
+          ? [`      <media:thumbnail url="${escapeXml(post.thumbnailUrl)}" />`]
+          : []),
         `      <pubDate>${new Date(post.date).toUTCString()}</pubDate>`,
         "    </item>",
       ].join("\n");
@@ -94,11 +118,17 @@ function renderFeedXml(posts) {
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<rss version="2.0">',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">',
     "  <channel>",
     `    <title>${escapeXml(SITE_TITLE)}</title>`,
     `    <link>${SITE_URL}</link>`,
     `    <description>${escapeXml(SITE_DESCRIPTION)}</description>`,
+    `    <atom:link href="${escapeXml(FEED_URL)}" rel="self" type="application/rss+xml" />`,
+    "    <image>",
+    `      <url>${escapeXml(FEED_IMAGE_URL)}</url>`,
+    `      <title>${escapeXml(SITE_TITLE)}</title>`,
+    `      <link>${SITE_URL}</link>`,
+    "    </image>",
     "    <language>en-us</language>",
     `    <lastBuildDate>${latestPostDate}</lastBuildDate>`,
     "    <generator>site-v2 feed generator</generator>",

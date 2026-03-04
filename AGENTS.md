@@ -197,3 +197,6 @@ git push                # Push to remote
 - Sigma canvas node labels can look soft with fractional placement; use a custom `defaultDrawNodeLabel` that snaps text coordinates to whole pixels for crisper titles.
 - Keep `/blog` index links subtle (hover underline), and force visible underlines only for inline links inside individual post bodies using the `blog-post-content-underlines` class on the content section.
 - New files added under `content/blog/<date-slug>/` are not auto-synced in `npm run dev`; run `node scripts/copy-blog-assets.mjs` (or `npm run build`) to refresh `public/blog/<slug>/` assets.
+- RSS feed generation lives in `scripts/generate-feed.mjs`; it now emits `<media:thumbnail>` tags in `public/feed.xml` when `content/blog/<date-slug>/thumbnail.{jpg,jpeg,png,gif,webp}` exists.
+- Social/contact icon links are centralized in `components/ui/social-links.tsx`; footer links include RSS (`/feed.xml`) alongside GitHub/LinkedIn/Email.
+- Feed validators expect discovery + self-link URL consistency (`/feed` here): keep explicit `<link rel="alternate" type="application/rss+xml" href="https://tze.how/feed">` in layout head and emit `<atom:link rel="self" ...>` in generated RSS.
