@@ -200,3 +200,4 @@ git push                # Push to remote
 - RSS feed generation lives in `scripts/generate-feed.mjs`; it now emits `<media:thumbnail>` tags in `public/feed.xml` when `content/blog/<date-slug>/thumbnail.{jpg,jpeg,png,gif,webp}` exists.
 - Social/contact icon links are centralized in `components/ui/social-links.tsx`; footer links include RSS (`/feed.xml`) alongside GitHub/LinkedIn/Email.
 - Feed validators expect discovery + self-link URL consistency (`/feed` here): keep explicit `<link rel="alternate" type="application/rss+xml" href="https://tze.how/feed">` in layout head and emit `<atom:link rel="self" ...>` in generated RSS.
+- Theme toggle hydration is safest when driven by `data-theme` as an external store (`useSyncExternalStore` + `MutationObserver`) instead of setting initial client state from `localStorage`/`document` during render.
