@@ -26,7 +26,7 @@ export async function getSearchEntries(): Promise<SearchEntry[]> {
     title: post.title,
     href: `/blog/${post.slug}`,
     description: post.summary,
-    tags: post.tags,
+    tags: [post.category, ...post.tags],
   }));
 
   const postHrefs = new Set(postEntries.map((p) => p.href));

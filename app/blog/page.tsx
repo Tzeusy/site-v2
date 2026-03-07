@@ -1,13 +1,25 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { BlogFilter } from "@/components/ui/blog-filter";
-import { getAllPostSummaries, isDraftPost } from "@/lib/blog";
+import {
+  BLOG_CATEGORY_VALUES,
+  getAllPostSummaries,
+  getBlogCategoryLabel,
+  isDraftPost,
+} from "@/lib/blog";
 import type { BlogPostSummary } from "@/lib/blog";
 
 export const metadata: Metadata = {
   title: "Blog",
   description: "Long-form essays on reliability, systems, and software practice.",
 };
+
+function collectCategoryOptions() {
+  return BLOG_CATEGORY_VALUES.map((id) => ({
+    id,
+    label: getBlogCategoryLabel(id),
+  }));
+}
 
 function collectTagOptions(posts: BlogPostSummary[]) {
   const tagMap = new Map<string, string>();
@@ -37,6 +49,7 @@ export default async function BlogIndexPage() {
     .filter((p) => isDraftPost(p))
     .map((p) => p.slug);
   const publishedPosts = allPosts.filter((p) => !isDraftPost(p));
+  const categories = collectCategoryOptions();
   const tags = collectTagOptions(allPosts);
 
   return (
@@ -51,6 +64,7 @@ export default async function BlogIndexPage() {
           <BlogFilter
             posts={publishedPosts}
             allPosts={allPosts}
+            categories={categories}
             tags={tags}
             draftSlugs={draftSlugs}
           />

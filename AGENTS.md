@@ -196,6 +196,7 @@ git push                # Push to remote
 - `/productivity` now uses a deterministic two-lane bipartite layout (categories left, posts right); avoid reintroducing ForceAtlas/noverlap drift unless explicitly desired.
 - Sigma canvas node labels can look soft with fractional placement; use a custom `defaultDrawNodeLabel` that snaps text coordinates to whole pixels for crisper titles.
 - Keep `/blog` index links subtle (hover underline), and force visible underlines only for inline links inside individual post bodies using the `blog-post-content-underlines` class on the content section.
+- Blog taxonomy is split: `category` is the low-cardinality primary frontmatter field (`finance`, `programming`, `personal`, `other`), while `tags` remain the high-cardinality freeform labels; the `/blog` index exposes both separately.
 - New files added under `content/blog/<date-slug>/` are not auto-synced in `npm run dev`; run `node scripts/copy-blog-assets.mjs` (or `npm run build`) to refresh `public/blog/<slug>/` assets.
 - RSS feed generation lives in `scripts/generate-feed.mjs`; it now emits `<media:thumbnail>` tags in `public/feed.xml` when `content/blog/<date-slug>/thumbnail.{jpg,jpeg,png,gif,webp}` exists.
 - Social/contact icon links are centralized in `components/ui/social-links.tsx`; footer links include RSS (`/feed.xml`) alongside GitHub/LinkedIn/Email.

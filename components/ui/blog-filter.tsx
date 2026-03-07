@@ -3,16 +3,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PostLink } from "@/components/ui/post-link";
-import type { BlogPostSummary } from "@/lib/blog";
+import type { BlogCategory, BlogPostSummary } from "@/lib/blog";
 
-type TagOption = {
-  id: string;
+type FilterOption<T extends string> = {
+  id: T;
   label: string;
 };
+
+type CategoryOption = FilterOption<BlogCategory>;
+type TagOption = FilterOption<string>;
 
 type BlogFilterProps = {
   posts: BlogPostSummary[];
   allPosts: BlogPostSummary[];
+  categories: CategoryOption[];
   tags: TagOption[];
   draftSlugs: string[];
 };
@@ -21,13 +25,20 @@ function normalizeTag(tag: string) {
   return tag.trim().toLowerCase();
 }
 
-export function BlogFilter({ posts, allPosts, tags, draftSlugs }: BlogFilterProps) {
+export function BlogFilter({
+  posts,
+  allPosts,
+  categories,
+  tags,
+  draftSlugs,
+}: BlogFilterProps) {
   const searchParams = useSearchParams();
   const showDrafts = searchParams.get("drafts") === "true";
 
   const activePosts = showDrafts ? allPosts : posts;
   const draftSet = useMemo(() => new Set(draftSlugs), [draftSlugs]);
 
+  const [selectedCategories, setSelectedCategories] = useState<BlogCategory[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -35,21 +46,33 @@ export function BlogFilter({ posts, allPosts, tags, draftSlugs }: BlogFilterProp
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredPosts = useMemo(() => {
-    if (selectedTags.length === 0) return activePosts;
+    const selectedCategorySet = new Set(selectedCategories);
+    const selectedTagSet = new Set(selectedTags);
+    return activePosts.filter((post) => {
+      const matchesCategory =
+        selectedCategorySet.size === 0 || selectedCategorySet.has(post.category);
+      const matchesTag =
+        selectedTagSet.size === 0 ||
+        post.tags.some((tag) => selectedTagSet.has(normalizeTag(tag)));
+      return matchesCategory && matchesTag;
+    });
+  }, [activePosts, selectedCategories, selectedTags]);
 
-    const selectedSet = new Set(selectedTags);
-    return activePosts.filter((post) =>
-      post.tags.some((tag) => selectedSet.has(normalizeTag(tag))),
-    );
-  }, [activePosts, selectedTags]);
-
-  const hasSelection = selectedTags.length > 0;
+  const hasSelection = selectedCategories.length > 0 || selectedTags.length > 0;
 
   const visibleTags = useMemo(() => {
     if (!search.trim()) return tags;
     const q = search.trim().toLowerCase();
     return tags.filter((tag) => tag.label.toLowerCase().includes(q));
   }, [tags, search]);
+
+  function toggleCategory(categoryId: BlogCategory) {
+    setSelectedCategories((current) =>
+      current.includes(categoryId)
+        ? current.filter((category) => category !== categoryId)
+        : [...current, categoryId],
+    );
+  }
 
   function toggleTag(tagId: string) {
     setSelectedTags((current) =>
@@ -60,6 +83,7 @@ export function BlogFilter({ posts, allPosts, tags, draftSlugs }: BlogFilterProp
   }
 
   function clearTags() {
+    setSelectedCategories([]);
     setSelectedTags([]);
   }
 
@@ -94,90 +118,124 @@ export function BlogFilter({ posts, allPosts, tags, draftSlugs }: BlogFilterProp
         </p>
       ) : null}
 
-      {tags.length > 0 ? (
-        <div ref={dropdownRef} className="relative">
-          <div className="flex items-center gap-3 text-sm">
-            <button
-              type="button"
-              onClick={() =>
-                setOpen((prev) => {
-                  const next = !prev;
-                  if (!next) {
-                    setSearch("");
-                  }
-                  return next;
-                })
-              }
-              className="flex items-center gap-1.5 text-sm uppercase tracking-[0.08em] text-accent"
-            >
-              Categories
-              <svg
-                className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                aria-hidden="true"
-              >
-                <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <span className="text-muted">
-              {hasSelection
-                ? `Showing ${filteredPosts.length} of ${activePosts.length}`
-                : `${activePosts.length} essays`}
-            </span>
-            {hasSelection ? (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          <span className="text-sm uppercase tracking-[0.08em] text-accent">
+            Categories
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => {
+              const isActive = selectedCategories.includes(category.id);
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => toggleCategory(category.id)}
+                  aria-pressed={isActive}
+                  className={`rounded-full border px-3 py-1 text-sm ${
+                    isActive
+                      ? "border-foreground bg-foreground/[0.06] text-foreground"
+                      : "border-rule text-muted"
+                  }`}
+                >
+                  {category.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {tags.length > 0 ? (
+          <div ref={dropdownRef} className="relative">
+            <div className="flex flex-wrap items-center gap-3 text-sm">
               <button
                 type="button"
-                onClick={clearTags}
-                className="text-muted hover:underline"
+                onClick={() =>
+                  setOpen((prev) => {
+                    const next = !prev;
+                    if (!next) {
+                      setSearch("");
+                    }
+                    return next;
+                  })
+                }
+                className="flex items-center gap-1.5 text-sm uppercase tracking-[0.08em] text-accent"
               >
-                Clear
+                Tags
+                <svg
+                  className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
+              <span className="text-muted">
+                {hasSelection
+                  ? `Showing ${filteredPosts.length} of ${activePosts.length}`
+                  : `${activePosts.length} essays`}
+              </span>
+              {hasSelection ? (
+                <button
+                  type="button"
+                  onClick={clearTags}
+                  className="text-muted hover:underline"
+                >
+                  Clear
+                </button>
+              ) : null}
+            </div>
+
+            {open ? (
+              <div className="absolute left-0 z-10 mt-2 max-w-[min(400px,calc(100vw-3rem))] rounded border border-rule bg-background shadow-sm">
+                <div className="border-b border-rule px-3 py-2">
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Filter tags..."
+                    className="w-full bg-transparent text-sm text-foreground placeholder:text-muted outline-none"
+                  />
+                </div>
+                <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto p-3">
+                  {visibleTags.length > 0 ? (
+                    visibleTags.map((tag) => {
+                      const isActive = selectedTags.includes(tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => toggleTag(tag.id)}
+                          aria-pressed={isActive}
+                          className={`rounded-full border px-3 py-1 text-sm ${
+                            isActive
+                              ? "border-foreground bg-foreground/[0.06] text-foreground"
+                              : "border-rule text-muted"
+                          }`}
+                        >
+                          {tag.label}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <span className="text-sm text-muted">No matching tags.</span>
+                  )}
+                </div>
+              </div>
             ) : null}
           </div>
-
-          {open ? (
-            <div className="absolute left-0 z-10 mt-2 max-w-[min(400px,calc(100vw-3rem))] rounded border border-rule bg-background shadow-sm">
-              <div className="border-b border-rule px-3 py-2">
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Filter categories..."
-                  className="w-full bg-transparent text-sm text-foreground placeholder:text-muted outline-none"
-                />
-              </div>
-              <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto p-3">
-                {visibleTags.length > 0 ? (
-                  visibleTags.map((tag) => {
-                    const isActive = selectedTags.includes(tag.id);
-                    return (
-                      <button
-                        key={tag.id}
-                        type="button"
-                        onClick={() => toggleTag(tag.id)}
-                        aria-pressed={isActive}
-                        className={`rounded-full border px-3 py-1 text-sm ${
-                          isActive
-                            ? "border-foreground bg-foreground/[0.06] text-foreground"
-                            : "border-rule text-muted"
-                        }`}
-                      >
-                        {tag.label}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <span className="text-sm text-muted">No matching categories.</span>
-                )}
-              </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+        ) : (
+          <div className="text-sm text-muted">
+            {hasSelection
+              ? `Showing ${filteredPosts.length} of ${activePosts.length}`
+              : `${activePosts.length} essays`}
+          </div>
+        )}
+      </div>
 
       {filteredPosts.length > 0 ? (
         <ol>
@@ -193,7 +251,7 @@ export function BlogFilter({ posts, allPosts, tags, draftSlugs }: BlogFilterProp
           ))}
         </ol>
       ) : (
-        <p className="text-muted">No essays match those categories.</p>
+        <p className="text-muted">No essays match those filters.</p>
       )}
     </div>
   );

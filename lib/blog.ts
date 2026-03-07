@@ -13,10 +13,27 @@ import { withBasePath } from "@/lib/base-path";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 
+export const BLOG_CATEGORY_VALUES = [
+  "finance",
+  "programming",
+  "personal",
+  "other",
+] as const;
+
+export type BlogCategory = (typeof BLOG_CATEGORY_VALUES)[number];
+
+const BLOG_CATEGORY_LABELS: Record<BlogCategory, string> = {
+  finance: "Finance",
+  programming: "Programming",
+  personal: "Personal",
+  other: "Other",
+};
+
 export type BlogFrontmatter = {
   title: string;
   date: string;
   summary: string;
+  category: BlogCategory;
   tags: string[];
 };
 
@@ -40,6 +57,7 @@ type RawFrontmatter = {
   title?: unknown;
   date?: unknown;
   summary?: unknown;
+  category?: unknown;
   tags?: unknown;
 };
 
@@ -132,6 +150,15 @@ function normalizeTag(tag: string) {
   return tag.trim().toLowerCase();
 }
 
+function normalizeCategory(category: string): BlogCategory | null {
+  const normalized = category.trim().toLowerCase();
+  return BLOG_CATEGORY_VALUES.find((value) => value === normalized) ?? null;
+}
+
+export function getBlogCategoryLabel(category: BlogCategory) {
+  return BLOG_CATEGORY_LABELS[category];
+}
+
 export function hasTag(tags: string[], tag: string) {
   const normalizedTag = normalizeTag(tag);
   return tags.some((item) => normalizeTag(item) === normalizedTag);
@@ -179,6 +206,10 @@ function normalizeFrontmatter(frontmatter: RawFrontmatter) {
         : "Untitled post",
     date: parsedDate,
     summary: typeof frontmatter.summary === "string" ? frontmatter.summary : "",
+    category:
+      typeof frontmatter.category === "string"
+        ? normalizeCategory(frontmatter.category) ?? "other"
+        : "other",
     tags: Array.isArray(frontmatter.tags)
       ? frontmatter.tags.map((tag) => String(tag))
       : [],

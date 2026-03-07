@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getAdjacentPosts,
+  getBlogCategoryLabel,
   getPostBySlug,
   getPublishedPostSummaries,
   getPostSlugs,
@@ -41,7 +42,7 @@ export async function generateMetadata({
       type: "article",
       url: `https://tze.how/blog/${post.slug}`,
       publishedTime: post.date,
-      tags: post.tags,
+      tags: [getBlogCategoryLabel(post.category), ...post.tags],
     },
     twitter: {
       card: "summary",
@@ -61,11 +62,25 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const allPosts = await getPublishedPostSummaries();
   const { previousPost, nextPost } = await getAdjacentPosts(slug);
   const relatedPosts = allPosts
-    .filter(
-      (candidate) =>
-        candidate.slug !== slug &&
-        candidate.tags.some((tag) => post.tags.includes(tag)),
+    .filter((candidate) => candidate.slug !== slug)
+    .map((candidate) => {
+      const sharedTagCount = candidate.tags.filter((tag) =>
+        post.tags.includes(tag),
+      ).length;
+      const sameCategory = candidate.category === post.category;
+      return {
+        candidate,
+        score: (sameCategory ? 100 : 0) + sharedTagCount,
+      };
+    })
+    .filter(({ score }) => score > 0)
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        new Date(right.candidate.date).getTime() -
+          new Date(left.candidate.date).getTime(),
     )
+    .map(({ candidate }) => candidate)
     .slice(0, 3);
   const showToc = post.headings.length >= 3;
 
@@ -82,6 +97,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <header className="space-y-4">
         <p className="text-sm text-muted">
           <time dateTime={post.date}>{post.date}</time> · {post.readingTime}
+        </p>
+        <p className="text-sm uppercase tracking-[0.08em] text-accent">
+          {getBlogCategoryLabel(post.category)}
         </p>
         <h1 className="text-balance text-4xl sm:text-5xl">{post.title}</h1>
         <p className="text-lg text-muted">{post.summary}</p>

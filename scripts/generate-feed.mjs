@@ -12,6 +12,7 @@ const FEED_IMAGE_URL = `${SITE_URL}/images/projects/project-placeholder.svg`;
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 const FEED_PATH = path.join(process.cwd(), "public/feed.xml");
 const THUMBNAIL_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
+const BLOG_CATEGORY_VALUES = ["finance", "programming", "personal", "other"];
 
 function escapeXml(value) {
   return value
@@ -32,12 +33,22 @@ function normalizeDate(rawDate) {
   return "1970-01-01";
 }
 
+function normalizeCategory(rawCategory) {
+  if (typeof rawCategory !== "string") {
+    return "other";
+  }
+
+  const normalized = rawCategory.trim().toLowerCase();
+  return BLOG_CATEGORY_VALUES.includes(normalized) ? normalized : "other";
+}
+
 function normalizeFrontmatter(data, slug) {
   return {
     slug,
     title: typeof data.title === "string" ? data.title : "Untitled post",
     summary: typeof data.summary === "string" ? data.summary : "",
     date: normalizeDate(data.date),
+    category: normalizeCategory(data.category),
     tags: Array.isArray(data.tags) ? data.tags.map((tag) => String(tag)) : [],
   };
 }
