@@ -16,6 +16,7 @@ const BLOG_DIR = path.join(process.cwd(), "content/blog");
 export const BLOG_CATEGORY_VALUES = [
   "finance",
   "programming",
+  "tinkering",
   "personal",
   "other",
 ] as const;

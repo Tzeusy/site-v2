@@ -45,6 +45,7 @@ next-env.d.ts
 
 .beads
 .beads/issues.jsonl
+.beads/backup/
 # bv (beads viewer) local config and caches
 .bv/
 
