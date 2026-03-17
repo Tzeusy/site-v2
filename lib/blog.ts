@@ -26,6 +26,7 @@ export type BlogCategory = (typeof BLOG_CATEGORY_VALUES)[number];
 const BLOG_CATEGORY_LABELS: Record<BlogCategory, string> = {
   finance: "Finance",
   programming: "Programming",
+  tinkering: "Tinkering",
   personal: "Personal",
   other: "Other",
 };
