@@ -138,6 +138,8 @@ Inspired by Cities: Skylines, I decided heatmaps were a good way to visualize va
 
 Now that we have identified a series of priorities which different people prioritize, we can do clever things with it! The idea here is to generate a value for each property based on its proximity to various amenities, multiplied by users' individual preferences. The former two are static datasets, while the latter is user-specific data. We turn to matrix multiplication for this. A pre-computed matrix can be generated for every category that we define - this can be as specific as "proximity to amazing primary schools" where only good primary schools have weights. This matrix can then be dot-producted with user preferences (if user cares about these primary schools, score++) to generate aggregated scores.
 
+<ExcalidrawDiagram light="accessibility-heatmap-flow-light.svg" dark="accessibility-heatmap-flow-dark.svg" alt="Accessibility heatmap scoring flow" />
+
 $$
 \text{score}(z) = \sum_{i} \hat{w}_i \cdot s_{z,i}
 \quad \text{where} \quad
