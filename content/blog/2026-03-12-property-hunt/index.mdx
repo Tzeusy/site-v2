@@ -6,7 +6,11 @@ category: programming
 tags: ["tinkering", "programming", "software", "singapore", "data-engineering", "data-visualization", "agents"]
 ---
 
-# Introduction
+<Callout type="info">
+TL;DR: Application link is [here](https://tze.how/sg-property-map/) - feel free to have a play! It's a little heavy and unoptimized, so it may not run well on weaker PCs sadly.
+</Callout>
+
+## Introduction
 
 ![Rental Heatmap of Singapore's Central Area](rental-heatmap.png)
 
@@ -37,7 +41,7 @@ How do we answer all of these questions *systematically* rather than on an ad-ho
 
 However, none of these were trivially aggregatable; not to mention, the underlying data had a fair amount of insight to it that simple UXes would not be able to surface for me. I hence got to work with the Unlimited LLM-provided Power I have at my disposal :-).
 
-## In this post
+### In this post
 
 - The application: a map-centered property search tool for Singapore
 - Tech stack and data sources powering the project
@@ -46,13 +50,13 @@ However, none of these were trivially aggregatable; not to mention, the underlyi
 - Dynamic radar charts for personalized location scoring
 - Future work: listings data and legal considerations
 
-# The application: [Play with it yourself](https://tze.how/sg-property-map/)
+## The [Application](https://tze.how/sg-property-map/)
 
 <Callout type="info">
 This is a statically exported subset of the full application, which includes a bunch of more personalized data (personal landmarks, listings aggregation, etc.). It was important to me that this could be fully statically rendered, so it can be served on GitHub Pages without me having to run a dedicated server.
 </Callout>
 
-## Tech Stack, data sources
+### Tech Stack, data sources
 
 | Layer | Technology | Role |
 |---|---|---|
@@ -83,11 +87,11 @@ This is a statically exported subset of the full application, which includes a b
 | **Package Management** | uv | Fast Python dependency resolution |
 | | Bun | Frontend package management |
 
-## Project Design
+### Project Design
 
 It first started off as a generic 'platform'-type of application; browse around tabs of listings, with a small map in the corner for navigation. Over the course of that exploration, however, I felt like the *map* itself was the most fun part of the experience - scrolling around, focusing on landmarks I recognized, estimating physical distances, were all things that the UX of a map could deliver far better than flat statistics depicted via 'distance' or 'lat/lon' tabular metrics. I hence rewrote it to be a primarily map-centered application!
 
-### Data Ingestion
+#### Data Ingestion
 
 This is a data aggregation/normalization + visualization project. We want to fetch various data sources (N data pipelines) and present it in a usable way on our pretty frontend map. Having worked in data engineering for most of my professional career, there were many lessons to intuitively incorporate into the design:
 
@@ -98,19 +102,19 @@ This is a data aggregation/normalization + visualization project. We want to fet
 
 To that end, we have ingestion flows for different data sources!
 
-#### Amenities
+##### Amenities
 
 <ExcalidrawDiagram light="amenities-light.svg" dark="amenities-dark.svg" alt="Amenities data ingestion flow" />
 
 Amenities are drawn from data.gov.sg and Wikipedia, with healthy rate limit respecting and geocoding embedded within the pipeline.
 
-#### Geocoding
+##### Geocoding
 
 <ExcalidrawDiagram light="geocoding-light.svg" dark="geocoding-dark.svg" alt="Geocoding pipeline flow" />
 
-All data sources without explicit latitude/longitude go through a geocoding processing stage, relying on OneMap and Nominatim to generate estimated lat/lon values. I've found this is sometimes wrong; was very fun investigating why "Lot 1" showed up next to the Esplanade... hence we also have a 'override' layer for explicit examples of places where "we know better."
+All data sources without explicit latitude/longitude go through a geocoding processing stage, relying on OneMap and Nominatim to generate estimated lat/lon values. I've found this is sometimes wrong; was very fun investigating why "Lot 1" showed up next to the Esplanade... hence we also have an 'override' layer for explicit examples of places where "we know better."
 
-## Visualization
+### Visualization
 
 The frontend was built to revolve around a map as the central UI component, akin to Google Maps but with an explicit 'property-search' concern. All of the abovementioned ingestion flows are incorporated here through various filters. My intended core feature of this is the *heatmap* - a series of heatmaps that allow us to visualize relative 'value' of locations!
 
@@ -128,7 +132,7 @@ Inspired by Cities: Skylines, I decided heatmaps were a good way to visualize va
     - Religious buildings
     - How do we allow them to tune heatmaps *for their personal priorities?*
 
-### Dynamic Radar Chart
+#### Dynamic Radar Chart
 
 Now that we have identified a series of priorities which different people prioritize, we can do clever things with it! The idea here is to generate a value for each property based on its proximity to various amenities, multiplied by users' individual preferences. The former two are static datasets, while the latter is user-specific data. We turn to matrix multiplication for this. A pre-computed matrix can be generated for every category that we define - this can be as specific as "proximity to amazing primary schools" where only good primary schools have weights. This matrix can then be dot-producted with user preferences (if user cares about these primary schools, score++) to generate aggregated scores.
 
@@ -158,7 +162,7 @@ We hence can allow users to tune *how much they value each category* in a radar 
 
 ![Or if you only care about hawker centres...](hawker-centre-heatmap.png)
 
-This approach allows for *user defined generation of valuable locations in Singapore*. For example, here's my own - weighing schools and childcare very low, because I don't have any children yet:
+This approach allows for *user-defined generation of valuable locations in Singapore*. For example, here's my own - weighing schools and childcare very low, because I don't have any children yet:
 
 ![My Personal Matrix](personal-heatmap-matrix.png)
 
@@ -168,7 +172,16 @@ I also took a few liberties to generate a few custom matrix-overlays for some co
 
 Best of all - it's a static site! Though it might not run very well on potato PCs...
 
-## Related (Future?) Work
+### Current State
+
+Using this map I've managed to identify several 'target zones' with ideal characteristics. Ironically, we decided to go for a rental nearby our workplaces so a lot of this became a little irrelevant. However, when we do go for a purchase, this is a resource I'm going to be relying on in my search. There's some more work to do in searching for listings...
+
+### Related (Future?) Work
 
 A big potential feature-space is *listings data*. Various sites (PropertyGuru, 99.co, edgeprop, etc.) work as marketplaces for property agents to list properties for rent or for sale. This was actually the initial idea for the project; however, this tends to venture into legally gray areas with web scraping and various sites' TOS-es. Perhaps I'll explore this more as the project matures :)
 
+#### Bloopers
+
+![OneMap giving me Killiney as the first result for 'Changi General Hospital'...](cgh-in-somerset.png)
+
+![AI thinking my primary school is Tier 3 :-(](ai-primary-school-tier.png)
