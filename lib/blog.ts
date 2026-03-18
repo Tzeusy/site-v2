@@ -5,8 +5,10 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import remarkMermaid from "@/lib/remark-mermaid";
 import remarkUnwrapImages from "remark-unwrap-images";
+import rehypeKatex from "rehype-katex";
 import readingTime from "reading-time";
 import { mdxComponents } from "@/components/mdx/mdx-components";
 import { withBasePath } from "@/lib/base-path";
@@ -302,9 +304,10 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     options: {
       parseFrontmatter: false,
       mdxOptions: {
-        remarkPlugins: [remarkGfm, remarkMermaid, remarkUnwrapImages],
+        remarkPlugins: [remarkGfm, remarkMath, remarkMermaid, remarkUnwrapImages],
         rehypePlugins: [
           rehypeSlug,
+          rehypeKatex,
           () => resolveUrls(slug),
           [rehypePrettyCode, prettyCodeOptions],
         ],

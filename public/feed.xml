@@ -11,8 +11,16 @@
       <link>https://tze.how</link>
     </image>
     <language>en-us</language>
-    <lastBuildDate>Tue, 03 Mar 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 12 Mar 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
+    <item>
+      <title>My Property Hunt</title>
+      <link>https://tze.how/blog/property-hunt</link>
+      <guid isPermaLink="true">https://tze.how/blog/property-hunt</guid>
+      <description>A tech-flavored spin on the experience of property hunting in Singapore</description>
+      <media:thumbnail url="https://tze.how/blog/property-hunt/thumbnail.png" />
+      <pubDate>Thu, 12 Mar 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Windows Tooling</title>
       <link>https://tze.how/blog/windows-tools</link>
@@ -36,14 +44,6 @@
       <description>Is Singapore&apos;s SRS worth it? I ran the numbers - and the answer surprised me.</description>
       <media:thumbnail url="https://tze.how/blog/srs-calculations/thumbnail.png" />
       <pubDate>Fri, 27 Feb 2026 00:00:00 GMT</pubDate>
-    </item>
-    <item>
-      <title>Homelab Motivations</title>
-      <link>https://tze.how/blog/homelab-motivations</link>
-      <guid isPermaLink="true">https://tze.how/blog/homelab-motivations</guid>
-      <description>Thoughts on why I spend so much time messing with my own homelab</description>
-      <media:thumbnail url="https://tze.how/blog/homelab-motivations/thumbnail.png" />
-      <pubDate>Fri, 20 Feb 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title>My Open Heart Surgery</title>
