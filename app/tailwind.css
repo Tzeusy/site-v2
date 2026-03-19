@@ -504,9 +504,9 @@ tr:last-child td {
 
 @media (pointer: fine) {
   .resizable-figure {
-    width: var(--fig-w, 130%);
-    margin-left: var(--fig-mx, -15%);
-    margin-right: var(--fig-mx, -15%);
+    width: var(--fig-w, 100%);
+    margin-left: var(--fig-mx, 0%);
+    margin-right: var(--fig-mx, 0%);
     cursor: ew-resize;
   }
 }

@@ -8,6 +8,7 @@ import { YouTube } from "@/components/mdx/youtube";
 import { MermaidDiagram } from "@/components/mdx/mermaid-diagram";
 import { ExcalidrawDiagram } from "@/components/mdx/excalidraw-diagram";
 import { ResizableFigure } from "@/components/mdx/resizable-figure";
+import { Video } from "@/components/mdx/video";
 
 const DEFAULT_MDX_IMAGE_WIDTH = 1200;
 const DEFAULT_MDX_IMAGE_HEIGHT = 630;
@@ -132,4 +133,5 @@ export const mdxComponents: MDXComponents = {
   YouTube,
   MermaidDiagram,
   ExcalidrawDiagram,
+  Video,
 };

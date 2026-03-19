@@ -10,7 +10,7 @@ type ResizableFigureProps = {
   initialWidthPct?: number;
 };
 
-const DEFAULT_INITIAL_WIDTH_PCT = 130;
+const DEFAULT_INITIAL_WIDTH_PCT = 100;
 
 export function ResizableFigure({
   children,

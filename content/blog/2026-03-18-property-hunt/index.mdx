@@ -140,7 +140,7 @@ Or in matrix form for all zones at once: $\textbf{scores} = S \cdot \hat{\textbf
 
 What's more, to optimize for computation, a significant chunk of this can be pre-computed! Every property, multiplied by every distance/value of each amenity, is data we hold on the backend - a one-off matrix can be generated and statically served for heatmap purposes. In addition, for the purposes of a heatmap, this can be pre-aggregated into *heatmap zones* instead of exporting one data point for every single property. This allows for something that would be typically *very expensive* to instead be periodically generated on the backend as we introduce different categories.
 
-![Radar Charts for User Preferences](radar-chart.png?size=100)
+![Radar Charts for User Preferences](radar-chart.png?size=70)
 
 We hence can allow users to tune *how much they value each category* in a radar chart - which dynamically influences the color of their generated maps in Singapore. For example, for a user that *really, really values police presence*, we can see how the heat map prioritizes zones near to police stations:
 
@@ -158,9 +158,25 @@ I also took a few liberties to generate a few custom matrix-overlays for some co
 
 Best of all - it's a static site, with no backend state persisted server-side! Though it might not run very well on potato PCs...
 
-TODO: embed heatmap-variation.mp4
+<Video src="heatmap-variation.mp4" caption="Dynamically adjusting heatmap weights based on user preferences" size={200}/>
 
-The end state is that we have a map whose weights dynamically update per the user's preferences, allowing for customized views of exactly what regions in Singapore would be ideal for their requirements
+The end state is that we have a map whose weights dynamically update per the user's preferences, allowing for customized views of exactly what regions in Singapore would be ideal for their requirements.
+
+### Transaction Lookup
+
+![URA/HDB Market Data](ura-hdb-data.png)
+
+Next up I wanted to tackle the problem of historical data lookup. There's plenty available from URA and HDB, but having to query them all one by one in their rather unwieldy UXes was a pretty poor way of figuring out what houses we wanted to buy.
+
+Why not embed this information into our map?
+
+![A problem we often faced was how to quickly view recent transactions for any given property, as a way for us to quickly benchmark historical rental prices. We now have a quick way to look that up!](transaction-tooltip.png)
+
+![For example, if URA's recent rental history for V on Shenton, for the size profile we're looking for](v-on-shenton-recent-rentals.png)
+
+Another question I had was, what about a location-approximate comparison? How much are condominiums in the same area charging for the same set of constraints?
+
+![With the 'Compare Nearby' button we can include transactions for all properties within a configurable radius!](v-on-shenton-rentals-with-nearby.png)
 
 ## Current State
 
