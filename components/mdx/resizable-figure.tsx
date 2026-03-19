@@ -6,12 +6,17 @@ type ResizableFigureProps = {
   children: React.ReactNode;
   className?: string;
   as?: "figure" | "div";
+  /** Initial width percentage on pointer:fine devices (default 130). */
+  initialWidthPct?: number;
 };
+
+const DEFAULT_INITIAL_WIDTH_PCT = 130;
 
 export function ResizableFigure({
   children,
   className = "",
   as: Tag = "figure",
+  initialWidthPct = DEFAULT_INITIAL_WIDTH_PCT,
 }: ResizableFigureProps) {
   const figureRef = useRef<HTMLElement>(null);
   // null = CSS-driven width; number = user has dragged, JS-driven
@@ -48,33 +53,20 @@ export function ResizableFigure({
     dragging.current = false;
   }, []);
 
-  // CSS-driven: 100% on mobile, 130% on desktop (pointer:fine)
-  // JS-driven: once user drags, inline style takes over
-  const jsMode = widthPct !== null;
-  const overflow = jsMode && widthPct > 100;
-  const marginInline = overflow
-    ? `calc(-${(widthPct - 100) / 2}%)`
-    : undefined;
+  // Compute the active width: user-dragged value takes priority, then prop
+  const activeWidth = widthPct ?? initialWidthPct;
+  // Positive margin centers narrow images, negative margin overflows wide ones
+  const figMargin = `${(100 - activeWidth) / 2}%`;
 
   return (
     <Tag
       ref={figureRef as unknown as React.Ref<HTMLDivElement>}
-      className={[
-        "select-none [@media(pointer:fine)]:cursor-ew-resize",
-        !jsMode &&
-          "w-full [@media(pointer:fine)]:w-[130%] [@media(pointer:fine)]:ml-[-15%] [@media(pointer:fine)]:mr-[-15%]",
-        className,
-      ]
-        .filter(Boolean)
-        .join(" ")}
+      className={`resizable-figure select-none ${className}`}
       style={
-        jsMode
-          ? {
-              width: `${widthPct}%`,
-              marginLeft: marginInline,
-              marginRight: marginInline,
-            }
-          : undefined
+        {
+          "--fig-w": `${activeWidth}%`,
+          "--fig-mx": figMargin,
+        } as React.CSSProperties
       }
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}

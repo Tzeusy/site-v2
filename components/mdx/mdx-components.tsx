@@ -26,10 +26,22 @@ function MdxImg({ className = "", alt, width, height, src, ...props }: React.Com
   const resolvedWidth = parseDimension(width) ?? DEFAULT_MDX_IMAGE_WIDTH;
   const resolvedHeight = parseDimension(height) ?? DEFAULT_MDX_IMAGE_HEIGHT;
   if (typeof src !== "string" || !src) return null;
-  const resolvedSrc = withBasePath(src);
+
+  // Parse optional ?size=N query parameter for initial display width
+  let cleanSrc = src;
+  let initialWidthPct: number | undefined;
+  const sizeMatch = src.match(/[?&]size=(\d+)/);
+  if (sizeMatch) {
+    initialWidthPct = Number(sizeMatch[1]);
+    cleanSrc = src.replace(/([?&])size=\d+&?/, (_, prefix) =>
+      prefix === "?" ? "?" : "",
+    ).replace(/\?$/, "");
+  }
+
+  const resolvedSrc = withBasePath(cleanSrc);
 
   return (
-    <ResizableFigure className="my-6">
+    <ResizableFigure className="my-6" initialWidthPct={initialWidthPct}>
       <Image
         className={`pointer-events-none h-auto w-full rounded-md border border-rule ${className}`}
         alt={alt ?? ""}

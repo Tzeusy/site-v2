@@ -5,18 +5,21 @@ type ExcalidrawDiagramProps = {
   light: string;
   dark?: string;
   alt?: string;
+  /** Initial width percentage on pointer:fine devices (default 130). */
+  size?: number;
 };
 
 export function ExcalidrawDiagram({
   light,
   dark,
   alt,
+  size = 160,
 }: ExcalidrawDiagramProps) {
   const lightSrc = withBasePath(light);
   const darkSrc = dark ? withBasePath(dark) : lightSrc;
 
   return (
-    <ResizableFigure className="my-8">
+    <ResizableFigure className="my-8" initialWidthPct={size}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="excalidraw-light pointer-events-none mx-auto h-auto w-full"
