@@ -89,11 +89,11 @@ This is a statically exported subset of the full application, which includes a b
 | **Package Management** | uv | Fast Python dependency resolution |
 | | Bun | Frontend package management |
 
-### Project Design
+## Project Design
 
 It first started off as a generic 'platform'-type of application; browse around tabs of listings, with a small map in the corner for navigation. Over the course of that exploration, however, I felt like the *map* itself was the most fun part of the experience - scrolling around, focusing on landmarks I recognized, estimating physical distances, were all things that the UX of a map could deliver far better than flat statistics depicted via 'distance' or 'lat/lon' tabular metrics. I hence rewrote it to be a primarily map-centered application!
 
-#### Data Ingestion
+### Data Ingestion
 
 This is a data aggregation/normalization + visualization project. We want to fetch various data sources (N data pipelines) and present it in a usable way on our pretty frontend map. Having worked in data engineering for most of my professional career, there were many lessons to intuitively incorporate into the design:
 
@@ -104,21 +104,23 @@ This is a data aggregation/normalization + visualization project. We want to fet
 
 To that end, we have ingestion flows for different data sources!
 
-##### Amenities
+#### Amenities
 
 <ExcalidrawDiagram light="amenities-light.svg" dark="amenities-dark.svg" alt="Amenities data ingestion flow" />
 
 Amenities are drawn from data.gov.sg and Wikipedia, with healthy rate limit respecting and geocoding embedded within the pipeline.
 
-##### Geocoding
+#### Geocoding
 
 <ExcalidrawDiagram light="geocoding-light.svg" dark="geocoding-dark.svg" alt="Geocoding pipeline flow" />
 
 All data sources without explicit latitude/longitude go through a geocoding processing stage, relying on OneMap and Nominatim to generate estimated lat/lon values. I've found this is sometimes wrong; was very fun investigating why "Lot 1" showed up next to the Esplanade... hence we also have an 'override' layer for explicit examples of places where "we know better."
 
-### Visualization
+## Visualization
 
 The frontend was built to revolve around a map as the central UI component, akin to Google Maps but with an explicit 'property-search' concern. All of the abovementioned ingestion flows are incorporated here through various filters. My intended core feature of this is the *heatmap* - a series of heatmaps that allow us to visualize relative 'value' of locations!
+
+![Heatmaps overlaid over Singapore aren't entirely new - NEA-MSS Rain Cloud Visualization](nea-mss-rain.png)
 
 ![A screenshot from my recent playthrough of Cities: Skylines II. Cities: Skylines loves using heatmaps for all sorts of projections - citizen age or population density, for example](cities-skylines.png)
 
@@ -134,7 +136,7 @@ Inspired by Cities: Skylines, I decided heatmaps were a good way to visualize va
     - Religious buildings
     - How do we allow them to tune heatmaps *for their personal priorities?*
 
-#### Dynamic Radar Chart
+### Dynamic Radar Chart
 
 Now that we have identified a series of priorities which different people prioritize, we can do clever things with it! The idea here is to generate a value for each property based on its proximity to various amenities, multiplied by users' individual preferences. The former two are static datasets, while the latter is user-specific data. We turn to matrix multiplication for this. A pre-computed matrix can be generated for every category that we define - this can be as specific as "proximity to amazing primary schools" where only good primary schools have weights. This matrix can then be dot-producted with user preferences (if user cares about these primary schools, score++) to generate aggregated scores.
 
@@ -176,7 +178,7 @@ I also took a few liberties to generate a few custom matrix-overlays for some co
 
 Best of all - it's a static site! Though it might not run very well on potato PCs...
 
-### Current State
+## Current State
 
 Using this map I've managed to identify several 'target zones' with ideal characteristics. Ironically, we decided to go for a rental nearby our workplaces so a lot of this became a little irrelevant. However, when we do go for a purchase, this is a resource I'm going to be relying on in my search. There's some more work to do in searching for listings...
 
@@ -184,7 +186,7 @@ Using this map I've managed to identify several 'target zones' with ideal charac
 
 A big potential feature-space is *listings data*. Various sites (PropertyGuru, 99.co, edgeprop, etc.) work as marketplaces for property agents to list properties for rent or for sale. This was actually the initial idea for the project; however, this tends to venture into legally gray areas with web scraping and various sites' TOS-es. Perhaps I'll explore this more as the project matures :)
 
-#### Bloopers
+### Bloopers
 
 ![OneMap giving me Killiney as the first result for 'Changi General Hospital'...](cgh-in-somerset.png)
 

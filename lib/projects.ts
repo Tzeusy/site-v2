@@ -20,6 +20,22 @@ export type ProjectEntry = {
 
 export const projects: ProjectEntry[] = [
   {
+    title: "Property Hunt",
+    description:
+      "A map-centered property search tool for Singapore — combining heatmaps, amenity data, transit info, and radar charts to systematically evaluate rental and purchase candidates.",
+    blogSlug: "property-hunt",
+    thumbnail: {
+      src: "/blog/property-hunt/thumbnail.gif",
+      alt: "Property Hunt Singapore heatmap visualization",
+    },
+    links: [
+      {
+        label: "Live App",
+        href: "https://tze.how/sg-property-map/",
+      },
+    ],
+  },
+  {
     title: "Butlers",
     description:
       "A home-rolled personal assistant system — my own Jarvis — integrating health, finance, home automation, and more via agentic LLM workflows.",
