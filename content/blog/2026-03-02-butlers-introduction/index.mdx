@@ -1,10 +1,10 @@
----
+-
 title: "Butlers - My Personal Jarvis"
 date: 2026-03-02
 summary: "Feature exploration, project scope, and architectural design of my project to create my personal long-lived digital butler"
 category: programming
 tags: ["infra", "homelab", "software", "agents", "health", "smart home", "programming", "hardware", "sre"]
----
+-
 
 <Callout type="info">
 You might wonder why this project is tagged with so many categories. That's because as a 'personal assistant' application, my `butler` interacts with everything in my home system - drawing on lessons and ideas throughout my career.
@@ -39,6 +39,7 @@ A butler is a secretary with *autonomous* and *interactive* capabilities that ca
 1) Preconfigured prompts/personality definitions
 2) Inputs from other data sources
 3) User-defined scheduled workflows, reminders, or TODOs
+4) Butlers are driven by their *manifestos* - their core purpose being centralized around a pillar of the user's life. All actions a butler take are oriented around this context, allowing for specialization of data and tasks without significant context poisoning.
 
 This allows data from any arbitrary system to meaningfully affect data in any other system, using LLMs and my prompts as a translation layer.
 
@@ -148,6 +149,63 @@ I'm of the philosophy that end-to-end telemetry is extremely important for any a
 ### Memory
 
 All butlers have a memory system that's partially inspired by Java's JVM design: A short-lived memory, a medium-term memory, and a long-term memory. 
+
+The common approach is a flat vector store: you embed everything, cosine-similarity search, and hope for the best. However, this breaks down when you have months of real data across multiple domains:
+
+1. Raw session observations are noisy; an LLM session might produce ten facts, three of which are redundant and two of which contradict earlier data.
+2. Without consolidation, your vector store grows linearly with session count. Search quality degrades as noise accumulates.
+3. There's no distinction between "something the agent noticed once" and "a stable fact about the user's life."
+
+Butlers uses three tiers:
+
+- **Eden** (short-term): Every observation from every LLM session goes here first. High volume, raw, unprocessed. This is the nursery - everything starts here, and most of it gets consolidated or discarded.
+
+- **Mid-Term** (consolidated): A cronjob runs every six hours, processing Eden entries. It deduplicates, resolves contradictions against existing facts, generates embeddings, and produces structured knowledge. Vector search via pgvector operates at this tier. This is where the butler actually "knows" things.
+
+- **Long-Term** (archival): Facts promoted from mid-term based on access frequency and relevance. Compressed, stable knowledge that persists across months. Your chronic health conditions, your close friends' birthdays, your dietary preferences - things that are true across seasons.
+
+Each butler that enables the memory module gets its own tiers within its database schema. The health butler's memory is about health; the relationship butler's memory is about people.
+
+The consolidation job is the key insight. It's what turns "the agent said something about my blood pressure once" into "the system knows my blood pressure has been trending upward over six months." Raw observations become structured knowledge through periodic processing - not through heroic single-session context windows that try to hold everything at once. The goal is multi-year retention that builds a genuine knowledge base. Not a log of everything the agent ever said, but a distilled understanding that gets richer and more accurate over time.
+
+## Identity: One Person Across Every Channel
+
+Here's a problem that surprised me: the same person messages you on Telegram, emails you from Gmail, and shows up in your Discord server. From the perspective of three different connectors, these are three unrelated senders. Without identity resolution, the Relationship butler doesn't know that the person who emailed about dinner is the same person who texted a photo on Telegram yesterday.
+
+Butlers solves this with a shared identity system in the `shared` PostgreSQL schema. The data model is:
+
+```
+entity (knowledge graph node with facts and relationships)
+  → contact (canonical person record)
+    → contact_info (UNIQUE on type + value)
+      → Channel identifier (telegram_chat_id, email address, discord_user_id)
+```
+
+When a message arrives from any channel, the Switchboard resolves the sender's channel identifier against this registry before routing. The butler receiving the message knows *who* sent it, not just *which Telegram chat ID* sent it.
+
+This enables things that feel obvious but are surprisingly hard without a unified identity layer:
+
+- The Relationship butler knows that the person who emailed is the same person who messaged on Telegram. Interaction history spans channels.
+- The owner's contact is bootstrapped at startup and recognized across all channels. Owner messages get elevated trust in the security model.
+- Contact merging handles the inevitable deduplication: when you realize two contacts are actually the same person.
+
+A limitation worth noting: this is identity *resolution*, not identity *authentication*. The system maps a Telegram chat ID to a known contact, but it can't cryptographically prove the person controlling that account is who they claim to be. For high-stakes actions, approval gates provide the safety net.
+
+## Approval Gates: Safety at the MCP Level
+
+LLMs will occasionally try to do things you didn't intend. Not necessarily maliciously, as they're optimistic executors. If a tool exists and the prompt suggests using it, the model will try, even if there may be pre-prompting explicitly warning against performing said actions. This is fine for read-only data, but it's less fine for anything stateful, like sending messages on your behalf, modifying your calendar, or deleting records.
+
+Butlers handles this with approval gates, and the critical design decision is *where* they're enforced: at the MCP server level, not in the prompt.
+
+When a tool is marked as requiring approval, the MCP server itself pauses execution and requests explicit confirmation from the owner before proceeding. The LLM session cannot bypass this. It doesn't matter what the model hallucinates or how cleverly it constructs a tool call: the gate is in the infrastructure layer, not the intelligence layer.
+
+Three constraints that make this actually safe:
+
+1. **Timeout = denial.** If the owner doesn't respond within the timeout window, the action is denied.
+2. **Cross-channel delivery.** Approval requests reach you wherever you are: dashboard, Telegram, whatever notification channel is active.
+3. **Non-bypassable by design.** The approval check happens in the MCP server's request handler. The LLM session has no mechanism to skip it, because the session only sees MCP tools: it has no access to the server's internals.
+
+Use cases where this matters daily: sending messages on my behalf (email or Telegram), modifying calendar events, deleting data, anything with real-world consequences that can't be undone. The LLM handles the intelligence; the infrastructure handles the judgment about whether to actually execute.
 
 ## Examples of it in use
 

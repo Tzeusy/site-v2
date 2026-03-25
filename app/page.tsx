@@ -51,7 +51,7 @@ export default function HomePage() {
           <Kbd shortcut="J" /> to toggle night mode.
         </p>
         <p className="text-muted">
-          <Kbd shortcut="_" /> to cycle weather effects.
+          <Kbd shortcut="_" /> to cycle weather effects (just for fun!).
         </p>
       </section>
     </article>
