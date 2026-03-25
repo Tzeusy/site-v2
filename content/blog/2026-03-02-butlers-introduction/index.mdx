@@ -207,6 +207,30 @@ Three constraints that make this actually safe:
 
 Use cases where this matters daily: sending messages on my behalf (email or Telegram), modifying calendar events, deleting data, anything with real-world consequences that can't be undone. The LLM handles the intelligence; the infrastructure handles the judgment about whether to actually execute.
 
+## Network Isolation: Defense in Depth
+
+Running nine AI agents with access to your personal data, your email credentials, and your messaging accounts inside Docker containers requires thinking carefully about what happens if something goes wrong. Butlers uses four Docker networks to enforce least-privilege connectivity:
+
+| Network | Internal? | What it connects |
+|---------|-----------|-----------------|
+| `db` | Yes | Database and storage only. No internet access. |
+| `backend` | Yes | Inter-service communication (butlers, switchboard, connectors). No internet on its own. |
+| `frontend` | Yes | Dashboard frontend to backend API only. No internet. |
+| `egress` | No | Outbound internet for services that call external APIs. |
+
+The principle: **internal by default, egress by exception.** Services join multiple networks based on what they need. Butlers and connectors sit on both `backend` (for inter-service MCP) and `egress` (because their spawned LLM sessions call Anthropic, OpenAI, Google APIs). Services that don't need internet --- PostgreSQL, MinIO, the migration runner --- are restricted to internal networks and are physically unable to reach it.
+
+The `egress` network itself has a private subnet firewall. It allows internet access but blocks all private subnets by default: RFC1918 (your LAN), Tailscale CGNAT ranges, link-local addresses. Specific tailnet hosts that Butlers depends on (OTEL collector, S3 storage, Ollama) are allowlisted dynamically at startup.
+
+This means a compromised container can't pivot to LAN machines, SSH into other hosts, or scan your tailnet. It can reach the internet (it needs to, for API calls), but it can't reach anything private that isn't explicitly permitted.
+
+Other details that matter:
+
+- All port bindings are `127.0.0.1` only. Nothing is accessible from the LAN via its Docker port. External access goes through Tailscale serve with HTTPS termination.
+- No `privileged: true`, no Docker socket mounts, no `cap_add`. Containers run with default capabilities.
+- The spawner's `_build_env()` is even more restrictive: LLM runtime subprocesses receive only `PATH` plus explicitly declared credentials from the credential store. Host environment variables don't leak in.
+- All runtime secrets live in the database via `CredentialStore`, not in environment variables or compose files. Env vars are only for infrastructure bootstrap (database connection, OTEL endpoint).
+
 ## Examples of it in use
 
 Dedicated butler functionalities deserve blogposts of their own; I'll simply include some examples of it being used live right now:
