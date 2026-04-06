@@ -11,8 +11,15 @@
       <link>https://tze.how</link>
     </image>
     <language>en-us</language>
-    <lastBuildDate>Wed, 18 Mar 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 30 Mar 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
+    <item>
+      <title>Viz on Shenton</title>
+      <link>https://tze.how/blog/viz-on-shenton</link>
+      <guid isPermaLink="true">https://tze.how/blog/viz-on-shenton</guid>
+      <description>Building a 3D model and renderings of my apartment</description>
+      <pubDate>Mon, 30 Mar 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>My Property Hunt</title>
       <link>https://tze.how/blog/property-hunt</link>
