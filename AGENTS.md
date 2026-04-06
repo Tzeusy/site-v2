@@ -192,9 +192,8 @@ git push                # Push to remote
 
 ## Notes to self
 
-- `/productivity` graph uses a Sigma/Graphology engine; keep Sigma-related imports dynamically loaded inside client effects to avoid prerender failures (`WebGL2RenderingContext is not defined`).
-- `/productivity` now uses a deterministic two-lane bipartite layout (categories left, posts right); avoid reintroducing ForceAtlas/noverlap drift unless explicitly desired.
-- Sigma canvas node labels can look soft with fractional placement; use a custom `defaultDrawNodeLabel` that snaps text coordinates to whole pixels for crisper titles.
+- `/productivity` no longer uses Sigma/Graphology; it is a client-rendered category-first board with a toggleable matrix view (`?view=matrix`) in `components/productivity/productivity-graph.tsx`.
+- `bd` CLI in this repo currently does not expose `bd sync` (command errors as unknown); rely on explicit git workflows and `bd ready/list/show/update/close/create` commands that are available.
 - Keep `/blog` index links subtle (hover underline), and force visible underlines only for inline links inside individual post bodies using the `blog-post-content-underlines` class on the content section.
 - Blog taxonomy is split: `category` is the low-cardinality primary frontmatter field (`finance`, `programming`, `personal`, `other`), while `tags` remain the high-cardinality freeform labels; the `/blog` index exposes both separately.
 - New files added under `content/blog/<date-slug>/` are not auto-synced in `npm run dev`; run `node scripts/copy-blog-assets.mjs` (or `npm run build`) to refresh `public/blog/<slug>/` assets.
