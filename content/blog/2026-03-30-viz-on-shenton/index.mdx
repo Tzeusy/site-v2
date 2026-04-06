@@ -3,20 +3,21 @@ title: "Viz on Shenton"
 date: 2026-03-30
 summary: "Building a 3D model and renderings of my apartment"
 category: personal
-tags: ["tinkering", "3d-design", "cad", "singapore", "data-engineering", "draft"]
+tags: ["tinkering", "3d-design", "cad", "singapore"]
 ---
 
 <Callout type="info">
-This is a bit of a departure from my usual posts - 3d modelling isn't really related to my day job :-) but it's a skill I picked up in SUTD, and this seemed like a great opportunity to exercise that muscle a little.
+This is a bit of a departure from my usual posts - 3D modelling isn't really related to my day job :-) but it's a skill I picked up in SUTD, and this seemed like a great opportunity to exercise that muscle a little.
 </Callout>
 
 ## Introduction
 
-After having done a bunch of house hunting (see <TODO: Link property-hunt post>), my partner and I settled on a condo near our workplaces. After a several-week process of reaching out to property agents and viewings (can't digitize this yet, unfortunately!), we made an offer for a 1BR + study apartment in V on Shenton. The next mini project of mine became clear then - planning furnishings and layouts of our upcoming house!
+After having done a bunch of house hunting (see [property-hunt post](/blog/property-hunt)), my partner and I settled on a condo near our workplaces. After a several-week process of reaching out to property agents and going for viewings (can't digitize this yet, unfortunately!), we made an offer for a 1BR + study apartment in V on Shenton. The next mini-project became clear then: planning furnishings and layouts of our upcoming house!
 
 There are several considerations to be made, given that this is a 2-year rental arrangement and not a 'forever home':
 
 - No permanent fixtures are allowed
+- No wall mounts, or smart switches, etc.; any 'smart home' functionality has to be noninvasive (e.g. IR emulation)
 - It should be robo-vacuum friendly to save us lots of cleaning trouble
 - Wiring is already done up so there are no networking or cabling decisions to be made (sadly)
 - We'll often have to have both of us working at the same time; our setup needs to accommodate that
@@ -27,40 +28,88 @@ There are several problems with answering our questions:
 - How do we know how any proposed furniture will look before we buy it? Will it even fit in the space that we theorize?
 - How will different 'arrangements' of furniture look? How can we visualize this *without* buying and physically rearranging everything?
 
-Typically the answer would be to pay some interior designer some lavish sum and they'd get artists do do mockups. But I'm an engineer with some amount of free time! So here we go :-)
+Typically the answer would be to pay an interior designer some lavish sum and get artists to do mockups. But I'm an engineer with some amount of free time! So here we go :-)
 
 ## Process
 
 The 'right' approach to do this would probably be a combination of Blender and 3DS Max - honestly, if I was starting this from scratch with no skill background I'd do it this way. However, during my time in SUTD I did plenty of 3D modelling in SolidWorks - their education license stickiness strategy has worked! - so SolidWorks became my lowest-friction, lowest-barrier-to-entry way of solving this (estimating a few hours in SolidWorks vs. likely a few days of UX learning on other platforms). 
 
-It's pretty clear that SolidWorks isn't the best software for this; it's meant more for electro-mechanical engineering tasks, than for design. Hoowever, it's enough for me! The main things I need:
+It's pretty clear that SolidWorks isn't the best software for this; it's meant more for electro-mechanical engineering tasks than for interior design. However, it's enough for me! The main things I need:
 
-- Ability to combine multiple components (Solidworks Assemblies)
+- Ability to combine multiple components (SolidWorks assemblies)
 - Ability to 'project' images (floor plans) and trace contours/edges
 - Ability to design individual components based on dimensions I can farm from different sources (e.g. furniture spec sheets)
     - In the far future - LLM support :-( to auto-generate components
-- Basic visualization capabilities (Honestly Solidworks Visualize is pretty disappointing so far....)
+- Basic visualization capabilities (Honestly SolidWorks Visualize is pretty disappointing so far....)
+- We only really need to focus on spaces where there are significant design choices to be made; no real need for toilet or bedroom design given the limited space
+- Ability to leverage existing community-made components (e.g. Herman Miller chair 3D models), while checking individual usage licenses
 
-### Step 1: Apartment
+### Community Parts
 
-We begin by taking the floor plan - in this case, it's very conveniently available from the [V on Shenton website](https://www.v-on-shenton.com/floor-plan.html). We also did a bunch of physical measurements during one of our viewings so we can easily scale the floorplan's size to fit the correct dimensions, for a proper scale-model.
+![Lots of available 3D models online!](aeron-grabcad.png)
 
-![Doing one measurement of the width of the living room allows a generally-accurate extrapolation of the full apartment's size](floorplan-scaling.png)
+Happily, I was able to find many fitting 3D models already built online - for example:
 
-![Basing the apartment off the floorplan, scaling per our measurements](floorplan-measurement.png)
+- [Herman Miller Aeron](https://grabcad.com/library/herman-miller-aeron-chair-1)
+- [Washer/Dryer](https://grabcad.com/library/washer-or-dryer-1)
+- [Yamaha P125 Digital Piano](https://www.cgtrader.com/free-3d-print-models/gadgets/audio/piano-yamaha-p125)
+
+This made it much easier to create correctly scaled (and good-looking!) representations in our model.
+
+### Apartment
+
+We begin by taking the floor plan - in this case, it's conveniently available from the [V on Shenton floor plan page](https://www.v-on-shenton.com/floor-plan.html) (which listed 1-bedroom + study unit types when I checked on 2026-04-06). We also did a bunch of physical measurements during one of our viewings so we could scale the floor plan to the correct dimensions for a proper scale model.
+
+![Doing one measurement of the width of the living room allows a generally-accurate extrapolation of the full apartment's size](floorplan-measurement.png)
 
 ![Extruding walls out of the apartment](wall-extrusions.png)
 
+### Furnishings
 
+![The fridge is just... a rectangular block with some carvings. Didn't really want to overengineer this; theoretically, could build a hinge and open/close capability too](fridge.png)
 
 ![Creating various components like the study table](study-table.png)
 
-![Study with chair, monitors, etc.](study-furnished.png)
+![Modelling the FortyTwo Marlene was... tedious, to say the least](marlene-sketch.png)
 
-## Mini side project (that failed): 
+![Progress!](marlene-progress.png)
 
-![Basic prototyping of a Vite setup, projecting the floorplan onto a 3d interactive site: [viz-on-shenton](https://github.com/Tzeusy/viz-on-shenton)](viz-on-shenton-node.png)
+![Now draw the rest of the owl - I mean, Marlene...](rest-of-marlene.png)
 
-Due to time constraints I didn't get too far on this project - hypothetically, nothing's really stopping one from simply *uploading* a floor plan and getting some LLM to run the entire gamut of visualizing and placing of furniture and interacting with the user throughout. However, this isn't trivial to build either; everything from furniture design (significant back and forth with an LLM to confirm dimensions, textures, shape, etc.), to lighting, to generating 3d models, to placing 3d models within 3d models, is rarely-tread-on territory for today's latest generation of LLMs, and some initial experimentation (1-2 hours) looked promising but showed that *a loooooot more work* was needed. 
+## Scenarios
 
-I hence decided to fallback to my tried and true method of modelling it myself - sad but the `Technology Just Isn't There Yet`.
+Having built all our components, we can now dynamically rearrange parts in our assembly!
+
+<video controls loop muted playsInline src="chair-rotation.mp4" />
+
+### Arrangements
+
+![Doing that ad nauseam for individual components allows for placements of furniture in the 'house'](study-furnished.png)
+
+After creating necessary assets, we can arrange them in our apartment!
+
+![I found out my idea of a table would have been too short for a feasible setup](living-room-short-table.png)
+
+![Can our living room accommodate a bookcase + unfolded table + 4 unfolded chairs?](lr-setup-dining.png)
+
+![How does it look when chairs/tables are 'stashed'](stashed.png)
+
+## Mini side project
+
+<Callout type="info">Due to time constraints I didn't get too far on this project; sadly, this is a bit too far from an MVP to deserve a blog post of its own...</Callout>
+
+![Basic prototyping of a Vite setup that projects the floor plan onto an interactive 3D site](viz-on-shenton-node.png)
+
+The prototype code is now public at [viz-on-shenton](https://github.com/Tzeusy/viz-on-shenton).
+
+In theory, nothing's really stopping one from simply *uploading* a floor plan and getting an LLM to handle visualizing layouts and interacting with the user throughout. In practice, this still wasn't trivial to build robustly in my tests: everything from furniture design (significant back and forth with an LLM to confirm dimensions, textures, shape, etc.), to lighting, to generating 3D models, to placing 3D models within 3D models needed much more glue code than expected.
+
+Some initial experimentation (1-2 hours) looked promising, but showed that *a loooooot more work* was needed - likely on the order of weeks to months for solo-dev-me, even with LLM assistance. I hence decided to put a pin in it while focusing on the much more involved manual method of 3D modelling everything myself.
+
+![My dream: to be able to 'dictate' instructions rather than do the 3D modelling myself](dictate-wishes.png)
+
+I hence decided to fall back to my tried-and-true method of modelling it myself - sad but the `Technology Just Isn't There Yet`.
+
+## Wrap-up
+
+This project did exactly what I needed for this rental: fast "will this fit?" iterations before spending money on furniture, plus a clearer view of tradeoffs in the study and living room. If I revisit the automated route later, I'll likely keep this manual model as the reference baseline to evaluate generated outputs against.
