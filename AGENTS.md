@@ -202,3 +202,4 @@ git push                # Push to remote
 - Feed validators expect discovery + self-link URL consistency (`/feed` here): keep explicit `<link rel="alternate" type="application/rss+xml" href="https://tze.how/feed">` in layout head and emit `<atom:link rel="self" ...>` in generated RSS.
 - Theme toggle hydration is safest when driven by `data-theme` as an external store (`useSyncExternalStore` + `MutationObserver`) instead of setting initial client state from `localStorage`/`document` during render.
 - Next.js 16 dev proxy access to `/_next/*` from external hosts (for example `*.ts.net`) should be explicitly allowlisted via top-level `allowedDevOrigins` in `next.config.ts` to avoid future blocking.
+- GitHub Linguist stats intentionally ignore `*.mdx` via `.gitattributes` so blog content does not dominate the repository language breakdown.

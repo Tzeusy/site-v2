@@ -1,3 +1,6 @@
 
 # Use bd merge for beads JSONL files
 .beads/issues.jsonl merge=beads
+
+# Blog post content should not dominate GitHub language stats
+*.mdx linguist-detectable=false
