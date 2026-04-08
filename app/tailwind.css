@@ -17,6 +17,8 @@
   --callout-warning-border: #fde68a;
   --callout-danger-bg: #fef2f2;
   --callout-danger-border: #fecaca;
+  --callout-quote-bg: #f5f5f4;
+  --callout-quote-border: #d6d3d1;
 
   color-scheme: light;
 }
@@ -48,6 +50,8 @@
   --callout-warning-border: #4f3f1a;
   --callout-danger-bg: #2a1a1a;
   --callout-danger-border: #4f2a2a;
+  --callout-quote-bg: #24211f;
+  --callout-quote-border: #3a3532;
 
   color-scheme: dark;
 }

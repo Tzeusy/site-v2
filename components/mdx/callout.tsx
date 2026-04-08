@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 
-type CalloutType = "info" | "warning" | "danger" | "tip";
+type CalloutType = "info" | "warning" | "danger" | "tip" | "quote";
 
 type CalloutProps = {
   type?: CalloutType;
+  cite?: string;
+  hyperlink?: string;
   children: ReactNode;
 };
 
@@ -28,18 +30,36 @@ const config: Record<CalloutType, { bg: string; border: string; label: string }>
     border: "var(--callout-danger-border)",
     label: "Danger",
   },
+  quote: {
+    bg: "var(--callout-quote-bg)",
+    border: "var(--callout-quote-border)",
+    label: "Quote",
+  },
 };
 
-export function Callout({ type = "info", children }: CalloutProps) {
+export function Callout({ type = "info", cite, hyperlink, children }: CalloutProps) {
   const c = config[type];
+  const showCitation = type === "quote" && cite;
 
   return (
     <aside
       className="my-6 rounded-md border px-4 py-3 text-sm text-foreground"
       style={{ backgroundColor: c.bg, borderColor: c.border }}
     >
-      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted">
-        {c.label}
+      <p className="mb-1 text-xs font-medium tracking-wide text-muted">
+        <span className="uppercase">{c.label}</span>
+        {showCitation ? (
+          <>
+            {" - "}
+            {hyperlink ? (
+              <a className="underline decoration-current underline-offset-2" href={hyperlink}>
+                {cite}
+              </a>
+            ) : (
+              <span>{cite}</span>
+            )}
+          </>
+        ) : null}
       </p>
       <div className="[&>p]:my-1">{children}</div>
     </aside>
