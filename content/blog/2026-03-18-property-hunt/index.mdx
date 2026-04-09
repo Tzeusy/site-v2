@@ -118,7 +118,11 @@ Inspired by Cities: Skylines, I decided heatmaps were a good way to visualize va
 
 ### Dynamic Radar Chart
 
-Now that we have identified a series of priorities which different people prioritize, we can do clever things with it! The idea here is to generate a value for each property based on its proximity to various amenities, multiplied by users' individual preferences. The former two are static datasets, while the latter is user-specific data. We turn to matrix multiplication for this. A pre-computed matrix can be generated for every category that we define - this can be as specific as "proximity to amazing primary schools" where only good primary schools have weights. This matrix can then be dot-producted with user preferences (if user cares about these primary schools, score++) to generate aggregated scores.
+![Radar Charts for User Preferences](radar-chart.png?size=70)
+
+Now that we have identified a series of priorities which different people prioritize, we can do clever things with it! The idea here is to generate a value for each property based on its proximity to various amenities, multiplied by users' individual preferences. The former two are static datasets, while the latter is user-specific data. 
+
+After spending some time thinking about the problem, I realized *matrix multiplication* was a perfect algorithm for this problem. A pre-computed matrix can be generated for every category that we define - this can be as specific as "proximity to amazing primary schools" where only good primary schools have weights. This matrix can then be dot-producted with user preferences (if user cares about these primary schools, score++; else, no impact) to generate scores, which can then be binned across regions to provide normalized heat-maps.
 
 <ExcalidrawDiagram light="accessibility-heatmap-flow-light.svg" dark="accessibility-heatmap-flow-dark.svg" alt="Accessibility heatmap scoring flow" />
 
@@ -139,8 +143,6 @@ $$
 Or in matrix form for all zones at once: $\textbf{scores} = S \cdot \hat{\textbf{w}}$, where $S$ is the precomputed zone-by-family signal matrix and $\hat{\textbf{w}}$ is the normalized user weight vector.
 
 What's more, to optimize for computation, a significant chunk of this can be pre-computed! Every property, multiplied by every distance/value of each amenity, is data we hold on the backend - a one-off matrix can be generated and statically served for heatmap purposes. In addition, for the purposes of a heatmap, this can be pre-aggregated into *heatmap zones* instead of exporting one data point for every single property. This allows for something that would be typically *very expensive* to instead be periodically generated on the backend as we introduce different categories.
-
-![Radar Charts for User Preferences](radar-chart.png?size=70)
 
 We hence can allow users to tune *how much they value each category* in a radar chart - which dynamically influences the color of their generated maps in Singapore. For example, for a user that *really, really values police presence*, we can see how the heat map prioritizes zones near to police stations:
 

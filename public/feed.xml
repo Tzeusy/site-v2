@@ -11,13 +11,22 @@
       <link>https://tze.how</link>
     </image>
     <language>en-us</language>
-    <lastBuildDate>Mon, 30 Mar 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 08 Apr 2026 00:00:00 GMT</lastBuildDate>
     <generator>site-v2 feed generator</generator>
+    <item>
+      <title>AI Economics Ruminations</title>
+      <link>https://tze.how/blog/ai-economics-ruminations</link>
+      <guid isPermaLink="true">https://tze.how/blog/ai-economics-ruminations</guid>
+      <description>My thoughts on the explosive growth of AI, and the resultant evolution of my developer experience over the past ~1.5 years</description>
+      <media:thumbnail url="https://tze.how/blog/ai-economics-ruminations/thumbnail.png" />
+      <pubDate>Wed, 08 Apr 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Viz on Shenton</title>
       <link>https://tze.how/blog/viz-on-shenton</link>
       <guid isPermaLink="true">https://tze.how/blog/viz-on-shenton</guid>
       <description>Building a 3D model and renderings of my apartment</description>
+      <media:thumbnail url="https://tze.how/blog/viz-on-shenton/thumbnail.png" />
       <pubDate>Mon, 30 Mar 2026 00:00:00 GMT</pubDate>
     </item>
     <item>

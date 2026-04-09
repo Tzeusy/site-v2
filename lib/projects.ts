@@ -49,6 +49,19 @@ export const projects: ProjectEntry[] = [
     ],
   },
   {
+    title: "Viz on Shenton",
+    description:
+      "A 3D apartment planning workflow for testing layouts, furniture fit, and furnishing tradeoffs, plus early experiments toward interactive floor-plan visualization.",
+    blogSlug: "viz-on-shenton",
+    thumbnail: {
+      src: "/blog/viz-on-shenton/thumbnail.png",
+      alt: "Viz on Shenton apartment rendering thumbnail",
+    },
+    links: [
+      { label: "GitHub (Pre-MVP stage, work ended up mostly being manual SolidWorks)", href: "https://github.com/Tzeusy/viz-on-shenton" },
+    ],
+  },
+  {
     title: "OpenAI Car Racing",
     description:
       "Imitation learning for the OpenAI Gym car racing environment, with Layerwise Relevance Propagation to visualize model behavior.",

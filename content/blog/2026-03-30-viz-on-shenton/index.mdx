@@ -2,17 +2,19 @@
 title: "Viz on Shenton"
 date: 2026-03-30
 summary: "Building a 3D model and renderings of my apartment"
-category: personal
-tags: ["tinkering", "3d-design", "cad", "singapore"]
+category: tinkering
+tags: ["tinkering", "3d-design", "cad", "interior-design", "singapore", "infra"]
 ---
 
 <Callout type="info">
-This is a bit of a departure from my usual posts - 3D modelling isn't really related to my day job :-) but it's a skill I picked up in SUTD, and this seemed like a great opportunity to exercise that muscle a little.
+This is a bit of a departure from my usual posts - 3D modelling isn't really related to my day job :-) but it's a skill I picked up in university, and this seemed like a great opportunity to exercise that muscle a little.
 </Callout>
+
+![A 3D rendering of proposed arrangements for our furnishings](full_assembly.png)
 
 ## Introduction
 
-After having done a bunch of house hunting (see [property-hunt post](/blog/property-hunt)), my partner and I settled on a condo near our workplaces. After a several-week process of reaching out to property agents and going for viewings (can't digitize this yet, unfortunately!), we made an offer for a 1BR + study apartment in V on Shenton. The next mini-project became clear then: planning furnishings and layouts of our upcoming house!
+After having done a bunch of house hunting (see my [property-hunt](/blog/property-hunt) post), my partner and I settled on a condo near our workplaces. After a several-week process of reaching out to property agents and going for viewings (can't digitize this yet, unfortunately!), we made an offer for a 1BR + study apartment in V on Shenton. The next mini-project became clear then: planning furnishings and layouts of our upcoming house!
 
 There are several considerations to be made, given that this is a 2-year rental arrangement and not a 'forever home':
 
@@ -41,7 +43,7 @@ It's pretty clear that SolidWorks isn't the best software for this; it's meant m
 - Ability to design individual components based on dimensions I can farm from different sources (e.g. furniture spec sheets)
     - In the far future - LLM support :-( to auto-generate components
 - Basic visualization capabilities (Honestly SolidWorks Visualize is pretty disappointing so far....)
-- We only really need to focus on spaces where there are significant design choices to be made; no real need for toilet or bedroom design given the limited space
+- We only really need to focus on spaces where there are significant design choices to be made; no real need for toilet or bedroom modelling given the limited space and furnishing options
 - Ability to leverage existing community-made components (e.g. Herman Miller chair 3D models), while checking individual usage licenses
 
 ### Community Parts
@@ -56,57 +58,72 @@ Happily, I was able to find many fitting 3D models already built online - for ex
 
 This made it much easier to create correctly scaled (and good-looking!) representations in our model.
 
+![I also found a pretty nice trick for extracting `.obj` 3d models from IKEA's site - please don't sue me, I'm buying your furniture!](ikea_3d_view_extraction.png)
+
 ### Apartment
 
-We begin by taking the floor plan - in this case, it's conveniently available from the [V on Shenton floor plan page](https://www.v-on-shenton.com/floor-plan.html) (which listed 1-bedroom + study unit types when I checked on 2026-04-06). We also did a bunch of physical measurements during one of our viewings so we could scale the floor plan to the correct dimensions for a proper scale model.
-
 ![Doing one measurement of the width of the living room allows a generally-accurate extrapolation of the full apartment's size](floorplan-measurement.png)
+
+We begin by taking the floor plan - in this case, it's conveniently available from the [V on Shenton floor plan page](https://www.v-on-shenton.com/floor-plan.html) (which listed 1-bedroom + study unit types when I checked on 2026-04-06). We also did a bunch of physical measurements during one of our viewings so we could scale the floor plan to the correct dimensions for a proper scale model (see the `<----- 280.00 ----->` line in the living room).
 
 ![Extruding walls out of the apartment](wall-extrusions.png)
 
 ### Furnishings
 
-![The fridge is just... a rectangular block with some carvings. Didn't really want to overengineer this; theoretically, could build a hinge and open/close capability too](fridge.png)
+Every piece of existing/proposed furniture without a downloadable 3d model needed to be modelled with appropriate textures and **accurate dimensions**. This is the bulk of the tedium in the work; to avoid boring you, I'll simply show the process for one particular piece: the [FortyTwo Marlene foldable chair](https://www.fortytwo.sg/marlene-foldable-chair.html).
 
-![Creating various components like the study table](study-table.png)
+![Due to the curvatures, modelling the FortyTwo Marlene was... tedious, to say the least](marlene-sketch.png)
 
-![Modelling the FortyTwo Marlene was... tedious, to say the least](marlene-sketch.png)
-
-![Progress!](marlene-progress.png)
+![Isometric views of the original, versus my in-progress skeleton](marlene-progress.png)
 
 ![Now draw the rest of the owl - I mean, Marlene...](rest-of-marlene.png)
 
+![Now CAD the rest of the furnishings (ouch)](rest-of-furniture.png)
+
 ## Scenarios
 
-Having built all our components, we can now dynamically rearrange parts in our assembly!
+Having built all our components, we can now dynamically rearrange parts in our assembly by assembling them and moving them around!
 
 <video controls loop muted playsInline src="chair-rotation.mp4" />
 
 ### Arrangements
 
-![Doing that ad nauseam for individual components allows for placements of furniture in the 'house'](study-furnished.png)
-
 After creating necessary assets, we can arrange them in our apartment!
 
-![I found out my idea of a table would have been too short for a feasible setup](living-room-short-table.png)
+![A big problem I had was how to accommodate a dual monitor setup + workspace in the living room, working around the built-in TV cabinet and TV placement. My initial idea for a table would have been too clunky for a comfortable setup](living-room-short-table.png)
 
-![Can our living room accommodate a bookcase + unfolded table + 4 unfolded chairs?](lr-setup-dining.png)
+![Fortunately, modelling it out allowed me to find appropriate office tables that could fit the dimensions (almost) nicely... with the sacrifice of setting one of the speakers sideways](office-desk-setup.png)
 
-![How does it look when chairs/tables are 'stashed'?](stashed.png)
+## Results
 
-## Mini side project
+The end result is a fully re-arrangeable virtual house, with visualizations trivially possible, and full dimension predictability for every piece of furniture without having to make possibly *really* expensive mistakes.
+
+![When furnishings are fully folded up, we have a nice open living room space that we can use for things like VR gaming](living_room_compact.png)
+
+![When tables and chairs are unfolded, we have a dining setup that fits up to 8 people (with an additional table)](living_room_dining_mode.png)
+
+![When my partner wants to just collapse on the floor and sleep but she's banned from the bed until she has taken a shower, our [IKEA VITHALL](https://www.ikea.com/sg/en/p/vithaell-mattress-pouffe-extra-firm-vissle-grey-90565419/) can unfold into a cosy bed...](vithall_expanded.png)
+
+### Learnings
+
+Given that I've done this before for my current room, I wouldn't say there was a lot of *learning* to be had here; this is more of a leverage-existing-skills kind of project, which I ended up relishing all the same; it's always pretty cool to show people 3D renderings of our proposed furniture arrangements!
+
+The total time taken would be on the order of about 10 hours, not including writing this blog post? With measurements, research/modelling of parts, and making multiple tentative rearrangements throughout discussions with my partner. While it isn't *the best* use of time possible, I was happy to do this as Claude/Codex churned away at other projects of mine in the background :-) at least there's still some viable work left for us human plebs.
+
+## Mini side project to this side project
 
 <Callout type="info">Due to time constraints I didn't get too far on this project; sadly, this is a bit too far from an MVP to deserve a blog post of its own... prototype code is public at [viz-on-shenton](https://github.com/Tzeusy/viz-on-shenton).</Callout>
 
 ![Basic prototyping of a Vite setup that projects the floor plan onto an interactive 3D site](viz-on-shenton-node.png)
 
+![My dream: what if we could simply 'dictate' instructions rather than do the 3D modelling myself?](dictate-wishes.png?size=60)
+
 In theory, nothing's really stopping one from simply *uploading* a floor plan and getting an LLM to handle visualizing layouts and interacting with the user throughout. In practice, this still wasn't trivial to build robustly in my tests: everything from furniture design (significant back and forth with an LLM to confirm dimensions, textures, shape, etc.), to lighting, to generating 3D models, to placing 3D models within 3D models needed much more glue code than expected.
 
 Some initial experimentation (1-2 hours) looked promising, but showed that *a loooooot more work* was needed - likely on the order of weeks to months for solo-dev-me, even with LLM assistance. I hence decided to fall back to my tried-and-true method of modelling it myself - sad but the `Technology Just Isn't There Yet`.
 
-![My dream: to be able to 'dictate' instructions rather than do the 3D modelling myself](dictate-wishes.png?size=60)
-
-
 ## Wrap-up
 
 This project did exactly what I needed for this rental: fast "will this fit?" iterations before spending money on furniture, plus a clearer view of tradeoffs in the study and living room. If I revisit the automated route later, I'll likely keep this manual model as the reference baseline to evaluate generated outputs against.
+
+We haven't started our lease yet; when we do, and when everything is fully set up, I will update this post with comparison pictures between our renderings and our reality :-).

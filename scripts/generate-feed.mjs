@@ -12,7 +12,7 @@ const FEED_IMAGE_URL = `${SITE_URL}/images/projects/project-placeholder.svg`;
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
 const FEED_PATH = path.join(process.cwd(), "public/feed.xml");
 const THUMBNAIL_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
-const BLOG_CATEGORY_VALUES = ["finance", "programming", "personal", "other"];
+const BLOG_CATEGORY_VALUES = ["finance", "programming", "tinkering", "personal", "other"];
 
 function escapeXml(value) {
   return value
