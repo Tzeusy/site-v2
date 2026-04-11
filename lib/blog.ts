@@ -11,6 +11,7 @@ import remarkUnwrapImages from "remark-unwrap-images";
 import rehypeKatex from "rehype-katex";
 import readingTime from "reading-time";
 import { mdxComponents } from "@/components/mdx/mdx-components";
+import { extractHeadingsFromNode } from "@/lib/blog-headings";
 import { withBasePath } from "@/lib/base-path";
 
 const BLOG_DIR = path.join(process.cwd(), "content/blog");
@@ -142,14 +143,6 @@ async function findPostDir(slug: string): Promise<string | null> {
   return match ? match.name : null;
 }
 
-function slugify(input: string) {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/gu, "")
-    .replace(/\s+/gu, "-");
-}
-
 function normalizeTag(tag: string) {
   return tag.trim().toLowerCase();
 }
@@ -180,18 +173,6 @@ export function getPostSize(post: Pick<BlogFrontmatter, "tags">) {
 
   const parsed = Number.parseInt(sizeTag.slice(sizeTag.indexOf("-") + 1), 10);
   return Number.isNaN(parsed) ? 2 : parsed;
-}
-
-function extractHeadings(source: string): BlogHeading[] {
-  return source
-    .split("\n")
-    .map((line) => line.match(/^(#{1,3})\s+(.+)$/u))
-    .filter((match): match is RegExpMatchArray => Boolean(match))
-    .map((match) => ({
-      level: match[1].length as 1 | 2 | 3,
-      text: match[2].trim(),
-      id: slugify(match[2]),
-    }));
 }
 
 function normalizeFrontmatter(frontmatter: RawFrontmatter) {
@@ -320,7 +301,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     ...frontmatter,
     slug,
     content: compiled.content,
-    headings: extractHeadings(content),
+    headings: extractHeadingsFromNode(compiled.content),
     readingTime: readingTime(content).text,
   };
 }

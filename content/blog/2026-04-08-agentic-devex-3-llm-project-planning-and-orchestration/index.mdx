@@ -69,6 +69,12 @@ In the Beads model, that role is handled by [`beads-pr-reviewer-worker`](https:/
 
 The goal of these guards is to introduce a quality-gate layer via LLM supervision: the PR is ready for merge, unresolved review threads are zero, required checks are green, merge state is clean enough, and the review leaves a visible audit trail. Otherwise, the reviewer keeps the review bead blocked and the system goes around again. I've observed that it's very important to have independent LLM sessions vet each others' output, rather than having one session run through implementation-review prompts; context poisoning leads to far more agreeableness with "an LLM's own code". 
 
+## Repo-level check-ins
+
+Due to the undeterministic nature of LLMs, we can rarely 'guarantee' a result; the generated code will *generally* follow the specs; the specs will *generally* follow the lore, the lore will *generally* follow the heart-and-soul. The above cycles are used for individual features; however, it's sometimes useful to run big-picture reconciliation cycles between the heart-and-soul through to the code implementation.
+
+A recent habit of mine (and also to leverage my ChatGPT Pro subscription, I suppose) has been to launch ChatGPT Pro sessions with a dedicated custom [Project Reviewer GPT](https://chatgpt.com/g/g-69b788c0b7788191bb9f925efc1dab4d-project-reviewer) to do deep-dive 20-40 minute alignment review sessions. This often serves to identify documentation mismatch, especially when features outpace documentation as the spiderweb of implemented beads features grows. By getting it to explicitly assign scores to various categories of 'quality' for the repository, I can better inform myself of necessary directions to next take the project in.
+
 ## Conclusion
 
-With the project-shape and the project-direction flows specced out, we now have a harness around any LLM CLI that can be used to plan and autonomously drive deep cycles of implementation work, turning deep brainstorming sessions of ideas into implement
+With the project-shape and the project-direction flows specced out, we now have a harness around any LLM CLI that can be used to plan and autonomously drive deep cycles of LLM work, turning brainstorming sessions of ideas into crystallized code.

@@ -205,3 +205,4 @@ git push                # Push to remote
 - Next.js 16 dev proxy access to `/_next/*` from external hosts (for example `*.ts.net`) should be explicitly allowlisted via top-level `allowedDevOrigins` in `next.config.ts` to avoid future blocking.
 - GitHub Linguist stats intentionally ignore `*.mdx` via `.gitattributes` so blog content does not dominate the repository language breakdown.
 - MDX `Callout` supports `info`, `tip`, `warning`, `danger`, and `quote`; for quote callouts, optional `cite` and `hyperlink` props render as `QUOTE - [Name](url)` in the header. Keep matching theme variables in `app/tailwind.css` (`--callout-*-bg` and `--callout-*-border`) in sync with `components/mdx/callout.tsx`.
+- Blog post TOCs should be derived from the compiled React/MDX tree in `lib/blog-headings.ts`, not raw markdown lines, so inline markdown inside headings stays aligned with the rendered text and `rehype-slug` ids.
