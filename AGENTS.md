@@ -194,6 +194,7 @@ git push                # Push to remote
 
 - `/productivity` no longer uses Sigma/Graphology; it is a client-rendered category-first board with a toggleable matrix view (`?view=matrix`) in `components/productivity/productivity-graph.tsx`.
 - `bd` CLI in this repo currently does not expose `bd sync` (command errors as unknown); rely on explicit git workflows and `bd ready/list/show/update/close/create` commands that are available.
+- When documenting this repo's tool topology, distinguish native Codex skill discovery (`.agents/skills` and `~/.agents/skills`) from this repo's `.codex/` adapter namespace; `.codex/` is a local facade, not Codex's primary skills path.
 - Keep `/blog` index links subtle (hover underline), and force visible underlines only for inline links inside individual post bodies using the `blog-post-content-underlines` class on the content section.
 - Blog taxonomy is split: `category` is the low-cardinality primary frontmatter field (`finance`, `programming`, `tinkering`, `personal`, `other`), while `tags` remain the high-cardinality freeform labels; keep `lib/blog.ts` and `scripts/generate-feed.mjs` in sync when category values change.
 - New files added under `content/blog/<date-slug>/` are not auto-synced in `npm run dev`; run `node scripts/copy-blog-assets.mjs` (or `npm run build`) to refresh `public/blog/<slug>/` assets.

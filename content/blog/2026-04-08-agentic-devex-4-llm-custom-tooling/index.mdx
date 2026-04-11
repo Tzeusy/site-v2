@@ -1,0 +1,39 @@
+---
+title: "Agentic DevEx Part 4: LLM Custom Tooling"
+date: 2026-04-08
+summary: "Tools I've found to be uncommonly useful in my development flow"
+category: programming
+tags: ["ai", "agents", "developer-tools", "dotfiles", "infra", "terminal", "SRE", "software", "draft"]
+---
+
+<Callout type="info">
+This is a series of Developer Experience- type posts where I document my local LLM setup for managing of subagents for personal projects. These are snapshot-type posts; I may update this over time as my tooling evolves.
+
+Last updated: 2026-04-10
+</Callout>
+
+## Personally maintained skills
+
+### Diagramming: Excalidraw
+
+<ExcalidrawDiagram light="amenities-light.svg" dark="amenities-dark.svg" alt="I've found LLM-generated Excalidraw diagrams excellent ways to improve my personal mental model of the project's design" />
+
+(This was initially forked off this [excalidraw-diagram-skill](https://github.com/coleam00/excalidraw-diagram-skill) repository, and I further tuned it for themes and image export formats)
+
+As code generation gets cheaper, my understanding of the current state of the system is the new cognitive bottleneck on project development. I have found that a good architecture diagram, topology map, or flow sketch often collapses pages of prose into something an agent can reason about in one glance. This is especially true for project-shape work, where much of the challenge is not implementation difficulty but preserving a coherent mental model across doctrine, contracts, requirements, and topology.
+
+I have loved how this skill has allowed me to generate diagrams that intuitively explain how the infrastructure of my code works; this has short-circuited a lot of logical challenges I've had in investigating and resolving of issues.
+
+### Blogpost Editing
+
+Skills: [blogpost-editor](https://github.com/Tzeusy/ai-bootstrap/tree/main/skills/personal/blogpost-editor) and [blogpost-formatter](https://github.com/Tzeusy/ai-bootstrap/tree/main/skills/personal/blogpost-formatter)
+
+While I try to write most my my blogposts with my own hand, using LLMs as an *editor* has been invaluable for my writing. Many times it has identified outdated or inaccurate claims, allowing me to tune these; prior to LLMs existing, I wouldn't have been able to resolve them without spending orders of magnitudes more time fact checking every single part of my posts. 
+
+It is admittedly quite sycophantic, which frustrates me a little; GPT-5.4 frames posts which seem perfectly ordinary to me as 'excellent and consistent humor', which I *know* just sounds too good to be true for a first-draft post. 
+
+## Open Source Skills
+
+### [Superpowers](https://github.com/obra/superpowers/tree/main)
+
+### [Anthropic Skills](https://github.com/anthropics/skills)

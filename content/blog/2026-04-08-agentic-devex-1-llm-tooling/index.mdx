@@ -1,0 +1,84 @@
+---
+title: "Agentic DevEx Part 1: LLM Tooling"
+date: 2026-04-08
+summary: "How I keep my LLM tooling portable across assistants"
+category: programming
+tags: ["ai", "agents", "developer-tools", "dotfiles", "infra", "terminal", "SRE", "software"]
+---
+
+<Callout type="info">
+This is a series of Developer Experience-type posts where I document my local LLM setup for managing subagents for personal projects. These are snapshot-type posts; I may update this over time as my tooling evolves.
+
+Series of posts:
+
+- [LLM Project Alignment Pillars](/blog/agentic-devex-2-llm-project-alignment-pillars)
+- [LLM Project Planning and Orchestration](/blog/agentic-devex-3-llm-project-planning-and-orchestration)
+- [LLM Custom Tools](/blog/agentic-devex-4-llm-custom-tools)
+
+Last updated: 2026-04-10
+</Callout>
+
+## The Goal
+
+*A rough timeline and my thoughts on the wider AI landscape can be found in my sister post, [AI Economics Ruminations](/blog/ai-economics-ruminations)*
+
+My AI setup has pretty organically grown over the past ~1.5 years, with me being a relatively optimistic user of AI tools to improve my personal workflows. The shape of the current tooling landscape has led to me realizing I need my own version-controlled overlay to allow me to more conveniently adapt and switch between different tools for similar use cases; more on this later.
+
+In addition to 'tooling interoperability', I also wanted a consistent historical view of the tools I have, and my own adaptations/forks of others' tools. This led to the idea of two types of components composed into my overall skill ecosystem:
+
+- *Submodules* of other users' skills and MCPs; references dynamically updatable, yet locally modifiable
+- *Personal skills* which have different boundary requirements altogether; allowed for cross-skill references, and meta-concepts that span several skills
+
+As laid out in my [ruminations post](/blog/ai-economics-ruminations), the idea here is to create an additional layer of multiplicative scaling on top of the existing open source ecosystem. Tooling here allows me to accelerate my own ability to use these systems; if well written and maintained, this layer tune my productivity up by multiples independent of the progress of LLM CLIs out there.
+
+### Opportunities and Constraints
+
+It is important to understand the central constraints around our LLM ecosystem today:
+
+- LLMs have limited context windows of ~200k-1m, which can be up to 750,000 words; in practice, significant performance degradations after [256k tokens](https://reddit.com/r/codex/comments/1rlyf98/1m_context_is_not_worth_it_seriously_the_quality/) mean that you never really want long sessions with huge contexts
+- LLMs do not have (efficient forms of) memory
+- Multiple independent developers working on the same repository leads to the entire point of version control and branches; replace 'developers' with 'LLMs' and we get the same issue
+- Using LLMs well involves providing it clear sets of instructions with limitations and suggested capabilities
+- Discoverability and documentation of a codebase allows an LLM to more efficiently load what it needs to know into 'knowledge', before development starts and afterwards, during validation
+
+These constraints shape the design and intent our tooling:
+
+- To help a model understand a codebase 'from scratch', which is needed basically every time we start it up
+- To encourage modes of thinking of the model - be it test driven, exploratory, reliability/observability-oriented, etc.
+- To know *what to work on*, *when* via *orchestration*
+- To provide it new capabilities (API access, diagram generation, etc.)
+- To provide all of the above *without itself dragging on a model's context*
+
+And the lack thereof of these capabilities represents opportunities for us to generate multipliers for our LLMs' productivity!
+
+### Tooling interoperability: Frustrations
+
+Claude Code, Codex, GitHub Copilot (GHCP), OpenCode, Gemini CLI, all have various claims to subsets of my time in AI tooling usage. These have wildly different UXes, and frustratingly, no unified configuration mechanism. Even where several of them converge on the open Agent Skills format, they still disagree on the native homes for those skills and on the adjacent extension surfaces around them:
+
+- Claude Code uses `.claude/skills/` in a project and `~/.claude/skills/` for personal skills
+- Codex uses `.agents/skills/` in the repository tree and `~/.agents/skills/` for personal skills; plugins are the installable distribution layer on top
+- Gemini CLI supports `.gemini/skills/` and the generic `.agents/skills/` alias, plus the matching `~/.gemini/skills/` and `~/.agents/skills/` global locations
+- OpenCode uses `.opencode/skills/` in a project and `~/.config/opencode/skills/` for global state
+- GHCP supports project skills in `.github/skills/`, `.claude/skills/`, or `.agents/skills/`, plus personal skills in `~/.copilot/skills/`, `~/.claude/skills/`, or `~/.agents/skills/`; it also has a separate custom-agent surface in `.github/agents/`
+
+Keeping one set of authoritative skills and having them propagate to all these directories is a core requirement, as I don't want to worry about having to maintain multiple copies of identical skill files across folders. On the other hand, these aren't universally consistent; GHCP introduces things like [agents](https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/create-custom-agents), Gemini CLI has [extensions](https://geminicli.com/extensions/), Claude Code has [Plugins/Hooks](https://code.claude.com/docs/en/discover-plugins); we also need to support tool-specific configuration.
+
+The naive way to do this is to let every tool accrete its own giant pile of prompts, instructions, local hacks, shell aliases, and one-off repos. That arrangement works only as long as the person who assembled it still remembers where everything is and why it was put there. I wanted one place where the *operating model* lives, and thin per-tool wrappers within this model. The important bit here is that the reusable knowledge should outlive any given tool vendor, model generation, or plugin format. If Codex gets better next month, or Gemini adds a new affordance, switching to this CLI should be a relatively painless process.
+
+### Techniques
+
+A few methods are involved to 'agnostify' our documented tools:
+
+- Symbolic linking: Skill folders, given that they follow the same open standard, can be symlinked into each target CLI's config folders; only one authoritative copy needs to exist, if that's the case
+- Tool-specific references: [CLAUDE.md can reference @AGENTS.md](https://code.claude.com/docs/en/common-workflows#reference-files-and-directories), allowing us to only need to maintain an AGENTS.md file.
+- Personas: pre-prompts are essentially LLM agnostic, allowing these to be managed orthogonally to toolings
+
+These are defined on a case-by-case basis, due to various CLIs' support for various functionalities; who knows, some may not support symlinks? It's best-effort, and an unfortunate fighting-the-tide style of tool management as the landscape evolves.
+
+### Gaps
+
+As far as LLM tooling goes, there are plenty of services that exist beyond statically committed files; due to the constraints of a github repo, I can only *reference them* in [ai-bootstrap](https://github.com/Tzeusy/ai-bootstrap). You may see references to services or binaries like [beads-viewer](https://github.com/Dicklesworthstone/beads_viewer) as I use them throughout; installation should be relatively self-explanatory, simply install whenever you see a workflow that requires it :-).
+
+## Next steps
+
+Now that we have standardized a set of means by which instructions can be delegated to LLM CLIs in a tool-agnostic manner, our next goal is to define engineering standards and practices for our projects. We want to define the shape and the direction of our projects; this will be elaborated more on [LLM Project Alignment Pillars](/blog/agentic-devex-2-llm-project-alignment-pillars).
